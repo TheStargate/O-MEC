@@ -268,11 +268,12 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    // Pone la cámara en visión completa del tablero
-    public void VisionTablero()
+    // Pone la cámara en visión completa del tablero.
+    // mostrarPanel: si es false, la cámara se mueve sin bloquear ni mostrar panelConfirmar al llegar
+    public void VisionTablero(bool mostrarPanel = true)
     {
         enVisionTablero = true;
-        bloqueado = true;
+        bloqueado = mostrarPanel;
 
         objetivoPosicion = new Vector3(0, 50, 50);
         if (TurnManager.turnoP1)

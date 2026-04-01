@@ -672,6 +672,10 @@ public class DeckManager : MonoBehaviour
             nuevaCarta.Setup(deckList[20]);
             nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
             nuevaCarta.Setup(deckList[20]);
+
+            // Prueba hechizos
+                        nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+            nuevaCarta.Setup(deckList[36]);
         }
         else
         {

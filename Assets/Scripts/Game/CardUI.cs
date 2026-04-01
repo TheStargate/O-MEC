@@ -102,16 +102,6 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
 
         // RESALTAR CASILLAS DISPONIBLES
 
-        if (cartaPrefab.cardData.tipo == CardType.Hechizo)
-        {
-            // Los hechizos se pueden lanzar en cualquier lugar del tablero
-            foreach (var cell in Board.Instance.cells)
-            {
-                cell.Resaltar(Color.lightBlue);
-            }
-            return;
-        }
-
         // Se busca el castillo del jugador actual
         Cell[] casillasCastillo = new Cell[3]; // Casillas donde se pueden generar monstruos
         int filaCastillo = -1;
@@ -228,6 +218,14 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                 }
             }
         }
+        else if (cartaPrefab.cardData.tipo == CardType.Hechizo)
+        { // Los hechizos se pueden lanzar en cualquier lugar del tablero
+            foreach (var cell in Board.Instance.cells)
+            {
+                cell.Resaltar(Color.lightBlue);
+            }
+            CameraController.Instance.VisionTablero(false);
+        }
     }
 
     // Actualiza las casillas y la posición de la carta seleccionada al arrastrarla
@@ -239,10 +237,26 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         // Convierte la posición del ratón en un "raycast"
         Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
         if (Physics.Raycast(ray, out RaycastHit hit))
-        { // Comprueba si el rayo ha colisionado con algo (una casilla)
+        { // Comprueba si el rayo ha colisionado con algo (una casilla o una carta)
             Cell casilla = hit.collider.GetComponent<Cell>();
-            if (casilla != null && !casilla.ocupada && !casilla.bloqueado)
-            { // Hay una casilla seleccionada que no está ocupada ni bloqueada
+
+            // Los hechizos pueden apuntar a casillas ocupadas
+            bool esHechizo = cartaPrefab.cardData.tipo == CardType.Hechizo;
+
+            // Si el rayo golpea la carta encima de la casilla (y es un hechizo), se selecciona la casilla
+            if (casilla == null && esHechizo)
+            {
+                Card cardGolpeada = hit.collider.GetComponent<Card>();
+                if (cardGolpeada != null && cardGolpeada.casilla != null)
+                    casilla = cardGolpeada.casilla;
+            }
+
+            // Hay una casilla seleccionada que no está ocupada ni bloqueada
+            bool casillaMarcable = casilla != null && !casilla.bloqueado &&
+                                   (esHechizo || !casilla.ocupada);
+
+            if (casillaMarcable)
+            { // Hay una casilla válida bajo el cursor
                 if (casilla != casillaAnterior)
                 { // Actualiza la casilla seleccionada
                     if (casillaAnterior != null) // Restablece el color de la anterior casilla seleccionada
@@ -273,6 +287,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     public void OnEndDrag(PointerEventData eventData)
     {
 
+        CameraController.Instance.VolverAPosicionOriginal();
+
         // Restablece la transparencia y el bloqueo de raycasts de la carta
         canvasGroup.blocksRaycasts = true;
         canvasGroup.alpha = 1f;
@@ -287,7 +303,27 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         {
             if (cartaPrefab.cardData.tipo == CardType.Hechizo)
             { // Los hechizos simplemente se lanzan, no se colocan
-                
+
+                SpellManager efecto = SpellManager.Crear(cartaPrefab.cardData.nombre);
+                if (efecto == null)
+                {
+                    Debug.LogWarning($"[CardUI] No hay SpellManager para '{cartaPrefab.cardData.nombre}'.");
+                    rectTransform.anchoredPosition = posicionInicial;
+                    casillaAnterior = null;
+                    return;
+                }
+
+                if (!efecto.Lanzar(casillaAnterior))
+                { // Si no se lanza el hechizo con éxito, devuelve la carta a la mano
+                    rectTransform.anchoredPosition = posicionInicial;
+                    casillaAnterior = null;
+                    return;
+                }
+
+                // Muestra el hechizo en el visor central y pausa el juego antes de lanzarlo
+                UIManager.visorCentral.sprite = imagenUI.sprite;
+                UIManager.visorCentral.gameObject.SetActive(true);
+                CameraController.Instance.MantenerVisor();
             }
             else
             { // Ocupa la casilla seleccionada con la carta

@@ -311,7 +311,7 @@ public class Board : MonoBehaviour
         }
         else if (seleccionandoCasilla)
         { // Activa la visión de tablero si no lo estaba antes (al pulsar "volver" mirando un objeto clickable)
-            CameraController.Instance.VisionTablero();
+            CameraController.Instance.VisionTablero(true);
         }
     }
 }
