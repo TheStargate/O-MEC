@@ -17,6 +17,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     private bool girada; // Indica si se debe mostrar la parte de atrás de la carta
     public static CardUI cartaUISeleccionada; // Indica la carta seleccionada de la mano del jugador
     private CardSorter sorter; // Para ordenar y resaltar las cartas de la mano
+    private System.Collections.Generic.List<Cell> casillasAreaActual = new System.Collections.Generic.List<Cell>(); // Casillas que se resaltan al arrastrar una carta que actúa en un área
 
     void Awake()
     {
@@ -262,13 +263,20 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                     if (casillaAnterior != null) // Restablece el color de la anterior casilla seleccionada
                         casillaAnterior.Resaltar(Color.lightBlue);
 
+                    LimpiarResaltadoArea();
                     casilla.Resaltar(Color.green); // Marca la nueva casilla seleccionada en verde
                     casillaAnterior = casilla;
+
+                    if (esHechizo && (cartaPrefab.cardData as SpellCardData).actuaEnArea)
+                    { // Si es un hechizo de área, resalta el área
+                        ResaltarArea(casilla);
+                    }
                 }
             }
             else if (casillaAnterior != null && !casillaAnterior.bloqueado)
             { // Reestablece el color de la casilla seleccionada anteriormente (si no estaba bloqueada)
                 casillaAnterior.Resaltar(Color.lightBlue);
+                LimpiarResaltadoArea();
                 casillaAnterior = null; // Ya no hay ninguna casilla seleccionada
             }
         }
@@ -277,7 +285,46 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
             if (casillaAnterior != null && !casillaAnterior.bloqueado)
             { // Reestablece el color de la casilla seleccionada anteriormente (si no estaba bloqueada)
                 casillaAnterior.Resaltar(Color.lightBlue);
+                LimpiarResaltadoArea();
                 casillaAnterior = null; // Ya no hay ninguna casilla seleccionada
+            }
+        }
+    }
+
+    // Limpia el resaltado de las casillas del área seleccionada
+    private void LimpiarResaltadoArea()
+    {
+        foreach (Cell c in casillasAreaActual)
+        {
+            if (c != null && c.GetColor() != Color.white) c.Resaltar(Color.lightBlue);
+        }
+        casillasAreaActual.Clear();
+    }
+
+    // Resalta el área alrededor de la casilla seleccionada
+    private void ResaltarArea(Cell centro)
+    {
+        // Diferencias de filas y columnas para las 8 casillas adyacentes
+        int[] dFilas = { -1, -1, -1, 0, 0, 1, 1, 1 };
+        int[] dColums = { -1, 0, 1, -1, 1, -1, 0, 1 };
+
+        for (int i = 0; i < dFilas.Length; i++)
+        { // Itera sobre las 8 casillas adyacentes
+            int nf = centro.row + dFilas[i];
+            int nc = centro.col + dColums[i];
+
+            if (nf >= 0 && nf < Board.Instance.rows && nc >= 0 && nc < Board.Instance.columns)
+            { // Comprueba si la casilla está dentro del tablero
+                Cell adyacente = Board.Instance.cells[nf, nc];
+                if (adyacente != null)
+                { // Si la casilla está ocupada y tiene una carta que se puede dañar, se resalta en naranja
+                    if (adyacente.ocupada && adyacente.cartaActual != null && adyacente.cartaActual.cardData is DamageableCardData)
+                        adyacente.Resaltar(new Color(1f, 0.5f, 0f)); // Naranja
+                    else
+                        adyacente.Resaltar(Color.yellow); // Si no, se resalta en amarillo
+                    
+                    casillasAreaActual.Add(adyacente);
+                }
             }
         }
     }

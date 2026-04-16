@@ -385,49 +385,57 @@ public class DeckManager : MonoBehaviour
                 alcance = 3,
                 costeHabilidad = 6
             },
-            new CardData
+            new SpellCardData
             {
                 nombre = "Lentitud eterna",
                 tipo = CardType.Hechizo,
                 costoEnergia = 4
             },
-            new CardData
+            new SpellCardData
             {
                 nombre = "Virus",
                 tipo = CardType.Hechizo,
                 costoEnergia = 4
             },
-            new CardData
+            new SpellCardData
             {
                 nombre = "Muerte instantánea",
                 tipo = CardType.Hechizo,
                 costoEnergia = 7
             },
-            new CardData
+            new SpellCardData
             {
                 nombre = "Flecha ardiente",
                 tipo = CardType.Hechizo,
                 costoEnergia = 6
             },
-            new CardData
+            new SpellCardData
             {
                 nombre = "Caos",
                 tipo = CardType.Hechizo,
                 costoEnergia = 7
             },
-            new CardData
+            new SpellCardData
             {
                 nombre = "Explosivo",
                 tipo = CardType.Hechizo,
                 costoEnergia = 9
             },
-            new CardData
+            new SpellCardData
             {
                 nombre = "Bola de fuego",
                 tipo = CardType.Hechizo,
-                costoEnergia = 11
+                costoEnergia = 11,
+                actuaEnArea = true
             },
-            new CardData
+            new SpellCardData
+            {
+                nombre = "Impacto Solar",
+                tipo = CardType.Hechizo,
+                costoEnergia = 8,
+                actuaEnArea = true
+            },
+            new SpellCardData
             {
                 nombre = "Bomba nuclear",
                 tipo = CardType.Hechizo,

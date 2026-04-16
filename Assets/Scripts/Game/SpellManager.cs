@@ -25,6 +25,7 @@ public abstract class SpellManager
             "Explosivo"          => new SpellExplosivo(),
             "Bola de fuego"      => new SpellBolaFuego(),
             "Bomba nuclear"      => new SpellBombaNuclear(),
+            "Impacto Solar"      => new SpellImpactoSolar(),
             _                    => null
         };
     }
@@ -224,21 +225,20 @@ public class SpellExplosivo : SpellManager
 }
 
 /// <summary>
-/// Bola de fuego (coste 11): inflige 15 de daño a la carta objetivo y 5 de daño
-/// a cada carta adyacente (incluidas las propias).
-/// Objetivo: cualquier casilla ocupada del tablero.
+/// Bola de fuego (coste 11): inflige 11 de daño a la carta objetivo y a cada 
+/// carta adyacente (incluidas las propias).
+/// Objetivo: cualquier casilla del tablero
 /// </summary>
 public class SpellBolaFuego : SpellManager
 {
-    private const int DANYO_CENTRAL   = 15;
-    private const int DANYO_ADYACENTE = 5;
+    private const int DANYO = 11;
 
     public override bool Lanzar(Cell casilla)
     {
-        if (casilla == null || !casilla.ocupada) return false;
+        if (casilla == null) return false;
 
-        // Daño central
-        AplicarDanyo(casilla, DANYO_CENTRAL);
+        // Aplicar daño a la casilla central
+        AplicarDanyo(casilla, DANYO);
 
         // Daño en área (8 celdas adyacentes)
         int[] dFilas  = { -1, -1, -1, 0, 0, 1, 1, 1 };
@@ -253,8 +253,7 @@ public class SpellBolaFuego : SpellManager
                 nc >= 0 && nc < Board.Instance.columns)
             {
                 Cell adyacente = Board.Instance.cells[nf, nc];
-                if (adyacente.ocupada)
-                    AplicarDanyo(adyacente, DANYO_ADYACENTE);
+                AplicarDanyo(adyacente, DANYO);
             }
         }
         return true;
@@ -262,9 +261,9 @@ public class SpellBolaFuego : SpellManager
 
     private void AplicarDanyo(Cell cell, int danyo)
     {
-        Card carta = cell.cartaActual;
-        if (carta == null) return;
+        if (!cell.ocupada || cell.cartaActual == null) return;
 
+        Card carta = cell.cartaActual;
         if (carta.cardData is DamageableCardData datos)
         {
             int nuevaVida = datos.vida - danyo;
@@ -310,3 +309,59 @@ public class SpellBombaNuclear : SpellManager
         return true;
     }
 }
+
+/// <summary>
+/// Impacto Solar (coste 8): Inflige 18 de daño en la casilla central y 7 en las adyacentes.
+/// NO IMPLEMENTADO AÚN
+/// </summary>
+public class SpellImpactoSolar : SpellManager
+{
+    private const int DANYO_CENTRAL = 18;
+    private const int DANYO_ADYACENTE = 7;
+
+    public override bool Lanzar(Cell casilla)
+    {
+        if (casilla == null) return false;
+
+        // Daño central
+        AplicarDanyo(casilla, DANYO_CENTRAL);
+
+        // Daño adyacente
+        int[] dFilas = { -1, -1, -1, 0, 0, 1, 1, 1 };
+        int[] dColums = { -1, 0, 1, -1, 1, -1, 0, 1 };
+
+        for (int i = 0; i < dFilas.Length; i++)
+        {
+            int nf = casilla.row + dFilas[i];
+            int nc = casilla.col + dColums[i];
+
+            if (nf >= 0 && nf < Board.Instance.rows &&
+                nc >= 0 && nc < Board.Instance.columns)
+            {
+                Cell adyacente = Board.Instance.cells[nf, nc];
+                AplicarDanyo(adyacente, DANYO_ADYACENTE);
+            }
+        }
+        return true;
+    }
+
+    private void AplicarDanyo(Cell cell, int danyo)
+    {
+        if (!cell.ocupada || cell.cartaActual == null) return;
+
+        Card carta = cell.cartaActual;
+        if (carta.cardData is DamageableCardData datos)
+        {
+            int nuevaVida = datos.vida - danyo;
+            if (nuevaVida <= 0)
+            {
+                cell.LiberarCasilla(false);
+            }
+            else
+            {
+                carta.UpdateVida(nuevaVida);
+            }
+        }
+    }
+}
+

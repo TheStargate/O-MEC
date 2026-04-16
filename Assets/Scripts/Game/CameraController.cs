@@ -68,7 +68,7 @@ public class CameraController : MonoBehaviour
                 if (bloqueado) // Si la cámara estaba bloqueada, solo se puede confirmar para volver a la visión de tablero
                     panelConfirmar?.SetActive(true);
                 else
-                    MostrarPanelSegunObjeto(objetivoActual.GetComponent<ClickableObject>());
+                    MostrarPanelSegunObjeto(objetivoActual != null ? objetivoActual.GetComponent<ClickableObject>() : null);
             });
         }
 

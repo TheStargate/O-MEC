@@ -34,6 +34,25 @@ public class CardData
     }
 }
 
+[System.Serializable]
+public class SpellCardData : CardData
+{
+    public bool actuaEnArea;
+
+    public override CardData Clone()
+    {
+        return new SpellCardData
+        {
+            nombre = this.nombre,
+            tipo = this.tipo,
+            costoEnergia = this.costoEnergia,
+            imagenCarta = this.imagenCarta,
+            imageUI = this.imageUI,
+            actuaEnArea = this.actuaEnArea
+        };
+    }
+}
+
 public class DamageableCardData : CardData
 {
     public int vida; // Vida actual de la carta
