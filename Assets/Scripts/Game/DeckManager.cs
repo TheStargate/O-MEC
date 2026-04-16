@@ -419,21 +419,25 @@ public class DeckManager : MonoBehaviour
             {
                 nombre = "Explosivo",
                 tipo = CardType.Hechizo,
-                costoEnergia = 9
+                costoEnergia = 9,
+                actuaEnArea = true,
+                radioArea = 2
             },
             new SpellCardData
             {
                 nombre = "Bola de fuego",
                 tipo = CardType.Hechizo,
                 costoEnergia = 11,
-                actuaEnArea = true
+                actuaEnArea = true,
+                radioArea = 1
             },
             new SpellCardData
             {
                 nombre = "Impacto Solar",
                 tipo = CardType.Hechizo,
                 costoEnergia = 8,
-                actuaEnArea = true
+                actuaEnArea = true,
+                radioArea = 1
             },
             new SpellCardData
             {
@@ -682,8 +686,20 @@ public class DeckManager : MonoBehaviour
             nuevaCarta.Setup(deckList[20]);
 
             // Prueba hechizos
-                        nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+            nuevaCarta.Setup(deckList[31]);
+            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+            nuevaCarta.Setup(deckList[32]);
+            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+            nuevaCarta.Setup(deckList[33]);
+            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+            nuevaCarta.Setup(deckList[34]);
+            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+            nuevaCarta.Setup(deckList[35]);
+            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
             nuevaCarta.Setup(deckList[36]);
+            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+            nuevaCarta.Setup(deckList[38]);
         }
         else
         {

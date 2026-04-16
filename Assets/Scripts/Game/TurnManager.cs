@@ -43,6 +43,10 @@ public class TurnManager : MonoBehaviour
                     Card carta = clickable.GetComponent<Card>();
                     if (carta != null)
                     {
+                        // Actualiza efectos por turno activos
+                        carta.UpdateEfectos();
+                        if (carta == null) continue; // La carta ha muerto, pasamos a la siguiente
+
                         if (carta.cardData is MonsterCardData mData && (mData.alcance <= 0 || mData.ataque <= 0) && mData.velocidad <= 0)
                             clickable.usado = true; // Si es un monstruo que no puede atacar ni moverse, no se puede usar
                         else if (carta.cardData is StructureCardData sData && (sData.alcance <= 0 || sData.ataque <= 0))

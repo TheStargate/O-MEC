@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 public enum CardType
 {
@@ -37,7 +38,8 @@ public class CardData
 [System.Serializable]
 public class SpellCardData : CardData
 {
-    public bool actuaEnArea;
+    public bool actuaEnArea; // Indica si el hechizo actúa en un área
+    public int radioArea; // Radio del área
 
     public override CardData Clone()
     {
@@ -48,8 +50,27 @@ public class SpellCardData : CardData
             costoEnergia = this.costoEnergia,
             imagenCarta = this.imagenCarta,
             imageUI = this.imageUI,
-            actuaEnArea = this.actuaEnArea
+            actuaEnArea = this.actuaEnArea,
+            radioArea = this.radioArea
         };
+    }
+}
+
+[System.Serializable]
+public class DanyoEfecto
+{ // Para efectos que hacen daño durante varios turnos
+    public int danyo; // Daño que se hace por turno
+    public int turnosRestantes; // Turnos restantes para que el efecto termine (-1 para infinito)
+
+    public DanyoEfecto(int danyo, int turnos)
+    {
+        this.danyo = danyo;
+        this.turnosRestantes = turnos;
+    }
+
+    public DanyoEfecto Clone()
+    {
+        return new DanyoEfecto(danyo, turnosRestantes);
     }
 }
 
@@ -59,6 +80,7 @@ public class DamageableCardData : CardData
     public int vidaMaxima;
     public int ataque;
     public int alcance;
+    public List<DanyoEfecto> efectosDanyo = new();
 
     public override CardData Clone()
     {
@@ -73,6 +95,7 @@ public class DamageableCardData : CardData
             vidaMaxima = this.vidaMaxima,
             ataque = this.ataque,
             alcance = this.alcance,
+            efectosDanyo = this.efectosDanyo.ConvertAll(e => e.Clone())
         };
     }
 }
@@ -159,7 +182,7 @@ public class Card : MonoBehaviour
     // Instancia una nueva carta a partir de los datos indicados
     public void Setup(CardData data)
     {
-        background.SetActive(false);
+        if (background != null) background.SetActive(false);
         cardData = data.Clone();
         name = data.nombre;
         if (data.tipo != CardType.Trampa) // Si la carta es un trampa, no se muestra su imagen
@@ -171,10 +194,10 @@ public class Card : MonoBehaviour
             CardType.Hechizo => TipoObjeto.Hechizo,
             CardType.Trampa => TipoObjeto.Trampa,
             CardType.MonstruoLeg => TipoObjeto.MonstruoLeg,
-            CardType.Energia => TipoObjeto.Energia,
-            _ => TipoObjeto.Ninguno
-        };
-    }
+                CardType.Energia => TipoObjeto.Energia,
+                _ => TipoObjeto.Ninguno
+            };
+        }
 
     // Actualiza y muestra la nueva vida de la carta
     public void UpdateVida(int nuevaVida)
@@ -186,6 +209,46 @@ public class Card : MonoBehaviour
             background.SetActive(false);
         else
             background.SetActive(true);
+    }
+
+    // Actualiza los efectos por turno activos
+    public void UpdateEfectos()
+    {
+        if (cardData is DamageableCardData dData && dData.efectosDanyo.Count > 0)
+        { // Si la carta tiene efectos de daño activos
+            int danyoTotal = 0;
+            // Usamos una lista temporal para guardar los efectos que acaban este turno
+            List<DanyoEfecto> aEliminar = new();
+
+            foreach (DanyoEfecto efecto in dData.efectosDanyo)
+            { // Sumamos el daño de todos los efectos
+                danyoTotal += efecto.danyo;
+                if (efecto.turnosRestantes > 0)
+                {
+                    efecto.turnosRestantes--;
+                    if (efecto.turnosRestantes == 0)
+                        aEliminar.Add(efecto); // Añadimos el efecto a la lista de efectos a eliminar si sus turnos llegan a 0
+                }
+            }
+
+            // Aplicar daño de los efectos de este turno
+            if (danyoTotal > 0)
+            {
+                int nuevaVida = dData.vida - danyoTotal;
+                Debug.Log($"[Card] Efectos aplican {danyoTotal} de daño a {name}. Vida restante: {nuevaVida}");
+                
+                if (nuevaVida <= 0)
+                { // La carta muere si recibe demasiado daño
+                    casilla.LiberarCasilla(false);
+                    return;
+                }
+                UpdateVida(nuevaVida);
+            }
+
+            // Limpiar efectos que acaban este turno
+            foreach (DanyoEfecto efecto in aEliminar)
+                dData.efectosDanyo.Remove(efecto);
+        }
     }
 
     // Actualiza los turnos restantes de las cartas de tipo Trampa
