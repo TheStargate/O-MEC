@@ -45,7 +45,7 @@ public abstract class SpellManager
 /// <summary>
 /// Lentitud eterna (coste 4): reduce la velocidad del monstruo objetivo a 1
 /// durante el resto de la partida.
-/// Objetivo: casilla ocupada por un monstruo enemigo.
+/// Objetivo: casilla ocupada por un monstruo.
 /// </summary>
 public class SpellLentitudEterna : SpellManager
 {
@@ -56,12 +56,9 @@ public class SpellLentitudEterna : SpellManager
         Card carta = casilla.cartaActual;
         if (carta == null) return false;
 
-        bool esEnemigo = carta.clickableObject.propietarioP1 == TurnManager.turnoP1;
-        if (esEnemigo) return false; // solo afecta a cartas enemigas
-
         if (carta.cardData is MonsterCardData datos)
         {
-            datos.velocidad = 1;
+            carta.UpdateVelocidad(1);
             Debug.Log($"[Lentitud eterna] {carta.name} reducido a velocidad 1.");
             return true;
         }
@@ -71,7 +68,7 @@ public class SpellLentitudEterna : SpellManager
 
 /// <summary>
 /// Virus (coste 4): la carta objetivo pierde 1 de vida en cada turno.
-/// Objetivo: casilla ocupada por un monstruo enemigo con vida.
+/// Objetivo: casilla ocupada por un monstruo.
 /// </summary>
 public class SpellVirus : SpellManager
 {
@@ -81,9 +78,6 @@ public class SpellVirus : SpellManager
 
         Card carta = casilla.cartaActual;
         if (carta == null) return false;
-
-        bool esEnemigo = carta.clickableObject.propietarioP1 == TurnManager.turnoP1;
-        if (esEnemigo) return false;
 
         if (carta.cardData is MonsterCardData datos)
         {
@@ -123,8 +117,8 @@ public class SpellDebilitar : SpellManager
 }
 
 /// <summary>
-/// Muerte instantánea (coste 7): destruye al instante la carta enemiga objetivo.
-/// Objetivo: casilla ocupada por cualquier carta enemiga (excepto castillo).
+/// Muerte instantánea (coste 7): destruye al instante la carta objetivo.
+/// Objetivo: casilla ocupada por cualquier monstruo.
 /// </summary>
 public class SpellMuerteInstantanea : SpellManager
 {
@@ -134,9 +128,6 @@ public class SpellMuerteInstantanea : SpellManager
 
         Card carta = casilla.cartaActual;
         if (carta == null) return false;
-
-        bool esEnemigo = carta.clickableObject.propietarioP1 == TurnManager.turnoP1;
-        if (esEnemigo) return false;
 
         if (!(carta.cardData is MonsterCardData))
         {
@@ -152,7 +143,7 @@ public class SpellMuerteInstantanea : SpellManager
 
 /// <summary>
 /// Flecha ardiente (coste 6): inflige daño fijo de 8 a la carta objetivo.
-/// Objetivo: casilla ocupada por cualquier carta enemiga con vida.
+/// Objetivo: casilla ocupada por cualquier monstruo.
 /// </summary>
 public class SpellFlechaArdiente : SpellManager
 {
@@ -166,9 +157,6 @@ public class SpellFlechaArdiente : SpellManager
 
         Card carta = casilla.cartaActual;
         if (carta == null) return false;
-
-        bool esEnemigo = carta.clickableObject.propietarioP1 == TurnManager.turnoP1;
-        if (esEnemigo) return false;
 
         if (carta.cardData is MonsterCardData datos)
         {

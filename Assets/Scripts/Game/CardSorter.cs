@@ -1,10 +1,10 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Linq;
 using System.Collections.Generic;
 
 public class CardSorter : MonoBehaviour
 {
-
     // Diccionario que asigna un peso a cada tipo (para ordenar)
     private Dictionary<CardType, int> ordenTipos = new Dictionary<CardType, int>
     {
@@ -27,7 +27,31 @@ public class CardSorter : MonoBehaviour
 
         for (int i = 0; i < cartas.Count; i++)
             cartas[i].transform.SetSiblingIndex(i);
+
+        AjustarEspaciado(cartas.Count);
         Resaltar();
+    }
+
+    // Ajusta el espacio entre cartas en la mano según la cantidad de cartas actuales.
+    private void AjustarEspaciado(int cantidadCartas)
+    {
+        if (cantidadCartas <= 0 || DeckManager.Instance == null) return;
+
+        // Layout de las cartas actual
+        HorizontalLayoutGroup layoutGroup = null;
+        if (transform == DeckManager.Instance.handPanelP1)
+            layoutGroup = DeckManager.Instance.handPanelP1.GetComponent<HorizontalLayoutGroup>();
+        else if (transform == DeckManager.Instance.handPanelP2)
+            layoutGroup = DeckManager.Instance.handPanelP2.GetComponent<HorizontalLayoutGroup>();
+
+        if (layoutGroup == null) return;
+
+        const float minSpacing = -90f;
+        const float maxSpacing = 40f;
+
+        float spacing = maxSpacing - (cantidadCartas - 1) * 5;
+
+        layoutGroup.spacing = Mathf.Max(spacing, minSpacing);
     }
 
     // Resalta las cartas que se pueden usar de la mano del jugador

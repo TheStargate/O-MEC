@@ -376,6 +376,7 @@ GameObject:
   - component: {fileID: 129566632}
   - component: {fileID: 129566634}
   - component: {fileID: 129566635}
+  - component: {fileID: 129566636}
   m_Layer: 0
   m_Name: Game Manager
   m_TagString: Untagged
@@ -444,6 +445,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b37e5721398343d46bd89aab83f04e9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &129566636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 129566631}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 438362d4300718b4da0ae62a26b3035a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  botonTurnCards: {fileID: 1953705952}
+  botonUseEnergy: {fileID: 591215778}
+  botonMonsterBack: {fileID: 963585991}
+  botonMonsterMove: {fileID: 1374787569}
+  botonMonsterAttack: {fileID: 1874470593}
+  botonMonsterHability: {fileID: 1846052128}
+  botonStructureBack: {fileID: 443633083}
+  botonStructureAttack: {fileID: 534277045}
+  botonStructureHability: {fileID: 1678938529}
+  botonTemplateBack: {fileID: 1120274956}
+  botonPauseContinue: {fileID: 420286561}
+  botonConfirmBack: {fileID: 1491021128}
+  botonConfirmConfirm: {fileID: 1143431398}
+  botonMenuBack: {fileID: 2024758767}
+  botonMenuNextTurn: {fileID: 747991481}
+  botonDeckBack: {fileID: 1949579854}
+  botonDeckDraw: {fileID: 2002280892}
 --- !u!1 &132015711
 GameObject:
   m_ObjectHideFlags: 0
@@ -955,6 +985,10 @@ MonoBehaviour:
   panelMenu: {fileID: 1651204892}
   panelConfirmar: {fileID: 1330986018}
   panelPausa: {fileID: 787977417}
+  deckP1: {fileID: 2068453180}
+  deckP2: {fileID: 961563050}
+  menuP1: {fileID: 591845808}
+  menuP2: {fileID: 1527500593}
   handPanelP1: {fileID: 560035604}
   handPanelP2: {fileID: 365394936}
   botonGirar: {fileID: 1953705950}
@@ -1842,7 +1876,7 @@ MonoBehaviour:
       - m_Target: {fileID: 330585548}
         m_TargetAssemblyTypeName: CameraController, Assembly-CSharp
         m_MethodName: VisionTablero
-        m_Mode: 1
+        m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -1946,7 +1980,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 7
-  m_Spacing: 0
+  m_Spacing: -1.67
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0

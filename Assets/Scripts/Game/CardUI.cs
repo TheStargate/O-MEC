@@ -222,9 +222,29 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         }
         else if (cartaPrefab.cardData.tipo == CardType.Hechizo)
         { // Los hechizos se pueden lanzar en cualquier lugar del tablero
-            foreach (var cell in Board.Instance.cells)
+            SpellCardData spellData = cartaPrefab.cardData as SpellCardData;
+            if (spellData != null && spellData.requiereMonstruo)
+            { // Si solo se puede lanzar el hechizo sobre un monstruo
+                // Resaltar casillas con monstruos enemigos, resto en gris
+                foreach (var cell in Board.Instance.cells)
+                {
+                    if (cell.ocupada && cell.cartaActual != null && cell.cartaActual.cardData is MonsterCardData)
+                    {
+                        cell.Resaltar(Color.lightBlue);
+                    }
+                    else
+                    {
+                        cell.SetColor(Color.gray);
+                    }
+                }
+            }
+            else
             {
-                cell.Resaltar(Color.lightBlue);
+                // Resaltar todo el tablero
+                foreach (var cell in Board.Instance.cells)
+                {
+                    cell.Resaltar(Color.lightBlue);
+                }
             }
             CameraController.Instance.VisionTablero(false);
         }
@@ -254,8 +274,21 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
             }
 
             // Hay una casilla seleccionada que no está ocupada ni bloqueada
-            bool casillaMarcable = casilla != null && !casilla.bloqueado &&
-                                   (esHechizo || !casilla.ocupada);
+            bool casillaMarcable = casilla != null && !casilla.bloqueado;
+            if (esHechizo)
+            {
+                SpellCardData spellData = cartaPrefab.cardData as SpellCardData;
+                if (spellData != null && spellData.requiereMonstruo)
+                {
+                    casillaMarcable &= casilla != null && casilla.ocupada && casilla.cartaActual != null &&
+                                       casilla.cartaActual.cardData is MonsterCardData &&
+                                       casilla.cartaActual.clickableObject != null;
+                }
+            }
+            else
+            {
+                casillaMarcable &= casilla != null && !casilla.ocupada;
+            }
 
             if (casillaMarcable)
             { // Hay una casilla válida bajo el cursor
@@ -268,7 +301,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                     casilla.Resaltar(Color.green); // Marca la nueva casilla seleccionada en verde
                     casillaAnterior = casilla;
 
-                    if (esHechizo && (cartaPrefab.cardData as SpellCardData).actuaEnArea)
+                    SpellCardData spellDataArea = cartaPrefab.cardData as SpellCardData;
+                    if (esHechizo && spellDataArea != null && spellDataArea.actuaEnArea)
                     { // Si es un hechizo de área, resalta el área
                         ResaltarArea(casilla);
                     }
@@ -306,6 +340,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     private void ResaltarArea(Cell centro)
     {
         SpellCardData data = cartaPrefab.cardData as SpellCardData;
+        if (data == null) return;
         int radio = data.radioArea;
 
         for (int df = -radio; df <= radio; df++)

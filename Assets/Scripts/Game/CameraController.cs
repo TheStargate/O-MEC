@@ -17,6 +17,12 @@ public class CameraController : MonoBehaviour
     [SerializeField] private GameObject panelConfirmar;
     [SerializeField] private GameObject panelPausa; // Para cuando el juego está pausado
 
+    // Objetos Deck y Menu para acceso por teclado
+    [SerializeField] private ClickableObject deckP1;
+    [SerializeField] private ClickableObject deckP2;
+    [SerializeField] private ClickableObject menuP1;
+    [SerializeField] private ClickableObject menuP2;
+
     // Paneles referentes a las manos de cada jugador
     [SerializeField] private Transform handPanelP1;
     [SerializeField] private Transform handPanelP2;
@@ -303,5 +309,64 @@ public class CameraController : MonoBehaviour
         Time.timeScale = 1f;
         botonGirar.SetActive(true);
         panelPausa.SetActive(false);
+    }
+
+    // Mueve la cámara a la baraja según el turno actual
+    public void MoverAlDeck()
+    {
+        ClickableObject deckActual = TurnManager.turnoP1 ? deckP1 : deckP2;
+        if (deckActual == null)
+            return;
+
+        // Valida que se puede acceder a la baraja
+        if (!TurnManager.robadoDisponible)
+            return;
+
+        objetivoActual = deckActual.transform;
+
+        // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
+        Vector3 offset = deckActual.offsetDesdeEsteObjeto;
+        if (!deckActual.propietarioP1)
+            offset.z *= -1;
+
+        objetivoPosicion = objetivoActual.position + offset;
+        Vector3 direccion = (objetivoActual.position - objetivoPosicion).normalized;
+        objetivoRotacion = Quaternion.LookRotation(direccion);
+
+        moverCamara = true;
+        volverAPosicionOriginal = false;
+        enVisionTablero = false;
+        MostrarPanelSegunObjeto(null);
+    }
+
+    // Mueve la cámara al Menu según el turno actual
+    public void MoverAlMenu()
+    {
+        ClickableObject menuActual = TurnManager.turnoP1 ? menuP1 : menuP2;
+        if (menuActual == null)
+            return;
+
+        // Valida que se puede acceder al menú
+        if (TurnManager.numTurno <= 2)
+        {
+            if ((TurnManager.turnoP1 && handPanelP1.childCount > 0) || (!TurnManager.turnoP1 && handPanelP2.childCount > 0))
+                return;
+        }
+
+        objetivoActual = menuActual.transform;
+
+        // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
+        Vector3 offset = menuActual.offsetDesdeEsteObjeto;
+        if (!menuActual.propietarioP1)
+            offset.z *= -1;
+
+        objetivoPosicion = objetivoActual.position + offset;
+        Vector3 direccion = (objetivoActual.position - objetivoPosicion).normalized;
+        objetivoRotacion = Quaternion.LookRotation(direccion);
+
+        moverCamara = true;
+        volverAPosicionOriginal = false;
+        enVisionTablero = false;
+        MostrarPanelSegunObjeto(null);
     }
 }

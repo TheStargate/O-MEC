@@ -389,25 +389,29 @@ public class DeckManager : MonoBehaviour
             {
                 nombre = "Lentitud eterna",
                 tipo = CardType.Hechizo,
-                costoEnergia = 4
+                costoEnergia = 4,
+                requiereMonstruo = true
             },
             new SpellCardData
             {
                 nombre = "Virus",
                 tipo = CardType.Hechizo,
-                costoEnergia = 4
+                costoEnergia = 4,
+                requiereMonstruo = true
             },
             new SpellCardData
             {
                 nombre = "Muerte instantánea",
                 tipo = CardType.Hechizo,
-                costoEnergia = 7
+                costoEnergia = 7,
+                requiereMonstruo = true
             },
             new SpellCardData
             {
                 nombre = "Flecha ardiente",
                 tipo = CardType.Hechizo,
-                costoEnergia = 6
+                costoEnergia = 6,
+                requiereMonstruo = true
             },
             new SpellCardData
             {
@@ -428,14 +432,6 @@ public class DeckManager : MonoBehaviour
                 nombre = "Bola de fuego",
                 tipo = CardType.Hechizo,
                 costoEnergia = 11,
-                actuaEnArea = true,
-                radioArea = 1
-            },
-            new SpellCardData
-            {
-                nombre = "Impacto Solar",
-                tipo = CardType.Hechizo,
-                costoEnergia = 8,
                 actuaEnArea = true,
                 radioArea = 1
             },
@@ -684,22 +680,6 @@ public class DeckManager : MonoBehaviour
             nuevaCarta.Setup(deckList[20]);
             nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
             nuevaCarta.Setup(deckList[20]);
-
-            // Prueba hechizos
-            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-            nuevaCarta.Setup(deckList[31]);
-            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-            nuevaCarta.Setup(deckList[32]);
-            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-            nuevaCarta.Setup(deckList[33]);
-            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-            nuevaCarta.Setup(deckList[34]);
-            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-            nuevaCarta.Setup(deckList[35]);
-            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-            nuevaCarta.Setup(deckList[36]);
-            nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-            nuevaCarta.Setup(deckList[38]);
         }
         else
         {

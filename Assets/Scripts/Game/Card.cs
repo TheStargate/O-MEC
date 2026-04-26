@@ -40,6 +40,7 @@ public class SpellCardData : CardData
 {
     public bool actuaEnArea; // Indica si el hechizo actúa en un área
     public int radioArea; // Radio del área
+    public bool requiereMonstruo; // Indica si el hechizo requiere seleccionar un monstruo enemigo
 
     public override CardData Clone()
     {
@@ -51,7 +52,8 @@ public class SpellCardData : CardData
             imagenCarta = this.imagenCarta,
             imageUI = this.imageUI,
             actuaEnArea = this.actuaEnArea,
-            radioArea = this.radioArea
+            radioArea = this.radioArea,
+            requiereMonstruo = this.requiereMonstruo
         };
     }
 }
@@ -177,12 +179,15 @@ public class Card : MonoBehaviour
     public Cell casilla; // Casilla en la que está colocada la carta
     public ClickableObject clickableObject; // Para establecer la carta como clickable
     [SerializeField] private TextMeshPro textoVida; // Indica la vida actual de la carta
+    [SerializeField] private TextMeshPro textoVelocidad; // Indica la velocidad de la carta (para monstruos)
     public GameObject background; // Fondo para que se vea bien textoVida
+    public GameObject backgroundVelocidad; // Fondo para que se vea bien textoVelocidad
     
     // Instancia una nueva carta a partir de los datos indicados
     public void Setup(CardData data)
     {
         if (background != null) background.SetActive(false);
+        if (backgroundVelocidad != null) backgroundVelocidad.SetActive(false);
         cardData = data.Clone();
         name = data.nombre;
         if (data.tipo != CardType.Trampa) // Si la carta es un trampa, no se muestra su imagen
@@ -209,6 +214,22 @@ public class Card : MonoBehaviour
             background.SetActive(false);
         else
             background.SetActive(true);
+    }
+
+    // Actualiza y muestra la nueva velocidad de la carta (para monstruos)
+    public void UpdateVelocidad(int nuevaVelocidad)
+    {
+        MonsterCardData data = cardData as MonsterCardData;
+        if (data != null)
+        {
+            data.velocidad = nuevaVelocidad;
+            if (textoVelocidad != null)
+            {
+                textoVelocidad.text = nuevaVelocidad.ToString();
+                textoVelocidad.gameObject.SetActive(true);
+                backgroundVelocidad.SetActive(true);
+            }
+        }
     }
 
     // Actualiza los efectos por turno activos
