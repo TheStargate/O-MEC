@@ -28,8 +28,13 @@ public class CardSorter : MonoBehaviour
         for (int i = 0; i < cartas.Count; i++)
             cartas[i].transform.SetSiblingIndex(i);
 
-        AjustarEspaciado(cartas.Count);
         Resaltar();
+    }
+
+    // Se ejecuta cuando cambian las cartas de la mano para reajustar el espacio entre ellas
+    private void OnTransformChildrenChanged()
+    {
+        AjustarEspaciado(transform.childCount);
     }
 
     // Ajusta el espacio entre cartas en la mano según la cantidad de cartas actuales.
@@ -49,8 +54,7 @@ public class CardSorter : MonoBehaviour
         const float minSpacing = -90f;
         const float maxSpacing = 40f;
 
-        float spacing = maxSpacing - (cantidadCartas - 1) * 5;
-
+        float spacing = maxSpacing - Mathf.Sqrt(cantidadCartas - 1) * 18;
         layoutGroup.spacing = Mathf.Max(spacing, minSpacing);
     }
 

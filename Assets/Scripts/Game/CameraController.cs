@@ -43,7 +43,20 @@ public class CameraController : MonoBehaviour
     public bool enVisionTablero = false; // Indica que la cámara está en visión completa del tablero
     private bool pausado; // Indica si el juego está pausado
     private Transform objetivoActual; // Indica el objeto al que se quiere mover la cámara
-    public static CameraController Instance; // Instancia de la propia cámara para comunicarse con otros scripts
+    public static CameraController Instance { get; private set; } // Instancia de la propia cámara para comunicarse con otros scripts
+
+    [SerializeField] private float velocidadDesplazamiento = 20f; // Velocidad a la que se mueve la cámara con el teclado en la visión de tablero
+    [SerializeField] private float velocidadZoom = 200f; // Velocidad del zoom con la rueda del ratón en la visión de tablero
+    [SerializeField] private float zoomMinY = 10f; // Zoom mínimo en la visión de tablero
+    [SerializeField] private float zoomMaxY = 60f; // Zoom máximo en la visión de tablero
+    [SerializeField] private GameObject botonVolverVisionTablero; // Para volver a la posición original de la visión de tablero
+    [SerializeField] private GameObject botonVerTablero; // Botón para entrar en visión de tablero
+    [SerializeField] private Vector3 posicionVisionTableroDefault = new Vector3(0, 50, 50);
+    [SerializeField] private Vector3 rotacionVisionTableroDefaultEuler = new Vector3(90f, 0f, 0f);
+    [SerializeField] private float limiteMinX = -15f; // Desplazamiento X mínimo en la visión de tablero
+    [SerializeField] private float limiteMaxX = 15f; // Desplazamiento X máximo en la visión de tablero
+    [SerializeField] private float limiteMinZ = 30f; // Desplazamiento Z mínimo en la visión de tablero
+    [SerializeField] private float limiteMaxZ = 70f; // Desplazamiento Z máximo en la visión de tablero
 
     void Start()
     {
@@ -53,6 +66,8 @@ public class CameraController : MonoBehaviour
         posicionOriginalCamaraP2 = new Vector3(0, 35, 100);
         rotacionOriginalCamaraP2 = Quaternion.Euler(40f, 180f, 0f);
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
+        botonVolverVisionTablero.SetActive(false);
+        botonVerTablero.SetActive(!enVisionTablero);
         Instance = this;
     }
 
@@ -88,9 +103,14 @@ public class CameraController : MonoBehaviour
             {
                 volverAPosicionOriginal = false;
                 objetivoActual = null;
+                enVisionTablero = false;
+                botonVerTablero.SetActive(!enVisionTablero);
                 MostrarPanelSegunObjeto(null); // No se muestra ningún panel
             });
         }
+
+        if (enVisionTablero && !moverCamara && !volverAPosicionOriginal && !pausado)
+            ControlarVisionTablero();
     }
 
     // Maneja el click izquierdo para mover la cámara a un objeto válido
@@ -105,6 +125,17 @@ public class CameraController : MonoBehaviour
             return;
 
         Card carta = hit.transform.GetComponent<Card>();
+
+        // Si se selecciona una carta resaltada en morado, se muestra en el visor central
+        if (carta != null && carta.casilla.GetColor() == Color.violet)
+        {
+            MostrarPanelSegunObjeto(null);
+            UIManager.visorCentral.sprite = carta.cardData.imagenCarta;
+            UIManager.visorCentral.gameObject.SetActive(true);
+            MantenerVisor();
+            return;
+        }
+
         if (carta != null && !bloqueado)
             UIManager.SetCartaSeleccionada(carta); // Marca la carta como seleccionada
 
@@ -142,6 +173,7 @@ public class CameraController : MonoBehaviour
         moverCamara = true;
         volverAPosicionOriginal = false;
         enVisionTablero = false;
+        botonVerTablero.SetActive(false);
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
     }
 
@@ -173,8 +205,76 @@ public class CameraController : MonoBehaviour
             volverAPosicionOriginal = true;
             moverCamara = false;
             bloqueado = false;
+            botonVolverVisionTablero.gameObject.SetActive(false);
 
             MostrarPanelSegunObjeto(null); // No se muestra ningún panel
+        }
+    }
+
+    // Vuelve a la posición y rotación por defecto de la visión de tablero según el turno actual
+    public void VolverAPosicionVisionTablero()
+    {
+        objetivoPosicion = posicionVisionTableroDefault;
+        
+        if (TurnManager.turnoP1)
+            objetivoRotacion = Quaternion.Euler(rotacionVisionTableroDefaultEuler);
+        else
+            objetivoRotacion = Quaternion.Euler(rotacionVisionTableroDefaultEuler.x, rotacionVisionTableroDefaultEuler.y + 180f, rotacionVisionTableroDefaultEuler.z);
+        
+        moverCamara = true;
+        enVisionTablero = true;
+        botonVerTablero.SetActive(!enVisionTablero);
+
+        botonVolverVisionTablero.SetActive(false);
+    }
+
+    // Controla el movimiento y el zoom de la cámara cuando está en visión completa del tablero.
+    private void ControlarVisionTablero()
+    {
+        if (Camera.main == null)
+            return;
+
+        Vector2 inputMovimiento = KeyboardManager.Instance != null ? KeyboardManager.Instance.movimientoCamara : Vector2.zero;
+        Vector3 movimiento = new Vector3(inputMovimiento.x, 0f, inputMovimiento.y);
+
+        // Si hay movimiento por teclado, desplaza la cámara en la dirección correspondiente.
+        if (movimiento.sqrMagnitude > 0f)
+        {
+            Vector3 direccionVertical = Vector3.forward;
+            Vector3 direccionHorizontal = Vector3.right;
+
+            if (!TurnManager.turnoP1)
+            {
+                direccionVertical = -direccionVertical;
+                direccionHorizontal = -direccionHorizontal;
+            }
+
+            Vector3 desplazamiento = (direccionVertical * movimiento.z + direccionHorizontal * movimiento.x) * velocidadDesplazamiento * Time.deltaTime;
+            Vector3 nuevaPos = Camera.main.transform.position + desplazamiento;
+
+            nuevaPos.x = Mathf.Clamp(nuevaPos.x, limiteMinX, limiteMaxX);
+            nuevaPos.z = Mathf.Clamp(nuevaPos.z, limiteMinZ, limiteMaxZ);
+
+            Camera.main.transform.position = nuevaPos;
+
+            botonVolverVisionTablero.SetActive(true);
+        }
+
+        if (Mouse.current != null)
+        {
+            Vector2 scroll = Mouse.current.scroll.ReadValue();
+
+            // Si hay movimiento de la rueda, aumenta o reduce el zoom.
+            if (scroll.y != 0f)
+            {
+                Vector3 direccionZoom = Camera.main.transform.forward;
+                Vector3 nuevaPosicion = Camera.main.transform.position + direccionZoom * (scroll.y * velocidadZoom * Time.deltaTime);
+
+                if (nuevaPosicion.y >= zoomMinY && nuevaPosicion.y <= zoomMaxY)
+                    Camera.main.transform.position = nuevaPosicion;
+
+                botonVolverVisionTablero.SetActive(true);
+            }
         }
     }
 
@@ -289,10 +389,11 @@ public class CameraController : MonoBehaviour
 
         moverCamara = true;
         volverAPosicionOriginal = false;
+        botonVerTablero.SetActive(!enVisionTablero);
 
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
     }
-
+    
     // Muestra el visor central y pone en pausa el juego
     public void MantenerVisor()
     {
@@ -305,6 +406,7 @@ public class CameraController : MonoBehaviour
     // Oculta el visor central y quita la pausa del juego
     public void OcultarVisor()
     {
+        UIManager.visorCentral.gameObject.SetActive(false);
         pausado = false;
         Time.timeScale = 1f;
         botonGirar.SetActive(true);

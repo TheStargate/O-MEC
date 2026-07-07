@@ -10,7 +10,7 @@ public class Board : MonoBehaviour
     public float spacingZ = 5f; // Distancia vertical entre las casillas
     public Cell cellPrefab; // Prefab para instanciar las casillas
     public UIManager UIManager; // Para gestionar los cambios en la interfaz
-    public static Board Instance; // Instancia del propio tablero para comunicarse con otros scripts
+    public static Board Instance { get; private set; } // Instancia del propio tablero para comunicarse con otros scripts
     public Cell[,] cells; // Casillas del tablero
     private bool seleccionandoCasilla = false; // Indica si se está seleccionando una casilla para moverse
     private bool seleccionandoAtaque = false; // Indica si se está seleccionando una casilla para atacar
@@ -126,6 +126,20 @@ public class Board : MonoBehaviour
             }
             if (carta.clickableObject.ultimoMovimiento == TurnManager.numTurno && carta.clickableObject.ultimoAtaque == TurnManager.numTurno)
                 carta.clickableObject.usar(); // Marca la carta como usada si no quedan acciones disponibles
+        }
+    }
+
+    // Resalta en verde todas las casillas ocupadas por cartas del jugador rival.
+    public void ResaltarCasillasVerde()
+    {
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < columns; col++)
+            {
+                Cell casilla = cells[row, col];
+                if (casilla.ocupada && casilla.cartaActual.clickableObject.propietarioP1 != TurnManager.turnoP1)
+                    casilla.SetColor(Color.violet);
+            }
         }
     }
 

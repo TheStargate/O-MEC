@@ -5,6 +5,9 @@ using UnityEngine.EventSystems;
 
 public class KeyboardManager : MonoBehaviour
 {
+    public static KeyboardManager Instance { get; private set; }  // Instancia del propio objeto para comunicarse con otros scripts
+    public Vector2 movimientoCamara { get; private set; } // Indica el movimiento que hace la cámara al pulsar las flechas en la visión de tablero activada
+
     [Header("Botones de la UI")]
     [SerializeField] private Button botonTurnCards;
     [SerializeField] private Button botonUseEnergy;
@@ -23,6 +26,8 @@ public class KeyboardManager : MonoBehaviour
     [SerializeField] private Button botonMenuNextTurn;
     [SerializeField] private Button botonDeckBack;
     [SerializeField] private Button botonDeckDraw;
+    [SerializeField] private Button botonResetCamera;
+    [SerializeField] private Button botonBoardView;
 
     [Header("Teclas asignadas")]
     private Key keyTurnCards = Key.G;
@@ -40,17 +45,40 @@ public class KeyboardManager : MonoBehaviour
     private Key keyConfirmConfirm = Key.C;
     private Key keyMenuBack = Key.V;
     private Key keyMenuNextTurn = Key.P;
+    private Key keyResetCamera = Key.P;
     private Key keyDeckBack = Key.V;
     private Key keyDeckDraw = Key.R;
+    private Key keyBoardView = Key.O;
 
     [Header("Teclas para acceso rápido a Deck y Menu")]
     private Key keyAccessDeck = Key.R;
     private Key keyAccessMenu = Key.E;
 
+    void Awake()
+    {
+        Instance = this;
+    }
+
     void Update()
     {
         if (Keyboard.current == null)
             return;
+
+        Vector2 movimiento = Vector2.zero;
+
+        if (Keyboard.current.upArrowKey.isPressed || (Keyboard.current.wKey != null && Keyboard.current.wKey.isPressed))
+            movimiento.y += 1f;
+
+        if (Keyboard.current.downArrowKey.isPressed || (Keyboard.current.sKey != null && Keyboard.current.sKey.isPressed))
+            movimiento.y -= 1f;
+
+        if (Keyboard.current.leftArrowKey.isPressed || (Keyboard.current.aKey != null && Keyboard.current.aKey.isPressed))
+            movimiento.x -= 1f;
+
+        if (Keyboard.current.rightArrowKey.isPressed || (Keyboard.current.dKey != null && Keyboard.current.dKey.isPressed))
+            movimiento.x += 1f;
+
+        movimientoCamara = movimiento;
 
         if (Keyboard.current[keyTurnCards].wasPressedThisFrame)
             InvokeButton(botonTurnCards);
@@ -102,6 +130,12 @@ public class KeyboardManager : MonoBehaviour
 
         if (Keyboard.current[keyDeckDraw].wasPressedThisFrame)
             InvokeButton(botonDeckDraw);
+
+        if (Keyboard.current[keyResetCamera].wasPressedThisFrame)
+            InvokeButton(botonResetCamera);
+
+        if (Keyboard.current[keyBoardView].wasPressedThisFrame)
+            InvokeButton(botonBoardView);
 
         // Acceso rápido a Deck y Menu
         if (Keyboard.current[keyAccessDeck].wasPressedThisFrame)

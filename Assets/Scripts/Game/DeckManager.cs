@@ -25,7 +25,7 @@ public class DeckManager : MonoBehaviour
     [SerializeField] private GameObject DeckP2;
     [SerializeField] private GameObject EnergyDeckP1;
     [SerializeField] private GameObject EnergyDeckP2;
-    public static DeckManager Instance; // Instancia del propio objeto para comunicarse con otros scripts
+    public static DeckManager Instance { get; private set; } // Instancia del propio objeto para comunicarse con otros scripts
 
     void Start()
     {
