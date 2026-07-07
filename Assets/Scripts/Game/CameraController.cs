@@ -125,22 +125,12 @@ public class CameraController : MonoBehaviour
             return;
 
         Card carta = hit.transform.GetComponent<Card>();
-
-        // Si se selecciona una carta resaltada en morado, se muestra en el visor central
-        if (carta != null && carta.casilla.GetColor() == Color.violet)
-        {
-            MostrarPanelSegunObjeto(null);
-            UIManager.visorCentral.sprite = carta.cardData.imagenCarta;
-            UIManager.visorCentral.gameObject.SetActive(true);
-            MantenerVisor();
-            return;
-        }
-
-        if (carta != null && !bloqueado)
+            
+        if (carta != null && (!bloqueado || carta.casilla.GetColor() == Color.violet))
             UIManager.SetCartaSeleccionada(carta); // Marca la carta como seleccionada
 
-        if (bloqueado && (carta == null || carta.clickableObject.propietarioP1 == TurnManager.turnoP1 || carta.casilla.GetColor() != Color.green))
-            return; // En la visión de tablero no se pueden clickar cartas del jugador actual o cartas que no estén resaltadas en verde
+        if (bloqueado && (carta == null || carta.clickableObject.propietarioP1 == TurnManager.turnoP1 || (carta.casilla.GetColor() != Color.green && carta.casilla.GetColor() != Color.violet)))
+            return; // En la visión de tablero no se pueden clickar cartas del jugador actual o cartas que no estén resaltadas en verde o violeta
 
         ClickableObject clickeable = hit.transform.GetComponent<ClickableObject>();
         if (clickeable == null)
@@ -173,6 +163,7 @@ public class CameraController : MonoBehaviour
         moverCamara = true;
         volverAPosicionOriginal = false;
         enVisionTablero = false;
+        botonVolverVisionTablero.SetActive(false);
         botonVerTablero.SetActive(false);
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
     }

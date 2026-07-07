@@ -81,7 +81,7 @@ public class Board : MonoBehaviour
         // Obtenemos la carta seleccionada para mover / atacar
         Card carta = UIManager.GetCartaSeleccionada();
 
-        if (casillaSeleccionada != null)
+        if (casillaSeleccionada != null && casillaSeleccionada.GetColor() != Color.violet)
         {
             if (!seleccionandoAtaque)
             { // Mover
@@ -325,6 +325,10 @@ public class Board : MonoBehaviour
         }
         else if (seleccionandoCasilla)
         { // Activa la visión de tablero si no lo estaba antes (al pulsar "volver" mirando un objeto clickable)
+            CameraController.Instance.VisionTablero(true);
+        }
+        else if (UIManager.GetCartaSeleccionada().casilla.GetColor() == Color.violet)
+        { // Si la casilla clickada está resaltada en violeta, vuelve a la observación del tablero
             CameraController.Instance.VisionTablero(true);
         }
     }
