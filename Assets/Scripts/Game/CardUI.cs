@@ -225,12 +225,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
             SpellCardData spellData = cartaPrefab.cardData as SpellCardData;
             if (spellData != null && spellData.requiereMonstruo)
             { // Si solo se puede lanzar el hechizo sobre un monstruo
-                // Resaltar casillas con monstruos enemigos, resto en gris
+                // Resaltar casillas con monstruos enemigos vulnerables, resto en gris
                 foreach (var cell in Board.Instance.cells)
                 {
                     if (cell.ocupada && cell.cartaActual != null && cell.cartaActual.cardData is MonsterCardData)
                     {
-                        cell.Resaltar(Color.lightBlue);
+                        bool vulnerable = SpellManager.EsObjetivoValido(cell.cartaActual);
+                        cell.Resaltar(vulnerable ? Color.lightBlue : Color.gray);
                     }
                     else
                     {
@@ -240,10 +241,14 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
             }
             else
             {
-                // Resaltar todo el tablero
+                // Para hechizos de área: resaltar todo pero mostrar en gris las cartas inmunes o invulnerables
                 foreach (var cell in Board.Instance.cells)
                 {
-                    cell.Resaltar(Color.lightBlue);
+                    if (cell.ocupada && cell.cartaActual != null &&
+                        PassiveAbility.EsInmuneTotalHechizos(cell.cartaActual))
+                        cell.SetColor(Color.gray); // Inmune o invulnerable: el hechizo no le afecta
+                    else
+                        cell.Resaltar(Color.lightBlue);
                 }
             }
             CameraController.Instance.VisionTablero(false);
@@ -282,7 +287,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                 {
                     casillaMarcable &= casilla != null && casilla.ocupada && casilla.cartaActual != null &&
                                        casilla.cartaActual.cardData is MonsterCardData &&
-                                       casilla.cartaActual.clickableObject != null;
+                                       casilla.cartaActual.clickableObject != null &&
+                                       SpellManager.EsObjetivoValido(casilla.cartaActual); // Descarta inmunes e invulnerables
                 }
             }
             else
@@ -295,7 +301,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                 if (casilla != casillaAnterior)
                 { // Actualiza la casilla seleccionada
                     if (casillaAnterior != null) // Restablece el color de la anterior casilla seleccionada
-                        casillaAnterior.Resaltar(Color.lightBlue);
+                        RestaurarCasilla(casillaAnterior);
 
                     LimpiarResaltadoArea();
                     casilla.Resaltar(Color.green); // Marca la nueva casilla seleccionada en verde
@@ -310,7 +316,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
             }
             else if (casillaAnterior != null && !casillaAnterior.bloqueado)
             { // Reestablece el color de la casilla seleccionada anteriormente (si no estaba bloqueada)
-                casillaAnterior.Resaltar(Color.lightBlue);
+                RestaurarCasilla(casillaAnterior);
                 LimpiarResaltadoArea();
                 casillaAnterior = null; // Ya no hay ninguna casilla seleccionada
             }
@@ -319,11 +325,23 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         { // No hay nada seleccionado
             if (casillaAnterior != null && !casillaAnterior.bloqueado)
             { // Reestablece el color de la casilla seleccionada anteriormente (si no estaba bloqueada)
-                casillaAnterior.Resaltar(Color.lightBlue);
+                RestaurarCasilla(casillaAnterior);
                 LimpiarResaltadoArea();
                 casillaAnterior = null; // Ya no hay ninguna casilla seleccionada
             }
         }
+    }
+
+    // Restaura el color de una casilla respetando la inmunidad (gris si es inmune, azul si no)
+    private void RestaurarCasilla(Cell casilla)
+    {
+        if (casilla == null || casilla.bloqueado) return;
+        bool esHechizo = cartaPrefab.cardData.tipo == CardType.Hechizo;
+        if (esHechizo && casilla.ocupada && casilla.cartaActual != null &&
+            PassiveAbility.EsInmuneTotalHechizos(casilla.cartaActual))
+            casilla.SetColor(Color.gray);
+        else
+            casilla.Resaltar(Color.lightBlue);
     }
 
     // Limpia el resaltado de las casillas del área seleccionada
@@ -331,7 +349,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     {
         foreach (Cell c in casillasAreaActual)
         {
-            if (c != null && c.GetColor() != Color.white) c.Resaltar(Color.lightBlue);
+            if (c != null && c.GetColor() != Color.white) RestaurarCasilla(c);
         }
         casillasAreaActual.Clear();
     }
@@ -357,11 +375,16 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                     Cell adyacente = Board.Instance.cells[nf, nc];
                     if (adyacente != null)
                     { // Si la casilla está ocupada y tiene una carta que se puede dañar, se resalta en naranja
+                        // Si la carta es inmune, permanece en gris
+                        if (adyacente.ocupada && adyacente.cartaActual != null &&
+                            PassiveAbility.EsInmuneTotalHechizos(adyacente.cartaActual))
+                            continue; // No añadir a casillasAreaActual para que al limpiar no se cambie
+
                         if (adyacente.ocupada && adyacente.cartaActual != null && adyacente.cartaActual.cardData is DamageableCardData)
                             adyacente.Resaltar(new Color(1f, 0.5f, 0f)); // Naranja
                         else
                             adyacente.Resaltar(Color.yellow); // Si no, se resalta en amarillo
-                        
+
                         casillasAreaActual.Add(adyacente);
                     }
                 }

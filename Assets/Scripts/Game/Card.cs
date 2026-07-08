@@ -61,18 +61,20 @@ public class SpellCardData : CardData
 [System.Serializable]
 public class DanyoEfecto
 { // Para efectos que hacen daño durante varios turnos
+    public string nombre; // Nombre del efecto
     public int danyo; // Daño que se hace por turno
     public int turnosRestantes; // Turnos restantes para que el efecto termine (-1 para infinito)
 
-    public DanyoEfecto(int danyo, int turnos)
+    public DanyoEfecto(string nombre, int danyo, int turnos)
     {
+        this.nombre = nombre;
         this.danyo = danyo;
         this.turnosRestantes = turnos;
     }
 
     public DanyoEfecto Clone()
     {
-        return new DanyoEfecto(danyo, turnosRestantes);
+        return new DanyoEfecto(nombre, danyo, turnosRestantes);
     }
 }
 
@@ -182,6 +184,7 @@ public class Card : MonoBehaviour
     [SerializeField] private TextMeshPro textoVelocidad; // Indica la velocidad de la carta (para monstruos)
     public GameObject background; // Fondo para que se vea bien textoVida
     public GameObject backgroundVelocidad; // Fondo para que se vea bien textoVelocidad
+    public PassiveAbility pasiva; // Habilidad pasiva única de la carta (null si no tiene)
     
     // Instancia una nueva carta a partir de los datos indicados
     public void Setup(CardData data)
@@ -208,6 +211,8 @@ public class Card : MonoBehaviour
     public void UpdateVida(int nuevaVida)
     {
         DamageableCardData data = cardData as DamageableCardData;
+        // Si la carta recibe daño y es invulnerable, ignorarlo
+        if (nuevaVida < data.vida && PassiveAbility.EsInvulnerableATodo(this)) return;
         data.vida = nuevaVida;
         textoVida.text = data.vida.ToString();
         if (data.vidaMaxima == nuevaVida)
@@ -235,6 +240,9 @@ public class Card : MonoBehaviour
     // Actualiza los efectos por turno activos
     public void UpdateEfectos()
     {
+        // Si la carta es invulnerable, los efectos de daño no se aplican
+        if (PassiveAbility.EsInvulnerableATodo(this)) return;
+
         if (cardData is DamageableCardData dData && dData.efectosDanyo.Count > 0)
         { // Si la carta tiene efectos de daño activos
             int danyoTotal = 0;

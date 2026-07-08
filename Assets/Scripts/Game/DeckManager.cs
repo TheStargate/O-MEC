@@ -637,28 +637,34 @@ public class DeckManager : MonoBehaviour
             CardUI nuevaCarta;
             if (TurnManager.turnoP1)
             {
-                if (deckP1.Count > 0)
+                for (int i = 0; i < 20; i++)
                 {
-                    nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-                    nuevaCarta.Setup(deckP1.Dequeue());
-                }
-                if (energyDeckP1.Count > 0)
-                {
-                    nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-                    nuevaCarta.Setup(energyDeckP1.Dequeue());
+                    if (deckP1.Count > 0)
+                    {
+                        nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+                        nuevaCarta.Setup(deckP1.Dequeue());
+                    }
+                    if (energyDeckP1.Count > 0)
+                    {
+                        nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+                        nuevaCarta.Setup(energyDeckP1.Dequeue());
+                    }
                 }
             }
             else
             {
-                if (deckP2.Count > 0)
+                for (int i = 0; i < 20; i++)
                 {
-                    nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
-                    nuevaCarta.Setup(deckP2.Dequeue());
-                }
-                if (energyDeckP2.Count > 0)
-                {
-                    nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
-                    nuevaCarta.Setup(energyDeckP2.Dequeue());
+                    if (deckP2.Count > 0)
+                    {
+                        nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
+                        nuevaCarta.Setup(deckP2.Dequeue());
+                    }
+                    if (energyDeckP2.Count > 0)
+                    {
+                        nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
+                        nuevaCarta.Setup(energyDeckP2.Dequeue());
+                    }
                 }
             }
 

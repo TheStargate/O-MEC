@@ -47,6 +47,9 @@ public class TurnManager : MonoBehaviour
                         carta.UpdateEfectos();
                         if (carta == null) continue; // La carta ha muerto, pasamos a la siguiente
 
+                        // Dispara la habilidad pasiva de inicio de turno
+                        carta.pasiva?.OnTurnoInicio();
+
                         if (carta.cardData is MonsterCardData mData && (mData.alcance <= 0 || mData.ataque <= 0) && mData.velocidad <= 0)
                             clickable.usado = true; // Si es un monstruo que no puede atacar ni moverse, no se puede usar
                         else if (carta.cardData is StructureCardData sData && (sData.alcance <= 0 || sData.ataque <= 0))

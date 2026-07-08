@@ -109,20 +109,55 @@ public class Board : MonoBehaviour
                     casillaSeleccionada.LiberarCasilla(false);
             }
             else
-            { // Atacar
+            { // Atacar o Curar
                 // Actualizar turno del último ataque
                 carta.clickableObject.ultimoAtaque = TurnManager.numTurno;
 
-                // Si es una estructura, marcar la carta como usada
-                if (carta.cardData is StructureCardData)
-                    carta.clickableObject.usar();
-
-                // Produce daño a la carta seleccionada para ser atacada
-                DamageableCardData cardData = casillaSeleccionada.cartaActual.cardData as DamageableCardData;
                 DamageableCardData cardDataAtacante = carta.cardData as DamageableCardData;
-                casillaSeleccionada.cartaActual.UpdateVida(cardData.vida -= cardDataAtacante.ataque);
-                if (cardData.vida <= 0)
-                    casillaSeleccionada.LiberarCasilla(false); // Destruye la carta si se queda sin vida
+                Card objetivo = casillaSeleccionada.cartaActual;
+
+                // Si el objetivo es un aliado, se cura en vez de atacar
+                bool esAccionCuracion = carta.pasiva != null && carta.pasiva.PuedeAtacarAliados && objetivo.clickableObject.propietarioP1 == TurnManager.turnoP1;
+
+                if (esAccionCuracion)
+                {
+                    // Curar: restaura vida al aliado según el ataque del curador
+                    if (objetivo.cardData is DamageableCardData dDataAliado)
+                    {
+                        int curacion   = cardDataAtacante?.ataque ?? 0;
+                        int nuevaVida  = Mathf.Min(dDataAliado.vida + curacion, dDataAliado.vidaMaxima);
+                        objetivo.UpdateVida(nuevaVida);
+                        Debug.Log($"[Pasiva] {carta.name} cura {curacion} PV a {objetivo.name}.");
+                    }
+                    carta.pasiva.OnDespuesDeAtacar(objetivo);
+                }
+                else
+                {
+                    // Atacar: se calcula el daño base y todos los modificadores ofensivos (bonus pasivos, herreria, rey cura...)
+                    DamageableCardData cardData = objetivo.cardData as DamageableCardData;
+                    int danyo = PassiveAbility.CalcularDanyoAtacante(carta, objetivo);
+                    // Reducción de daño del defensor
+                    danyo  = objetivo.pasiva?.OnRecibirDanyo(danyo) ?? danyo;
+                    // Invulnerabilidad absoluta (daño 0)
+                    if (PassiveAbility.EsInvulnerableATodo(objetivo)) danyo = 0;
+
+                    // Aplica el daño a la carta seleccionada
+                    if (cardData != null)
+                    {
+                        int nuevaVida = cardData.vida - danyo;
+                        if (nuevaVida <= 0)
+                            casillaSeleccionada.LiberarCasilla(false); // Destruye la carta si se queda sin vida
+                        else
+                            objetivo.UpdateVida(nuevaVida);
+                    }
+
+                    // Efectos secundarios de la habilidad pasiva del atacante (Mago en área, Arquero largo, Ninja 2 ataques...)
+                    carta.pasiva?.OnDespuesDeAtacar(objetivo);
+                }
+
+                // Las estructuras se marcan como usadas a no ser que la habilidad pasiva permita más ataques
+                if (carta.cardData is StructureCardData && carta.clickableObject.ultimoAtaque == TurnManager.numTurno)
+                    carta.clickableObject.usar();
             }
             if (carta.clickableObject.ultimoMovimiento == TurnManager.numTurno && carta.clickableObject.ultimoAtaque == TurnManager.numTurno)
                 carta.clickableObject.usar(); // Marca la carta como usada si no quedan acciones disponibles
@@ -183,13 +218,42 @@ public class Board : MonoBehaviour
                 int distancia = Mathf.Abs(row - origenRow) + Mathf.Abs(col - origenCol);
 
                 if (distancia <= cardData.alcance)
-                { 
-                    if (casilla.ocupada)
+                {
+                    if (casilla.ocupada && casilla.cartaActual != null)
                     {
-                        if ((row == origenRow && col == origenCol) || casilla.cartaActual.cardData.tipo == CardType.Trampa || casilla.cartaActual.clickableObject.propietarioP1 == TurnManager.turnoP1)
-                            casilla.SetColor(Color.red); // Marca en rojo si hay una trampa
+                        bool esAliado = casilla.cartaActual.clickableObject.propietarioP1 == TurnManager.turnoP1; // La carta seleccionada es aliada
+                        Card atacante = UIManager.GetCartaSeleccionada(); // Carta que se quiere mover/atacar
+
+                        if ((row == origenRow && col == origenCol) || casilla.cartaActual.cardData.tipo == CardType.Trampa)
+                            casilla.SetColor(Color.red); // Marca en rojo si es la misma casilla o está ocupada por una trampa
+
+                        else if (esAliado && (atacante.pasiva?.PuedeAtacarAliados ?? false))
+                        {
+                            // Solo se pueden curar monstruos aliados (no estructuras)
+                            if (casilla.cartaActual.cardData is MonsterCardData)
+                                casilla.SetColor(Color.orange); // Marca en naranja si hay un monstruo que se puede curar
+                            else
+                                casilla.SetColor(Color.red);
+                        }
+                        
+                        else if (!esAliado && (atacante.pasiva?.PuedeAtacarEnemigos ?? true))
+                        {
+                            // Comprueba restricciones de la pasiva defensora (dragones) y del atacante (torreta)
+                            bool defensaPuedeAtacarse = casilla.cartaActual.pasiva?.PuedeSerAtacadoPor(atacante) ?? true;
+                            bool atacantePuedeAtacar  = atacante.pasiva?.PuedeAtacar(casilla.cartaActual) ?? true;
+                            // Comprueba invulnerabilidad por Torre protectora
+                            bool invulnerable = PassiveAbility.EsInvulnerablePorTorreProtectora(casilla.cartaActual);
+                            // Comprueba si la casilla atacada es el castillo y si está protegido por un Castillo falso
+                            bool castilloProtegido = casilla.cartaActual.cardData.nombre == "Castillo" &&
+                                PassiveAbility.EsCastilloInvulnerable(casilla.cartaActual.clickableObject.propietarioP1);
+
+                            if (defensaPuedeAtacarse && atacantePuedeAtacar && !invulnerable && !castilloProtegido)
+                                casilla.SetColor(Color.orange); // Marca en naranja si hay una carta que se puede atacar
+                            else
+                                casilla.SetColor(Color.red); // Marca en rojo si no se puede atacar
+                        }
                         else
-                            casilla.SetColor(Color.orange); // Marca en naranja si hay una carta que se puede atacar
+                            casilla.SetColor(Color.red); // Marca en rojo si no se puede atacar
                     }
                     else
                         casilla.SetColor(Color.yellow); // Marca en amarillo si no hay ninguna carta para atacar
@@ -305,7 +369,7 @@ public class Board : MonoBehaviour
     }
 
     // Comprueba que no se salga del tablero
-    private bool EsCoordenadaValida(int row, int col)
+    public bool EsCoordenadaValida(int row, int col)
     {
         return row >= 0 && row < rows && col >= 0 && col < columns;
     }

@@ -129,8 +129,8 @@ public class CameraController : MonoBehaviour
         if (carta != null && (!bloqueado || carta.casilla.GetColor() == Color.violet))
             UIManager.SetCartaSeleccionada(carta); // Marca la carta como seleccionada
 
-        if (bloqueado && (carta == null || carta.clickableObject.propietarioP1 == TurnManager.turnoP1 || (carta.casilla.GetColor() != Color.green && carta.casilla.GetColor() != Color.violet)))
-            return; // En la visión de tablero no se pueden clickar cartas del jugador actual o cartas que no estén resaltadas en verde o violeta
+        if (bloqueado && (carta == null || (carta.casilla.GetColor() != Color.green && carta.casilla.GetColor() != Color.violet)))
+            return; // En la visión de tablero no se pueden clickar cartas que no estén resaltadas en verde o violeta
 
         ClickableObject clickeable = hit.transform.GetComponent<ClickableObject>();
         if (clickeable == null)
@@ -296,7 +296,11 @@ public class CameraController : MonoBehaviour
                     MonsterCardData data = carta.cardData as MonsterCardData;
                     panelMonstruo.transform.Find("Hability").gameObject.SetActive(true);
                     if (clickeable.ultimoAtaque < TurnManager.numTurno && !clickeable.usado && data.alcance > 0 && data.ataque > 0)
-                        panelMonstruo.transform.Find("Attack").gameObject.SetActive(true); // Muestra el botón de atacar si es posible
+                    {
+                        GameObject botonAtacar = panelMonstruo.transform.Find("Attack").gameObject;
+                        botonAtacar.SetActive(true); // Muestra el botón de atacar si es posible
+                        ActualizarTextoAtaque(botonAtacar, carta.pasiva);
+                    }
                     else
                         panelMonstruo.transform.Find("Attack").gameObject.SetActive(false);
                     if (clickeable.ultimoMovimiento < TurnManager.numTurno && !clickeable.usado && data.velocidad > 0)
@@ -312,7 +316,12 @@ public class CameraController : MonoBehaviour
                 { // Si la carta es del jugador actual, mostrar opciones disponibles para usarla
                     panelEstructura?.SetActive(true);
                     if (clickeable.ultimoAtaque < TurnManager.numTurno && !clickeable.usado)
-                        panelEstructura.transform.Find("Attack").gameObject.SetActive(true); // Muestra el botón de atacar si es posible
+                    {
+                        GameObject botonAtacar = panelEstructura.transform.Find("Attack").gameObject;
+                        botonAtacar.SetActive(true); // Muestra el botón de atacar si es posible
+                        Card carta = objetivoActual.GetComponent<Card>();
+                        ActualizarTextoAtaque(botonAtacar, carta.pasiva);
+                    }
                     else
                         panelEstructura.transform.Find("Attack").gameObject.SetActive(false);
                 }
@@ -339,7 +348,11 @@ public class CameraController : MonoBehaviour
                     MonsterCardData data = carta.cardData as MonsterCardData;
                     panelMonstruo.transform.Find("Hability").gameObject.SetActive(false);
                     if (clickeable.ultimoAtaque < TurnManager.numTurno && !clickeable.usado && data.alcance > 0 && data.ataque > 0)
-                        panelMonstruo.transform.Find("Attack").gameObject.SetActive(true);
+                    {
+                        GameObject botonAtacar = panelMonstruo.transform.Find("Attack").gameObject;
+                        botonAtacar.SetActive(true); // Muestra el botón de atacar si es posible
+                        ActualizarTextoAtaque(botonAtacar, carta.pasiva);
+                    }
                     else
                         panelMonstruo.transform.Find("Attack").gameObject.SetActive(false);
                     if (clickeable.ultimoMovimiento < TurnManager.numTurno && !clickeable.usado && data.velocidad > 0)
@@ -461,5 +474,16 @@ public class CameraController : MonoBehaviour
         volverAPosicionOriginal = false;
         enVisionTablero = false;
         MostrarPanelSegunObjeto(null);
+    }
+
+    // Actualiza el texto del botón "Atacar" según si la pasiva permite curar, atacar o ambas
+    private void ActualizarTextoAtaque(GameObject boton, PassiveAbility pasiva)
+    {
+        string texto = "Atacar";
+        if (pasiva != null && pasiva.PuedeAtacarAliados)
+            texto = pasiva.PuedeAtacarEnemigos ? "Atacar / Curar" : "Curar";
+
+        var textoBoton = boton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+        if (textoBoton != null) textoBoton.text = texto;
     }
 }

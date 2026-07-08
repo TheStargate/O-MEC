@@ -15,6 +15,17 @@ public abstract class SpellManager
     // Devuelve true si el lanzamiento fue válido (para que CardUI descarte la carta).
     public abstract bool Lanzar(Cell casilla);
 
+    // Comprueba si una carta puede ser afectada por hechizos.
+    public static bool EsObjetivoValido(Card carta)
+    {
+        if (carta == null) return false;
+        return !PassiveAbility.EsInmuneTotalHechizos(carta);
+    }
+
+    // Comprueba si el castillo indicado puede recibir daño (físico y hechizos).
+    protected static bool EsCastilloObjetivoValido(Card castillo)
+        => castillo != null && !PassiveAbility.EsInvulnerableATodo(castillo);
+
     // Devuelve el SpellManager correspondiente al nombre de la carta.
     public static SpellManager Crear(SpellCardData data)
     {
@@ -54,7 +65,7 @@ public class SpellLentitudEterna : SpellManager
         if (casilla == null || !casilla.ocupada) return false;
 
         Card carta = casilla.cartaActual;
-        if (carta == null) return false;
+        if (!EsObjetivoValido(carta)) return false;
 
         if (carta.cardData is MonsterCardData datos)
         {
@@ -77,11 +88,11 @@ public class SpellVirus : SpellManager
         if (casilla == null || !casilla.ocupada) return false;
 
         Card carta = casilla.cartaActual;
-        if (carta == null) return false;
+        if (!EsObjetivoValido(carta)) return false;
 
         if (carta.cardData is MonsterCardData datos)
         {
-            datos.efectosDanyo.Add(new DanyoEfecto(1, -1));
+            datos.efectosDanyo.Add(new DanyoEfecto("Virus", 1, -1));
             Debug.Log($"[Virus] {carta.name} infectado. Perderá 1 PV por turno.");
             return true;
         }
@@ -101,7 +112,7 @@ public class SpellDebilitar : SpellManager
         if (casilla == null || !casilla.ocupada) return false;
 
         Card carta = casilla.cartaActual;
-        if (carta == null) return false;
+        if (!EsObjetivoValido(carta)) return false;
 
         bool esEnemigo = carta.clickableObject.propietarioP1 == TurnManager.turnoP1;
         if (esEnemigo) return false;
@@ -127,7 +138,7 @@ public class SpellMuerteInstantanea : SpellManager
         if (casilla == null || !casilla.ocupada) return false;
 
         Card carta = casilla.cartaActual;
-        if (carta == null) return false;
+        if (!EsObjetivoValido(carta)) return false;
 
         if (!(carta.cardData is MonsterCardData))
         {
@@ -147,24 +158,25 @@ public class SpellMuerteInstantanea : SpellManager
 /// </summary>
 public class SpellFlechaArdiente : SpellManager
 {
-    private const int DANYO_INICIAL = 9;
-    private const int DANYO_QUEMADURA = 3;
-    private const int TURNOS_QUEMADURA = 5;
+    private const int DANYO_INICIAL     = 9;
+    private const int DANYO_QUEMADURA   = 3;
+    private const int TURNOS_QUEMADURA  = 5;
 
     public override bool Lanzar(Cell casilla)
     {
         if (casilla == null || !casilla.ocupada) return false;
 
         Card carta = casilla.cartaActual;
-        if (carta == null) return false;
+        if (!EsObjetivoValido(carta)) return false;
 
         if (carta.cardData is MonsterCardData datos)
         {
-            datos.efectosDanyo.Add(new DanyoEfecto(DANYO_QUEMADURA, TURNOS_QUEMADURA));
+            datos.efectosDanyo.Add(new DanyoEfecto("Quemadura", DANYO_QUEMADURA, TURNOS_QUEMADURA));
 
-            int nuevaVida = datos.vida - DANYO_INICIAL;
-            Debug.Log($"[Flecha ardiente] {carta.name} recibe {DANYO_INICIAL} de daño e inicia quemadura ({DANYO_QUEMADURA} PV x {TURNOS_QUEMADURA} turnos).");
-            
+            int danyoReal  = carta.pasiva?.OnRecibirDanyo(DANYO_INICIAL) ?? DANYO_INICIAL;
+            int nuevaVida  = datos.vida - danyoReal;
+            Debug.Log($"[Flecha ardiente] {carta.name} recibe {danyoReal} de daño e inicia quemadura ({DANYO_QUEMADURA} PV x {TURNOS_QUEMADURA} turnos).");
+
             if (nuevaVida <= 0)
             {
                 casilla.LiberarCasilla(false);
@@ -201,22 +213,23 @@ public class SpellCaos : SpellManager
 
             if (carta.cardData.nombre.Equals("Castillo"))
             {
+                // Respetar invulnerabilidad del castillo (Castillo falso)
+                if (!EsCastilloObjetivoValido(carta)) continue;
+
                 if (carta.cardData is DamageableCardData datos)
                 {
-                    int nuevaVida = datos.vida - 10;
+                    int danyoFinal = carta.pasiva?.OnRecibirDanyo(10) ?? 10;
+                    int nuevaVida  = datos.vida - danyoFinal;
                     if (nuevaVida <= 0)
-                    {
                         cell.LiberarCasilla(false);
-                    }
                     else
-                    {
                         carta.UpdateVida(nuevaVida);
-                    }
                     tieneEfecto = true;
                 }
             }
             else if (carta.cardData is MonsterCardData)
             {
+                if (!EsObjetivoValido(carta)) continue;
                 // Destruye todos los monstruos (tanto aliados como enemigos)
                 aDestruir.Add(cell);
                 tieneEfecto = true;
@@ -243,7 +256,7 @@ public class SpellIntercambio : SpellManager
         if (casilla == null || !casilla.ocupada) return false;
 
         Card carta = casilla.cartaActual;
-        if (carta == null) return false;
+        if (!EsObjetivoValido(carta)) return false;
 
         bool esEnemigo = carta.clickableObject.propietarioP1 == TurnManager.turnoP1;
         if (esEnemigo) return false;
@@ -299,21 +312,24 @@ public class SpellExplosivo : SpellManager
         if (!cell.ocupada || cell.cartaActual == null) return false;
 
         Card carta = cell.cartaActual;
+        bool esCastillo = carta.cardData.nombre.Equals("Castillo");
+
+        // Respetar invulnerabilidad del castillo y protección de Torre protectora
+        if (esCastillo && !EsCastilloObjetivoValido(carta)) return false;
+        if (!esCastillo && !EsObjetivoValido(carta))        return false;
+
         if (carta.cardData is DamageableCardData datos)
         {
-            int danyo = carta.cardData.nombre.Equals("Castillo") ? DANYO_CASTILLO : DANYO_NORMAL;
+            int danyo = esCastillo ? DANYO_CASTILLO : DANYO_NORMAL;
+            int danyoFinal = carta.pasiva?.OnRecibirDanyo(danyo) ?? danyo;
 
-            int nuevaVida = datos.vida - danyo;
-            Debug.Log($"[Explosivo] {carta.name} recibe {danyo} de daño.");
-            
+            int nuevaVida = datos.vida - danyoFinal;
+            Debug.Log($"[Explosivo] {carta.name} recibe {danyoFinal} de daño.");
+
             if (nuevaVida <= 0)
-            {
                 cell.LiberarCasilla(false);
-            }
             else
-            {
                 carta.UpdateVida(nuevaVida);
-            }
             return true;
         }
         return false;
@@ -361,33 +377,35 @@ public class SpellBolaFuego : SpellManager
         if (!cell.ocupada || cell.cartaActual == null) return false;
 
         Card carta = cell.cartaActual;
+        bool esCastillo = carta.cardData.nombre.Equals("Castillo");
+        bool esEdificio = carta.cardData is StructureCardData || esCastillo;
+
+        // Respetar invulnerabilidad del castillo y protección de Torre protectora
+        if (esCastillo && !EsCastilloObjetivoValido(carta)) return false;
+        if (!esCastillo && !EsObjetivoValido(carta))        return false;
+
         if (carta.cardData is DamageableCardData datos)
         {
             int danyoInicial = DANYO_GENERAL;
-            bool esCastillo = carta.cardData.nombre.Equals("Castillo");
-            bool esEdificio = carta.cardData is StructureCardData || esCastillo;
 
             if (esCastillo)
             {
                 danyoInicial = DANYO_CASTILLO_INICIAL;
-                datos.efectosDanyo.Add(new DanyoEfecto(DANYO_EXTRA_CASTILLO, 1));
+                datos.efectosDanyo.Add(new DanyoEfecto("Fuego a Castillo", DANYO_EXTRA_CASTILLO, 1));
             }
             else if (esEdificio)
             {
-                datos.efectosDanyo.Add(new DanyoEfecto(DANYO_EXTRA_EDIFICIOS, 1));
+                datos.efectosDanyo.Add(new DanyoEfecto("Fuego a Edificio", DANYO_EXTRA_EDIFICIOS, 1));
             }
 
-            int nuevaVida = datos.vida - danyoInicial;
-            Debug.Log($"[Bola de fuego] {carta.name} recibe {danyoInicial} de daño inicial.");
-            
+            int danyoReal = carta.pasiva?.OnRecibirDanyo(danyoInicial) ?? danyoInicial;
+            int nuevaVida = datos.vida - danyoReal;
+            Debug.Log($"[Bola de fuego] {carta.name} recibe {danyoReal} de daño inicial.");
+
             if (nuevaVida <= 0)
-            {
                 cell.LiberarCasilla(false);
-            }
             else
-            {
                 carta.UpdateVida(nuevaVida);
-            }
             return true;
         }
         return false;
@@ -415,9 +433,13 @@ public class SpellBombaNuclear : SpellManager
 
              if (carta.cardData.nombre.Equals("Castillo"))
              {
+                 // Respetar invulnerabilidad del castillo
+                 if (!EsCastilloObjetivoValido(carta)) continue;
+
                  if (carta.cardData is DamageableCardData datos)
                  {
-                     int nuevaVida = datos.vida - 10;
+                     int danyoFinal = carta.pasiva?.OnRecibirDanyo(10) ?? 10;
+                     int nuevaVida  = datos.vida - danyoFinal;
                      if (nuevaVida <= 0) cell.LiberarCasilla(false);
                      else carta.UpdateVida(nuevaVida);
                      tieneEfecto = true;
@@ -425,9 +447,11 @@ public class SpellBombaNuclear : SpellManager
              }
              else if (carta.cardData is StructureCardData)
              {
+                 if (!EsObjetivoValido(carta)) continue;
                  if (carta.cardData is DamageableCardData datos)
                  {
-                     int nuevaVida = datos.vida - 35;
+                     int danyoFinal = carta.pasiva?.OnRecibirDanyo(35) ?? 35;
+                     int nuevaVida  = datos.vida - danyoFinal;
                      if (nuevaVida <= 0) cell.LiberarCasilla(false);
                      else carta.UpdateVida(nuevaVida);
                      tieneEfecto = true;
@@ -478,17 +502,20 @@ public class SpellImpactoSolar : SpellManager
         if (!cell.ocupada || cell.cartaActual == null) return false;
 
         Card carta = cell.cartaActual;
+        bool esCastillo = carta.cardData.nombre.Equals("Castillo");
+
+        // Respetar invulnerabilidad del castillo y protección de Torre protectora
+        if (esCastillo && !EsCastilloObjetivoValido(carta)) return false;
+        if (!esCastillo && !EsObjetivoValido(carta))        return false;
+
         if (carta.cardData is DamageableCardData datos)
         {
-            int nuevaVida = datos.vida - danyo;
+            int danyoFinal = carta.pasiva?.OnRecibirDanyo(danyo) ?? danyo;
+            int nuevaVida  = datos.vida - danyoFinal;
             if (nuevaVida <= 0)
-            {
                 cell.LiberarCasilla(false);
-            }
             else
-            {
                 carta.UpdateVida(nuevaVida);
-            }
             return true;
         }
         return false;

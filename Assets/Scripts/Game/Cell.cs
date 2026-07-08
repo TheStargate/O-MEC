@@ -61,6 +61,9 @@ public class Cell : MonoBehaviour
         cartaActual.transform.SetParent(this.transform); // Establecer la carta como hijo de la casilla
         if (!TurnManager.turnoP1) cartaActual.transform.Rotate(0, 180, 0); // Rotar 180 grados si es del jugador 2
 
+        // Inicializar la habilidad pasiva de la carta (monstruos, legendarios y estructuras)
+        cartaActual.pasiva = PassiveAbility.Crear(cartaActual.cardData.nombre, cartaActual);
+        cartaActual.pasiva?.OnColocar();
 
         // Si se coloca el castillo, se dan 3 muros al jugador
         if (cartaActual.cardData.nombre.Equals("Castillo"))
@@ -76,6 +79,10 @@ public class Cell : MonoBehaviour
     {
         if (cartaActual != null)
         {
+            // Disparar la habilidad pasiva de muerte antes de destruir (solo si no se está moviendo la carta)
+            if (!movimiento)
+                cartaActual.pasiva?.OnMorir();
+
             // Si la carta se ha movido a otra casilla o es un Monstruo Legendario, no se pone en la pila de descartes
             if (cartaActual.cardData.tipo != CardType.MonstruoLeg && !movimiento)
                 DeckManager.Instance.descartar(cartaActual.cardData, cartaActual.clickableObject.propietarioP1);
