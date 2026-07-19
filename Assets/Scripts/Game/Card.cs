@@ -21,6 +21,8 @@ public class CardData
     public int costoEnergia;
     public Sprite imagenCarta;
     public Image imageUI; // Para mostrar la imagen de la carta en la UI
+    
+    public int costeHabilidad = 0;
 
     public virtual CardData Clone()
     {
@@ -108,7 +110,6 @@ public class DamageableCardData : CardData
 public class MonsterCardData : DamageableCardData
 {
     public int velocidad;
-    public int costeHabilidad;
 
     public override CardData Clone()
     {
@@ -132,8 +133,6 @@ public class MonsterCardData : DamageableCardData
 [System.Serializable]
 public class StructureCardData : DamageableCardData
 {
-    public int costeHabilidad;
-
     public override CardData Clone()
     {
         return new StructureCardData
@@ -155,7 +154,6 @@ public class StructureCardData : DamageableCardData
 [System.Serializable]
 public class TrapCardData : CardData
 {
-    public int costeHabilidad;
     public int ataque;
     public int turnos;
 
@@ -184,8 +182,29 @@ public class Card : MonoBehaviour
     [SerializeField] private TextMeshPro textoVelocidad; // Indica la velocidad de la carta (para monstruos)
     public GameObject background; // Fondo para que se vea bien textoVida
     public GameObject backgroundVelocidad; // Fondo para que se vea bien textoVelocidad
-    public PassiveAbility pasiva; // Habilidad pasiva única de la carta (null si no tiene)
+    public PassiveAbility pasiva; // Habilidad pasiva de la carta (null si no tiene)
+    public ActiveAbility activa; // Habilidad activa de la carta (null si no tiene)
     
+    // Estados otorgados por habilidades activas
+    public bool invulnerableHastaProximoTurno = false;
+    public bool inmuneHechizosIndefinido = false;
+
+    // Modificadores temporales para el próximo ataque
+    public int bonusDanyoProximoAtaque = 0;
+    public int multDanyoProximoAtaque = 1;
+    public bool areaProximoAtaque = false;
+    public bool espiaActivoProximoAtaque = false;
+
+    // Modificadores indefinidos
+    public int multDanyoIndefinido = 1; 
+
+    // Modificadores de trampas
+    public int bonusDanyoTrampa = 0;
+    public int multDanyoTrampa = 1;
+    public bool trampaAplicaAturdimiento = false;
+    public bool trampaAplicaRalentizacion = false;
+    public int trampaAplicaFuego = 0;
+
     // Instancia una nueva carta a partir de los datos indicados
     public void Setup(CardData data)
     {
@@ -202,10 +221,15 @@ public class Card : MonoBehaviour
             CardType.Hechizo => TipoObjeto.Hechizo,
             CardType.Trampa => TipoObjeto.Trampa,
             CardType.MonstruoLeg => TipoObjeto.MonstruoLeg,
-                CardType.Energia => TipoObjeto.Energia,
-                _ => TipoObjeto.Ninguno
-            };
-        }
+            CardType.Energia => TipoObjeto.Energia,
+            _ => TipoObjeto.Ninguno
+        };
+
+        // Inicializar Habilidad Activa
+        activa = ActiveAbility.Crear(this);
+        if (activa != null)
+            activa.Inicializar(this);
+    }
 
     // Actualiza y muestra la nueva vida de la carta
     public void UpdateVida(int nuevaVida)
@@ -219,6 +243,16 @@ public class Card : MonoBehaviour
             background.SetActive(false);
         else
             background.SetActive(true);
+    }
+
+    // Limpia los estados de habilidades activas que duran hasta el próximo turno
+    public void ResetBuffsTurno()
+    {
+        invulnerableHastaProximoTurno = false;
+        multDanyoProximoAtaque = 1;
+        bonusDanyoProximoAtaque = 0;
+        areaProximoAtaque = false;
+        espiaActivoProximoAtaque = false;
     }
 
     // Actualiza y muestra la nueva velocidad de la carta (para monstruos)

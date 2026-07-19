@@ -49,9 +49,9 @@ public class Cell : MonoBehaviour
     // Ocupa la casilla con la carta indicada
     public bool OcuparCasilla(Card cartaPrefab)
     {
-
         // Se comprueba si se puede poner la carta
-        if (ocupada || bloqueado) return false;
+        if (ocupada || bloqueado || cartaPrefab == null || cartaPrefab.cardData == null || cartaPrefab.clickableObject == null)
+            return false;
 
         // Se instancia la carta
         cartaActual = Instantiate(cartaPrefab, transform.position + Vector3.up * 0.1f, Quaternion.Euler(0, 180, 0));
@@ -64,6 +64,11 @@ public class Cell : MonoBehaviour
         // Inicializar la habilidad pasiva de la carta (monstruos, legendarios y estructuras)
         cartaActual.pasiva = PassiveAbility.Crear(cartaActual.cardData.nombre, cartaActual);
         cartaActual.pasiva?.OnColocar();
+
+        // Inicializar la habilidad activa de la carta
+        cartaActual.activa = ActiveAbility.Crear(cartaActual);
+        if (cartaActual.activa != null)
+            cartaActual.activa.Inicializar(cartaActual);
 
         // Si se coloca el castillo, se dan 3 muros al jugador
         if (cartaActual.cardData.nombre.Equals("Castillo"))
@@ -84,11 +89,12 @@ public class Cell : MonoBehaviour
                 cartaActual.pasiva?.OnMorir();
 
             // Si la carta se ha movido a otra casilla o es un Monstruo Legendario, no se pone en la pila de descartes
-            if (cartaActual.cardData.tipo != CardType.MonstruoLeg && !movimiento)
+            if (cartaActual.cardData != null && cartaActual.cardData.tipo != CardType.MonstruoLeg && !movimiento && cartaActual.clickableObject != null)
                 DeckManager.Instance.descartar(cartaActual.cardData, cartaActual.clickableObject.propietarioP1);
             Destroy(cartaActual.gameObject);
         }
 
         ocupada = false;
+        cartaActual = null;
     }
 }

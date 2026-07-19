@@ -445,6 +445,13 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                 UIManager.textoEnergia.SetText(TurnManager.energiaDisponible.ToString());
                 sorter.Resaltar();
             }
+
+            if (cartaPrefab.cardData.tipo == CardType.Hechizo && DeckManager.Instance != null)
+            {
+                // Los hechizos se consumen al tirarlos, hay que ponerlos en la pila de descartes
+                DeckManager.Instance.descartar(cartaPrefab.cardData, TurnManager.turnoP1);
+            }
+
             Destroy(this.gameObject); // Elimina la carta de la mano del jugador
             return;
         }

@@ -74,6 +74,10 @@ public abstract class PassiveAbility
     public static bool EsInvulnerableATodo(Card carta)
     {
         if (carta == null) return false;
+        
+        // Invulnerable hasta el próximo turno
+        if (carta.invulnerableHastaProximoTurno) return true;
+
         // Protegida por Torre protectora adyacente
         if (EsInvulnerablePorTorreProtectora(carta)) return true;
         // Castillo protegido por uno o más Castillos falsos
@@ -86,6 +90,9 @@ public abstract class PassiveAbility
     public static bool EsInmuneTotalHechizos(Card carta)
     {
         if (carta == null) return false;
+        
+        if (carta.inmuneHechizosIndefinido) return true;
+
         return EsInvulnerableATodo(carta) || EsInmuneHechizo(carta);
     }
 
@@ -125,6 +132,11 @@ public abstract class PassiveAbility
             if (cell.cartaActual.pasiva is PassiveHerreria)
                 bonus++;
         }
+        
+        // Aumento de daño por habilidad activa de la herrería (solo aplica si es el turno de ese jugador)
+        if (propietarioP1 == TurnManager.turnoP1)
+            bonus += TurnManager.bonusHerreriaActiva;
+        
         return bonus;
     }
 
@@ -165,6 +177,13 @@ public abstract class PassiveAbility
 
         // Multiplicador Rey cura (x3 si el atacante está adyacente a uno)
         danyo *= MultiplicadorDanyoReyCura(atacante);
+
+        // Bonus por habilidades activas
+        danyo += atacante.bonusDanyoProximoAtaque;
+        danyo *= atacante.multDanyoProximoAtaque;
+        danyo *= atacante.multDanyoIndefinido;
+        if (atacante.espiaActivoProximoAtaque && objetivo.cardData.nombre == "Castillo")
+            danyo *= 3;
 
         return danyo;
     }

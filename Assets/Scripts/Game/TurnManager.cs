@@ -6,6 +6,7 @@ public class TurnManager : MonoBehaviour
     public static bool robadoDisponible = false; // Indica si el jugador puede robar cartas
     public static int numTurno = 1; // Número de turnos que lleva la partida
     public static int energiaDisponible; // Energía lista para gastarse en el turno actual
+    public static int bonusHerreriaActiva = 0; // Bonus global temporal por habilidad activa de la Herrería
     private static ClickableObject[] clickables; // Lista de objetos clickables actualmente
 
     void Start()
@@ -22,6 +23,9 @@ public class TurnManager : MonoBehaviour
         turnoP1 = !turnoP1;
         energiaDisponible = 0;
 
+        // Reset de bonus globales que duran hasta el próximo turno
+        bonusHerreriaActiva = 0;
+
         // Adaptar los elementos de la interfaz al nuevo turno
         UIManager.visorCentral.gameObject.SetActive(false);
         UIManager.botonEnergia.gameObject.SetActive(false);
@@ -37,12 +41,17 @@ public class TurnManager : MonoBehaviour
             foreach (ClickableObject clickable in clickables)
             {
                 clickable.usado = false; // Permite que los objetos se puedan usar en el nuevo turno
+                clickable.habilidadUsada = false; // Permite que se vuelva a usar la habilidad activa en el nuevo turno
+
                 if (clickable.propietarioP1 == turnoP1)
                 {
                     // Actualiza las cartas del juguador que se pueden usar en el nuevo turno
                     Card carta = clickable.GetComponent<Card>();
                     if (carta != null)
                     {
+                        // Limpia estados temporales de habilidades
+                        carta.ResetBuffsTurno();
+
                         // Actualiza efectos por turno activos
                         carta.UpdateEfectos();
                         if (carta == null) continue; // La carta ha muerto, pasamos a la siguiente

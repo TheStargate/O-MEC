@@ -7,6 +7,7 @@ public class ClickableObject : MonoBehaviour
     public bool propietarioP1; // Jugador al que pertenece el objeto
     public int ultimoAtaque = 0; // Turno en el que la carta realizó el último ataque
     public int ultimoMovimiento = 0; // Turno en el que la carta realizó el último movimiento
+    public bool habilidadUsada = false; // Si la habilidad activa de la carta ya ha sido usada este turno
     public bool usado; // Si el objeto ya ha sido usado, no se resalta ni permite atacar o moverse
     public Renderer renderizador; // Para controlar la textura y resaltado del objeto
 

@@ -54,6 +54,7 @@
     <Compile Include="Assets\Scripts\Menu\MenuSystem.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_A.cs" />
     <Compile Include="Assets\Scripts\Game\CardUI.cs" />
+    <Compile Include="Assets\Scripts\Game\ActiveAbility.cs" />
     <Compile Include="Assets\Scripts\Game\UIManager.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark02.cs" />
     <Compile Include="Assets\Scripts\Game\PassiveAbility.cs" />

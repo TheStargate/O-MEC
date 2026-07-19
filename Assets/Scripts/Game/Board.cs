@@ -14,6 +14,8 @@ public class Board : MonoBehaviour
     public Cell[,] cells; // Casillas del tablero
     private bool seleccionandoCasilla = false; // Indica si se está seleccionando una casilla para moverse
     private bool seleccionandoAtaque = false; // Indica si se está seleccionando una casilla para atacar
+    private bool seleccionandoHabilidad = false; // Indica si se están seleccionando objetivos para utilizar una habilidad
+    private List<Card> objetivosHabilidad = new List<Card>(); // Objetivos seleccionados para aplicar la habilidad
     private Cell casillaOriginal; // Casilla que indica la carta que se ha seleccionado para moverse o atacar
     private Cell casillaSeleccionada; // Casilla objetivo donde mover o atacar
 
@@ -54,17 +56,44 @@ public class Board : MonoBehaviour
             {
                 Cell cell = hit.collider.GetComponent<Cell>();
                 Card card = hit.collider.GetComponent<Card>();
-                if (cell != null && (cell.GetColor() == Color.blue || cell.GetColor() == Color.orange))
-                { // Selecciona la casilla si está disponible para moverse / atacar (color azul / naranja)
-                    ActivarMovimiento(seleccionandoAtaque);
-                    cell.SetColor(Color.green);
-                    casillaSeleccionada = cell;
+
+                if (seleccionandoHabilidad)
+                { // Selecciona objetivos para aplicar una habilidad
+                    Card atacante = UIManager.GetCartaSeleccionada();
+                    if (atacante == null || atacante.activa == null || atacante.casilla == null)
+                        return;
+
+                    Card target = card ?? (cell != null && cell.ocupada ? cell.cartaActual : null);
+                    
+                    if (target != null && target.casilla != null && target.casilla.GetColor() == Color.orange)
+                    { // Selecciona objetivos disponibles para aplicar una habilidad
+                        if (!objetivosHabilidad.Contains(target))
+                        {
+                            objetivosHabilidad.Add(target);
+                            target.casilla.SetColor(Color.green);
+                            if (objetivosHabilidad.Count >= atacante.activa.NumObjetivos)
+                                ConfirmarHabilidad();
+                        }
+                    }
                 }
-                else if (card != null && card.casilla != null && card.casilla.GetColor() == Color.orange)
-                { // Selecciona la casilla si se selecciona una carta disponible para ser atacada
-                    ActivarMovimiento(seleccionandoAtaque);
-                    card.casilla.SetColor(Color.green);
-                    casillaSeleccionada = card.casilla;
+                else
+                {
+                    Card cartaSeleccionada = UIManager.GetCartaSeleccionada();
+                    if (cartaSeleccionada == null || cartaSeleccionada.casilla == null)
+                        return;
+
+                    if (cell != null && (cell.GetColor() == Color.blue || cell.GetColor() == Color.orange))
+                    { // Selecciona la casilla si está disponible para moverse / atacar (color azul / naranja)
+                        ActivarMovimiento(seleccionandoAtaque);
+                        cell.SetColor(Color.green);
+                        casillaSeleccionada = cell;
+                    }
+                    else if (card != null && card.casilla != null && card.casilla.GetColor() == Color.orange)
+                    { // Selecciona la casilla si se selecciona una carta disponible para ser atacada
+                        ActivarMovimiento(seleccionandoAtaque);
+                        card.casilla.SetColor(Color.green);
+                        casillaSeleccionada = card.casilla;
+                    }
                 }
             }
         }
@@ -81,7 +110,10 @@ public class Board : MonoBehaviour
         // Obtenemos la carta seleccionada para mover / atacar
         Card carta = UIManager.GetCartaSeleccionada();
 
-        if (casillaSeleccionada != null && casillaSeleccionada.GetColor() != Color.violet)
+        if (carta == null || carta.clickableObject == null || casillaSeleccionada == null || casillaOriginal == null)
+            return;
+
+        if (casillaSeleccionada.GetColor() != Color.violet)
         {
             if (!seleccionandoAtaque)
             { // Mover
@@ -89,24 +121,53 @@ public class Board : MonoBehaviour
                 carta.clickableObject.ultimoMovimiento = TurnManager.numTurno;
                 MonsterCardData mCardData = carta.cardData as MonsterCardData;
 
-                if (casillaSeleccionada.cartaActual.cardData.tipo == CardType.Trampa)
+                if (casillaSeleccionada.cartaActual != null && casillaSeleccionada.cartaActual.cardData != null &&
+                    casillaSeleccionada.cartaActual.cardData.tipo == CardType.Trampa)
                 { // Si se mueve la carta a una trampa, se activa y produce daño
-                    TrapCardData trapCardData = casillaSeleccionada.cartaActual.cardData as TrapCardData;
+                    Card trampa = casillaSeleccionada.cartaActual;
+                    TrapCardData trapCardData = trampa.cardData as TrapCardData;
                     UIManager.visorCentral.sprite = trapCardData.imagenCarta;
                     UIManager.visorCentral.gameObject.SetActive(true);
-                    carta.UpdateVida(mCardData.vida -= trapCardData.ataque);
+                    
+                    int danyoTrampa = trapCardData.ataque;
+                    danyoTrampa += trampa.bonusDanyoTrampa;
+                    danyoTrampa *= trampa.multDanyoTrampa;
+
+                    if (mCardData != null)
+                        carta.UpdateVida(mCardData.vida - danyoTrampa);
+
+                    // Efectos de habilidades activas de trampas
+                    if (trampa.trampaAplicaAturdimiento)
+                    { // Aturde la carta (no podrá moverse ni atacar durante 1 turno)
+                        carta.clickableObject.ultimoMovimiento = TurnManager.numTurno + 2;
+                        carta.clickableObject.ultimoAtaque = TurnManager.numTurno + 2;
+                    }
+                    if (trampa.trampaAplicaRalentizacion && mCardData != null)
+                    { // Ralentiza la carta (su velocidad se reduce 1 punto permanentemente)
+                        carta.UpdateVelocidad(mCardData.velocidad - 1);
+                    }
+                    if (trampa.trampaAplicaFuego > 0 && mCardData != null)
+                    { // Aplica fuego a la carta (1 punto de daño durante 3 turnos)
+                        mCardData.efectosDanyo.Add(new DanyoEfecto("Quemadura", trampa.trampaAplicaFuego, 3));
+                    }
+
                     casillaSeleccionada.LiberarCasilla(false);
                     CameraController.Instance.MantenerVisor(); // Mantenemos el visor para mostrar la trampa activada
                 }
 
                 // La carta se mueve (se ocupa la nueva casilla y se libera la anterior)
-                casillaSeleccionada.OcuparCasilla(carta);
-                casillaOriginal.LiberarCasilla(true);
-                carta = casillaSeleccionada.cartaActual;
-                carta.clickableObject.usado = false;
-                carta.clickableObject.actualizarResaltado();
-                if (mCardData.vida <= 0) // Comprueba si ha muerto por trampa
-                    casillaSeleccionada.LiberarCasilla(false);
+                if (casillaSeleccionada.OcuparCasilla(carta))
+                {
+                    casillaOriginal.LiberarCasilla(true);
+                    carta = casillaSeleccionada.cartaActual;
+                    if (carta != null && carta.clickableObject != null)
+                    {
+                        carta.clickableObject.usado = false;
+                        carta.clickableObject.actualizarResaltado();
+                    }
+                    if (mCardData != null && mCardData.vida <= 0) // Comprueba si ha muerto por trampa
+                        casillaSeleccionada.LiberarCasilla(false);
+                }
             }
             else
             { // Atacar o Curar
@@ -115,6 +176,9 @@ public class Board : MonoBehaviour
 
                 DamageableCardData cardDataAtacante = carta.cardData as DamageableCardData;
                 Card objetivo = casillaSeleccionada.cartaActual;
+
+                if (objetivo == null || objetivo.clickableObject == null)
+                    return;
 
                 // Si el objetivo es un aliado, se cura en vez de atacar
                 bool esAccionCuracion = carta.pasiva != null && carta.pasiva.PuedeAtacarAliados && objetivo.clickableObject.propietarioP1 == TurnManager.turnoP1;
@@ -153,14 +217,113 @@ public class Board : MonoBehaviour
 
                     // Efectos secundarios de la habilidad pasiva del atacante (Mago en área, Arquero largo, Ninja 2 ataques...)
                     carta.pasiva?.OnDespuesDeAtacar(objetivo);
+
+                    // Reseteo de buffs de habilidad activa que solo duran 1 ataque
+                    carta.multDanyoProximoAtaque = 1;
+                    carta.bonusDanyoProximoAtaque = 0;
+                    carta.areaProximoAtaque = false;
+                    carta.espiaActivoProximoAtaque = false;
                 }
 
                 // Las estructuras se marcan como usadas a no ser que la habilidad pasiva permita más ataques
                 if (carta.cardData is StructureCardData && carta.clickableObject.ultimoAtaque == TurnManager.numTurno)
                     carta.clickableObject.usar();
             }
-            if (carta.clickableObject.ultimoMovimiento == TurnManager.numTurno && carta.clickableObject.ultimoAtaque == TurnManager.numTurno)
+            if (carta.clickableObject != null && carta.clickableObject.ultimoMovimiento == TurnManager.numTurno && carta.clickableObject.ultimoAtaque == TurnManager.numTurno)
                 carta.clickableObject.usar(); // Marca la carta como usada si no quedan acciones disponibles
+        }
+    }
+
+    public void ActivarHabilidad()
+    {
+        Card carta = UIManager.GetCartaSeleccionada();
+        Debug.Log("[Habilidad] ActivarHabilidad invocada. Carta seleccionada: " + (carta != null ? carta.name : "null"));
+        
+        if (carta == null || carta.cardData == null || carta.casilla == null || carta.clickableObject == null) return;
+        
+        if (carta.activa == null)
+        {
+            Debug.Log("[Habilidad] La carta no tiene habilidad activa programada.");
+            return;
+        }
+
+        Debug.Log("[Habilidad] Habilidad encontrada: " + carta.activa.GetType().Name + ". Requiere objetivo: " + carta.activa.RequiereObjetivo + ". Coste: " + carta.cardData.costeHabilidad + ". Energía disponible: " + TurnManager.energiaDisponible);
+
+        if (TurnManager.energiaDisponible < carta.cardData.costeHabilidad)
+        {
+            Debug.Log("[Habilidad] Energía insuficiente");
+            return;
+        }
+
+        if (carta.activa.RequiereObjetivo)
+        {
+            Debug.Log("[Habilidad] Iniciando selección de objetivo...");
+            seleccionandoCasilla = true;
+            seleccionandoHabilidad = true;
+            casillaOriginal = carta.casilla;
+            objetivosHabilidad.Clear();
+            
+            // Colorear el tablero
+            for (int row = 0; row < rows; row++)
+            {
+                for (int col = 0; col < columns; col++)
+                {
+                    Cell casilla = cells[row, col];
+                    if (casilla.ocupada && casilla.cartaActual != null)
+                    {
+                        if (carta.activa.EsObjetivoValido(casilla.cartaActual))
+                            casilla.SetColor(Color.orange);
+                        else
+                            casilla.Bloquear();
+                    }
+                    else
+                    {
+                        casilla.Bloquear();
+                    }
+                }
+            }
+            CameraController.Instance.VisionTablero(true);
+        }
+        else
+        {
+            Debug.Log("[Habilidad] Ejecutando habilidad instantánea de " + carta.name);
+            TurnManager.energiaDisponible -= carta.cardData.costeHabilidad;
+            UIManager.textoEnergia.SetText(TurnManager.energiaDisponible.ToString());
+            
+            carta.clickableObject.habilidadUsada = true;
+            carta.activa.Ejecutar();
+            
+            if (carta.cardData.tipo == CardType.Trampa)
+                carta.UpdateTurnos();
+            CameraController.Instance.MostrarPanelSegunObjeto(carta.clickableObject);
+        }
+    }
+
+    public void ConfirmarHabilidad()
+    {
+        Debug.Log("[Habilidad] ConfirmarHabilidad invocada");
+        CameraController.Instance.enVisionTablero = true;
+        DesactivarMovimiento();
+        CameraController.Instance.enVisionTablero = false;
+
+        Card carta = UIManager.GetCartaSeleccionada();
+        if (carta != null && carta.activa != null && carta.cardData != null && objetivosHabilidad.Count >= carta.activa.NumObjetivos)
+        {
+            Debug.Log("[Habilidad] Confirmando habilidad con objetivos. Cantidad de objetivos elegidos: " + objetivosHabilidad.Count);
+            TurnManager.energiaDisponible -= carta.cardData.costeHabilidad;
+            UIManager.textoEnergia.SetText(TurnManager.energiaDisponible.ToString());
+            
+            carta.clickableObject.habilidadUsada = true;
+            carta.activa.Ejecutar(new List<Card>(objetivosHabilidad));
+
+            if (carta.cardData.tipo == CardType.Trampa)
+                carta.UpdateTurnos();
+
+            CameraController.Instance.MostrarPanelSegunObjeto(carta.clickableObject);
+        }
+        else
+        {
+            Debug.Log("[Habilidad] No se cumplen las condiciones para confirmar habilidad");
         }
     }
 
@@ -185,9 +348,12 @@ public class Board : MonoBehaviour
         seleccionandoAtaque = ataque;
         casillaSeleccionada = null;
 
-        // Establece la casilla seleccionada originalmente
-        casillaOriginal = UIManager.GetCartaSeleccionada().casilla;
+        Card cartaSeleccionada = UIManager.GetCartaSeleccionada();
+        if (cartaSeleccionada == null || cartaSeleccionada.casilla == null || cartaSeleccionada.cardData == null)
+            return;
 
+        // Establece la casilla seleccionada originalmente
+        casillaOriginal = cartaSeleccionada.casilla;
 
         // Según si se quiere mover / atacar se calcula una distancia distinta
         if (ataque)
@@ -200,13 +366,19 @@ public class Board : MonoBehaviour
     // Calcula la distancia Manhattan a partir de los datos de casillaOriginal
     private void DistanciaManhattan()
     {
+        if (casillaOriginal == null)
+            return;
+
         // Obtener coordenadas de la casilla origen
         int origenRow = casillaOriginal.row;
         int origenCol = casillaOriginal.col;
 
+        Card cartaSeleccionada = UIManager.GetCartaSeleccionada();
+        if (cartaSeleccionada == null || cartaSeleccionada.cardData == null)
+            return;
 
         // Datos de la carta seleccionada
-        DamageableCardData cardData = UIManager.GetCartaSeleccionada().cardData as DamageableCardData;
+        DamageableCardData cardData = cartaSeleccionada.cardData as DamageableCardData;
 
         for (int row = 0; row < rows; row++)
         {
@@ -222,7 +394,7 @@ public class Board : MonoBehaviour
                     if (casilla.ocupada && casilla.cartaActual != null)
                     {
                         bool esAliado = casilla.cartaActual.clickableObject.propietarioP1 == TurnManager.turnoP1; // La carta seleccionada es aliada
-                        Card atacante = UIManager.GetCartaSeleccionada(); // Carta que se quiere mover/atacar
+                        Card atacante = cartaSeleccionada; // Carta que se quiere mover/atacar
 
                         if ((row == origenRow && col == origenCol) || casilla.cartaActual.cardData.tipo == CardType.Trampa)
                             casilla.SetColor(Color.red); // Marca en rojo si es la misma casilla o está ocupada por una trampa
@@ -296,8 +468,12 @@ public class Board : MonoBehaviour
             }
         }
 
+        Card cartaSeleccionada = UIManager.GetCartaSeleccionada();
+        if (cartaSeleccionada == null || cartaSeleccionada.cardData == null || casillaOriginal == null)
+            return;
+
         // Datos de la carta seleccionada para moverse
-        MonsterCardData monsterData = UIManager.GetCartaSeleccionada().cardData as MonsterCardData;
+        MonsterCardData monsterData = cartaSeleccionada.cardData as MonsterCardData;
 
         // Calcula la distancia BFS con una cola y marcando las visitadas
         Queue<(Cell cell, int distancia)> cola = new Queue<(Cell, int)>();
@@ -381,6 +557,8 @@ public class Board : MonoBehaviour
         if (CameraController.Instance.enVisionTablero)
         {
             seleccionandoCasilla = false;
+            seleccionandoHabilidad = false;
+            objetivosHabilidad.Clear();
 
             foreach (Cell casilla in cells)
             {
@@ -391,9 +569,13 @@ public class Board : MonoBehaviour
         { // Activa la visión de tablero si no lo estaba antes (al pulsar "volver" mirando un objeto clickable)
             CameraController.Instance.VisionTablero(true);
         }
-        else if (UIManager.GetCartaSeleccionada().casilla.GetColor() == Color.violet)
-        { // Si la casilla clickada está resaltada en violeta, vuelve a la observación del tablero
-            CameraController.Instance.VisionTablero(true);
+        else
+        {
+            Card cartaSeleccionada = UIManager.GetCartaSeleccionada();
+            if (cartaSeleccionada != null && cartaSeleccionada.casilla != null && cartaSeleccionada.casilla.GetColor() == Color.violet)
+            { // Si la casilla clickada está resaltada en violeta, vuelve a la observación del tablero
+                CameraController.Instance.VisionTablero(true);
+            }
         }
     }
 }

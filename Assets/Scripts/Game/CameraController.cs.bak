@@ -270,7 +270,7 @@ public class CameraController : MonoBehaviour
     }
 
     // Muestra el panel del objeto clickable seleccionado (o ninguno si se indica null)
-    public void MostrarPanelSegunObjeto(ClickableObject clickeable)
+    void MostrarPanelSegunObjeto(ClickableObject clickeable)
     {
         // Oculta todos
         panelMonstruo?.SetActive(false);
@@ -297,9 +297,13 @@ public class CameraController : MonoBehaviour
                     
                     GameObject botonHabilidad = panelMonstruo.transform.Find("Hability").gameObject;
                     if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    {
                         botonHabilidad.SetActive(true);
+
+                    }
                     else
                         botonHabilidad.SetActive(false);
+
                     if (clickeable.ultimoAtaque < TurnManager.numTurno && !clickeable.usado && data.alcance > 0 && data.ataque > 0)
                     {
                         GameObject botonAtacar = panelMonstruo.transform.Find("Attack").gameObject;
@@ -322,12 +326,16 @@ public class CameraController : MonoBehaviour
                     panelEstructura?.SetActive(true);
                     Card carta = objetivoActual.GetComponent<Card>();
                     StructureCardData data = carta.cardData as StructureCardData;
-                    
+
                     GameObject botonHabilidad = panelEstructura.transform.Find("Hability").gameObject;
                     if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    {
                         botonHabilidad.SetActive(true);
+
+                    }
                     else
                         botonHabilidad.SetActive(false);
+
                     if (clickeable.ultimoAtaque < TurnManager.numTurno && !clickeable.usado)
                     {
                         GameObject botonAtacar = panelEstructura.transform.Find("Attack").gameObject;
@@ -352,10 +360,13 @@ public class CameraController : MonoBehaviour
                     panelTrampa?.SetActive(true);
                     Card carta = objetivoActual.GetComponent<Card>();
                     TrapCardData data = carta.cardData as TrapCardData;
-                    
+
                     GameObject botonHabilidad = panelTrampa.transform.Find("Hability").gameObject;
                     if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    {
                         botonHabilidad.SetActive(true);
+
+                    }
                     else
                         botonHabilidad.SetActive(false);
                 }
@@ -371,9 +382,13 @@ public class CameraController : MonoBehaviour
                     
                     GameObject botonHabilidad = panelMonstruo.transform.Find("Hability").gameObject;
                     if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    {
                         botonHabilidad.SetActive(true);
+
+                    }
                     else
                         botonHabilidad.SetActive(false);
+
                     if (clickeable.ultimoAtaque < TurnManager.numTurno && !clickeable.usado && data.alcance > 0 && data.ataque > 0)
                     {
                         GameObject botonAtacar = panelMonstruo.transform.Find("Attack").gameObject;
@@ -503,14 +518,198 @@ public class CameraController : MonoBehaviour
         MostrarPanelSegunObjeto(null);
     }
 
-    // Actualiza el texto del botón "Atacar" según si la pasiva permite curar, atacar o ambas
-    private void ActualizarTextoAtaque(GameObject boton, PassiveAbility pasiva)
-    {
-        string texto = "Atacar";
-        if (pasiva != null && pasiva.PuedeAtacarAliados)
-            texto = pasiva.PuedeAtacarEnemigos ? "Atacar / Curar" : "Curar";
+                    panelEstructura?.SetActive(true);
+                    Card carta = objetivoActual.GetComponent<Card>();
+                    StructureCardData data = carta.cardData as StructureCardData;
 
-        var textoBoton = boton.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-        if (textoBoton != null) textoBoton.text = texto;
+                    GameObject botonHabilidad = panelEstructura.transform.Find("Hability").gameObject;
+                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    {
+                        botonHabilidad.SetActive(true);
+
+                    }
+                    else
+                        botonHabilidad.SetActive(false);
+
+                    if (clickeable.ultimoAtaque < TurnManager.numTurno && !clickeable.usado)
+                    {
+                        GameObject botonAtacar = panelEstructura.transform.Find("Attack").gameObject;
+                        botonAtacar.SetActive(true); // Muestra el botón de atacar si es posible
+                        ActualizarTextoAtaque(botonAtacar, carta.pasiva);
+                    }
+                    else
+                        panelEstructura.transform.Find("Attack").gameObject.SetActive(false);
+                }
+                else
+                    panelConfirmar?.SetActive(true);
+                break;
+            case TipoObjeto.Hechizo:
+                if (TurnManager.turnoP1 == clickeable.propietarioP1)
+                    panelHechizo?.SetActive(true);
+                else
+                    panelConfirmar?.SetActive(true);
+                break;
+            case TipoObjeto.Trampa:
+                if (TurnManager.turnoP1 == clickeable.propietarioP1)
+                {
+                    panelTrampa?.SetActive(true);
+                    Card carta = objetivoActual.GetComponent<Card>();
+                    TrapCardData data = carta.cardData as TrapCardData;
+
+                    GameObject botonHabilidad = panelTrampa.transform.Find("Hability").gameObject;
+                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    {
+                        botonHabilidad.SetActive(true);
+
+                    }
+                    else
+                        botonHabilidad.SetActive(false);
+                }
+                else
+                    panelConfirmar?.SetActive(true);
+                break;
+            case TipoObjeto.MonstruoLeg:
+                if (TurnManager.turnoP1 == clickeable.propietarioP1)
+                {
+                    panelMonstruo?.SetActive(true);
+                    Card carta = objetivoActual.GetComponent<Card>();
+                    MonsterCardData data = carta.cardData as MonsterCardData;
+                    
+                    GameObject botonHabilidad = panelMonstruo.transform.Find("Hability").gameObject;
+                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    {
+                        botonHabilidad.SetActive(true);
+
+                    }
+                    else
+                        botonHabilidad.SetActive(false);
+
+                    if (clickeable.ultimoAtaque < TurnManager.numTurno && !clickeable.usado && data.alcance > 0 && data.ataque > 0)
+                    {
+                        GameObject botonAtacar = panelMonstruo.transform.Find("Attack").gameObject;
+                        botonAtacar.SetActive(true); // Muestra el botón de atacar si es posible
+                        ActualizarTextoAtaque(botonAtacar, carta.pasiva);
+                    }
+                    else
+                        panelMonstruo.transform.Find("Attack").gameObject.SetActive(false);
+                    if (clickeable.ultimoMovimiento < TurnManager.numTurno && !clickeable.usado && data.velocidad > 0)
+                        panelMonstruo.transform.Find("Move").gameObject.SetActive(true);
+                    else
+                        panelMonstruo.transform.Find("Move").gameObject.SetActive(false);
+                }
+                else
+                    panelConfirmar?.SetActive(true);
+                break;
+            case TipoObjeto.Energia:
+                if (TurnManager.turnoP1 == clickeable.propietarioP1)
+                    panelEnergia?.SetActive(true);
+                else
+                    panelConfirmar?.SetActive(true);
+                break;
+            case TipoObjeto.Baraja:
+                panelBaraja?.SetActive(true);
+                break;
+            case TipoObjeto.Menu:
+                panelMenu?.SetActive(true);
+                break;
+        }
+    }
+
+    // Pone la cámara en visión completa del tablero.
+    // mostrarPanel: si es false, la cámara se mueve sin bloquear ni mostrar panelConfirmar al llegar
+    public void VisionTablero(bool mostrarPanel = true)
+    {
+        enVisionTablero = true;
+        bloqueado = mostrarPanel;
+
+        objetivoPosicion = new Vector3(0, 50, 50);
+        if (TurnManager.turnoP1)
+            objetivoRotacion = Quaternion.Euler(90f, 0f, 0f);
+        else
+            objetivoRotacion = Quaternion.Euler(90f, 0f, 180f);
+
+        moverCamara = true;
+        volverAPosicionOriginal = false;
+        botonVerTablero.SetActive(!enVisionTablero);
+
+        MostrarPanelSegunObjeto(null); // No se muestra ningún panel
+    }
+    
+    // Muestra el visor central y pone en pausa el juego
+    public void MantenerVisor()
+    {
+        pausado = true;
+        Time.timeScale = 0f;
+        botonGirar.SetActive(false);
+        panelPausa.SetActive(true);
+    }
+
+    // Oculta el visor central y quita la pausa del juego
+    public void OcultarVisor()
+    {
+        UIManager.visorCentral.gameObject.SetActive(false);
+        pausado = false;
+        Time.timeScale = 1f;
+        botonGirar.SetActive(true);
+        panelPausa.SetActive(false);
+    }
+
+    // Mueve la cámara a la baraja según el turno actual
+    public void MoverAlDeck()
+    {
+        ClickableObject deckActual = TurnManager.turnoP1 ? deckP1 : deckP2;
+        if (deckActual == null)
+            return;
+
+        // Valida que se puede acceder a la baraja
+        if (!TurnManager.robadoDisponible)
+            return;
+
+        objetivoActual = deckActual.transform;
+
+        // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
+        Vector3 offset = deckActual.offsetDesdeEsteObjeto;
+        if (!deckActual.propietarioP1)
+            offset.z *= -1;
+
+        objetivoPosicion = objetivoActual.position + offset;
+        Vector3 direccion = (objetivoActual.position - objetivoPosicion).normalized;
+        objetivoRotacion = Quaternion.LookRotation(direccion);
+
+        moverCamara = true;
+        volverAPosicionOriginal = false;
+        enVisionTablero = false;
+        MostrarPanelSegunObjeto(null);
+    }
+
+    // Mueve la cámara al Menu según el turno actual
+    public void MoverAlMenu()
+    {
+        ClickableObject menuActual = TurnManager.turnoP1 ? menuP1 : menuP2;
+        if (menuActual == null)
+            return;
+
+        // Valida que se puede acceder al menú
+        if (TurnManager.numTurno <= 2)
+        {
+            if ((TurnManager.turnoP1 && handPanelP1.childCount > 0) || (!TurnManager.turnoP1 && handPanelP2.childCount > 0))
+                return;
+        }
+
+        objetivoActual = menuActual.transform;
+
+        // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
+        Vector3 offset = menuActual.offsetDesdeEsteObjeto;
+        if (!menuActual.propietarioP1)
+            offset.z *= -1;
+
+        objetivoPosicion = objetivoActual.position + offset;
+        Vector3 direccion = (objetivoActual.position - objetivoPosicion).normalized;
+        objetivoRotacion = Quaternion.LookRotation(direccion);
+
+        moverCamara = true;
+        volverAPosicionOriginal = false;
+        enVisionTablero = false;
+        MostrarPanelSegunObjeto(null);
     }
 }

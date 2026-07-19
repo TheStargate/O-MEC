@@ -1757,6 +1757,8 @@ MonoBehaviour:
   spacingZ: 5
   cellPrefab: {fileID: 6313592358896483239, guid: 2f6fbbcf2c4471646b95f5b84ac67367, type: 3}
   UIManager: {fileID: 129566634}
+  bonusHerreriaActivaP1: 0
+  bonusHerreriaActivaP2: 0
 --- !u!64 &492886339
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -2444,6 +2446,7 @@ MonoBehaviour:
   propietarioP1: 1
   ultimoAtaque: 0
   ultimoMovimiento: 0
+  habilidadUsada: 0
   usado: 0
   renderizador: {fileID: 0}
 --- !u!65 &591845809
@@ -3936,6 +3939,7 @@ MonoBehaviour:
   propietarioP1: 0
   ultimoAtaque: 0
   ultimoMovimiento: 0
+  habilidadUsada: 0
   usado: 0
   renderizador: {fileID: 0}
 --- !u!65 &961563051
@@ -5860,6 +5864,7 @@ MonoBehaviour:
   propietarioP1: 1
   ultimoAtaque: 0
   ultimoMovimiento: 0
+  habilidadUsada: 0
   usado: 0
   renderizador: {fileID: 0}
 --- !u!65 &1462593111
@@ -6269,6 +6274,7 @@ MonoBehaviour:
   propietarioP1: 0
   ultimoAtaque: 0
   ultimoMovimiento: 0
+  habilidadUsada: 0
   usado: 0
   renderizador: {fileID: 0}
 --- !u!65 &1527500594
@@ -6763,7 +6769,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1678938530}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 492886338}
+        m_TargetAssemblyTypeName: Board, Assembly-CSharp
+        m_MethodName: ActivarHabilidad
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1678938530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7189,7 +7207,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1846052129}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 492886338}
+        m_TargetAssemblyTypeName: Board, Assembly-CSharp
+        m_MethodName: ActivarHabilidad
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1846052129
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7410,6 +7440,7 @@ MonoBehaviour:
   propietarioP1: 0
   ultimoAtaque: 0
   ultimoMovimiento: 0
+  habilidadUsada: 0
   usado: 0
   renderizador: {fileID: 0}
 --- !u!65 &1885024146
@@ -8475,6 +8506,7 @@ MonoBehaviour:
   propietarioP1: 1
   ultimoAtaque: 0
   ultimoMovimiento: 0
+  habilidadUsada: 0
   usado: 0
   renderizador: {fileID: 0}
 --- !u!1 &2080099835
