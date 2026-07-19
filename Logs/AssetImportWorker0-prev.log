@@ -28,6 +28,7 @@ AssetImport
 Successfully changed project path to: C:/Users/JaumeJH/O;MEC
 C:/Users/JaumeJH/O;MEC
 [UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
     "memorysetup-allocator-temp-initial-block-size-worker=262144"
     "memorysetup-bucket-allocator-granularity=16"
     "memorysetup-bucket-allocator-bucket-count=8"

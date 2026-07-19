@@ -41,7 +41,6 @@ public class TurnManager : MonoBehaviour
             foreach (ClickableObject clickable in clickables)
             {
                 clickable.usado = false; // Permite que los objetos se puedan usar en el nuevo turno
-                clickable.habilidadUsada = false; // Permite que se vuelva a usar la habilidad activa en el nuevo turno
 
                 if (clickable.propietarioP1 == turnoP1)
                 {

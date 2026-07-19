@@ -66,15 +66,18 @@ public class Cell : MonoBehaviour
         cartaActual.pasiva?.OnColocar();
 
         // Inicializar la habilidad activa de la carta
-        cartaActual.activa = ActiveAbility.Crear(cartaActual);
-        if (cartaActual.activa != null)
-            cartaActual.activa.Inicializar(cartaActual);
+        cartaActual.activa = ActiveAbility.Crear(cartaActual.cardData.nombre, cartaActual);
+
+        // Guardar el turno en el que se colocó la carta
+        if (cartaActual.clickableObject != null)
+            cartaActual.clickableObject.turnoColocado = TurnManager.numTurno;
 
         // Si se coloca el castillo, se dan 3 muros al jugador
         if (cartaActual.cardData.nombre.Equals("Castillo"))
             DeckManager.Instance.SpawnWalls();
 
         ocupada = true;
+        cartaActual.RefrescarAtaqueUI();
 
         return true;
     }

@@ -7,7 +7,8 @@ public class ClickableObject : MonoBehaviour
     public bool propietarioP1; // Jugador al que pertenece el objeto
     public int ultimoAtaque = 0; // Turno en el que la carta realizó el último ataque
     public int ultimoMovimiento = 0; // Turno en el que la carta realizó el último movimiento
-    public bool habilidadUsada = false; // Si la habilidad activa de la carta ya ha sido usada este turno
+    public int turnoColocado = 0; // Turno en el que la carta fue colocada en el tablero
+    public bool habilidadUsada = false; // Si la habilidad activa de la carta ya ha sido usada
     public bool usado; // Si el objeto ya ha sido usado, no se resalta ni permite atacar o moverse
     public Renderer renderizador; // Para controlar la textura y resaltado del objeto
 
@@ -37,8 +38,19 @@ public class ClickableObject : MonoBehaviour
                 renderizador.material.color = Color.lightPink;
         }
         // Resalta las cartas del jugador actual en blanco (o en gris si no se pueden usar)
-        else if (usado || (tipoObjeto == TipoObjeto.Baraja && propietarioP1 != TurnManager.turnoP1))
+        else if (tipoObjeto == TipoObjeto.Baraja && propietarioP1 != TurnManager.turnoP1)
             renderizador.material.color = Color.gray;
+        else if (usado)
+        {
+            // Aunque esté "usada", puede seguir sin estar gris si su habilidad activa sigue disponible
+            Card carta = GetComponent<Card>();
+            bool puedeUsarHabilidad = carta != null &&
+                                      carta.activa != null &&
+                                      !habilidadUsada &&
+                                      turnoColocado < TurnManager.numTurno && // No puede actuar el turno en que fue colocada
+                                      carta.cardData.costeHabilidad <= TurnManager.energiaDisponible;
+            renderizador.material.color = puedeUsarHabilidad ? Color.white : Color.gray;
+        }
         else
             renderizador.material.color = Color.white;
     }

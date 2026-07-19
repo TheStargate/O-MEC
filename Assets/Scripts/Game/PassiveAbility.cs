@@ -19,7 +19,7 @@ using System.Collections.Generic;
 // ─────────────────────────────────────────────────────────────────────────────
 public abstract class PassiveAbility
 {
-    public Card portador; // La carta a la que pertenece esta pasiva.
+    public Card portador; // La carta a la que pertenece esta habilidad pasiva.
 
     public virtual void OnColocar()                               { }
     public virtual void OnTurnoInicio()                          { }
@@ -85,8 +85,15 @@ public abstract class PassiveAbility
         return false;
     }
 
+    /// <summary>Aplica la inmunidad a hechizos indefinida otorgada por habilidades como Cura protector.</summary>
+    public static void AplicarInmunidadHechizosIndefinida(Card carta)
+    {
+        if (carta == null) return;
+        carta.inmuneHechizosIndefinido = true;
+    }
+
     /// <summary>Devuelve true si la carta es inmune a hechizos por cualquier motivo
-    /// (Torre protectora, Castillo falso o Rey cura).</summary>
+    /// (Torre protectora, Castillo falso, Rey cura o efectos indefinidos como Cura protector).</summary>
     public static bool EsInmuneTotalHechizos(Card carta)
     {
         if (carta == null) return false;
@@ -110,6 +117,7 @@ public abstract class PassiveAbility
     public static int BonusDanyoEstructuras(bool propietarioP1)
     {
         int bonus = 0;
+        if (Board.Instance == null || Board.Instance.cells == null) return 0;
         foreach (Cell cell in Board.Instance.cells)
         {
             if (!cell.ocupada || cell.cartaActual == null) continue;
@@ -125,18 +133,20 @@ public abstract class PassiveAbility
     public static int BonusDanyoMonstruos(bool propietarioP1)
     {
         int bonus = 0;
+        if (Board.Instance == null || Board.Instance.cells == null) return 0;
         foreach (Cell cell in Board.Instance.cells)
         {
             if (!cell.ocupada || cell.cartaActual == null) continue;
+            if (cell.cartaActual.clickableObject == null) continue;
             if (cell.cartaActual.clickableObject.propietarioP1 != propietarioP1) continue;
             if (cell.cartaActual.pasiva is PassiveHerreria)
                 bonus++;
         }
-        
-        // Aumento de daño por habilidad activa de la herrería (solo aplica si es el turno de ese jugador)
+
+        // Aumento de daño por habilidad activa de la Herrería (solo aplica si es el turno de ese jugador)
         if (propietarioP1 == TurnManager.turnoP1)
             bonus += TurnManager.bonusHerreriaActiva;
-        
+
         return bonus;
     }
 
@@ -163,17 +173,23 @@ public abstract class PassiveAbility
     /// teniendo en cuenta todos los modificadores ofensivos (bonus pasivos, herrerías, rey cura...).</summary>
     public static int CalcularDanyoAtacante(Card atacante, Card objetivo)
     {
+        if (atacante == null || atacante.cardData == null) return 0;
+
         DamageableCardData cardDataAtacante = atacante.cardData as DamageableCardData;
         int danyo = cardDataAtacante?.ataque ?? 0;
 
         // Bonus propio de la carta atacante (arquero +1, guerrero +2, espía x2...)
-        danyo += atacante.pasiva?.ModificarDanyoAtacante(objetivo) ?? 0;
+        if (atacante.pasiva != null)
+            danyo += atacante.pasiva.ModificarDanyoAtacante(objetivo);
 
         // Bonus de edificio aliado (Casa de constructor para estructuras / Herrería para monstruos)
-        if (atacante.cardData is StructureCardData)
-            danyo += BonusDanyoEstructuras(atacante.clickableObject.propietarioP1);
-        else if (atacante.cardData is MonsterCardData)
-            danyo += BonusDanyoMonstruos(atacante.clickableObject.propietarioP1);
+        if (atacante.clickableObject != null && atacante.casilla != null)
+        {
+            if (atacante.cardData is StructureCardData)
+                danyo += BonusDanyoEstructuras(atacante.clickableObject.propietarioP1);
+            else if (atacante.cardData is MonsterCardData)
+                danyo += BonusDanyoMonstruos(atacante.clickableObject.propietarioP1);
+        }
 
         // Multiplicador Rey cura (x3 si el atacante está adyacente a uno)
         danyo *= MultiplicadorDanyoReyCura(atacante);
@@ -182,14 +198,14 @@ public abstract class PassiveAbility
         danyo += atacante.bonusDanyoProximoAtaque;
         danyo *= atacante.multDanyoProximoAtaque;
         danyo *= atacante.multDanyoIndefinido;
-        if (atacante.espiaActivoProximoAtaque && objetivo.cardData.nombre == "Castillo")
+        if (atacante.espiaActivoProximoAtaque && objetivo != null && objetivo.cardData != null && objetivo.cardData.nombre == "Castillo")
             danyo *= 3;
 
         return danyo;
     }
 
-    // Aplica daño a una carta respetando su pasiva, y la destruye si llega a 0
-    protected static void AplicarDanyo(Cell cell, int danyo)
+    // Aplica daño a una carta respetando sus habilidades, y la destruye si llega a 0
+    public static void AplicarDanyo(Cell cell, int danyo)
     {
         if (!cell.ocupada || cell.cartaActual == null) return;
         // Invulnerabilidad absoluta: Torre protectora o Castillo falso
@@ -205,11 +221,11 @@ public abstract class PassiveAbility
         }
     }
 
-    // Aplica daño en área (solo monstruos y estructuras enemigos) a partir de una casilla central
-    protected void AplicarDanyoAreaEnemigos(Cell centro, int danyo, int radio)
+    // Aplica daño en área a partir de una casilla central, con opciones para filtrar por monstruos o aliados
+    public static void AplicarDanyoAreaGeneral(Card atacante, Cell centro, int danyo, int radio, bool soloMonstruos = false, bool afectarAliados = false)
     {
-        if (centro == null) return;
-        bool esP1 = portador.clickableObject.propietarioP1;
+        if (atacante == null || centro == null) return;
+        bool esP1 = atacante.clickableObject.propietarioP1;
 
         for (int dr = -radio; dr <= radio; dr++)
         {
@@ -220,10 +236,38 @@ public abstract class PassiveAbility
                 if (r < 0 || r >= Board.Instance.rows || c < 0 || c >= Board.Instance.columns) continue;
                 Cell cell = Board.Instance.cells[r, c];
                 if (!cell.ocupada || cell.cartaActual == null) continue;
-                if (cell.cartaActual.clickableObject.propietarioP1 == esP1) continue;
-                if (!(cell.cartaActual.cardData is MonsterCardData) &&
+                
+                // Si no se permite afectar aliados y la carta es del mismo propietario, ignorarla
+                if (!afectarAliados && cell.cartaActual.clickableObject.propietarioP1 == esP1) continue;
+                
+                if (soloMonstruos && !(cell.cartaActual.cardData is MonsterCardData)) continue;
+                if (!soloMonstruos && !(cell.cartaActual.cardData is MonsterCardData) &&
                     !(cell.cartaActual.cardData is StructureCardData)) continue;
+                    
                 AplicarDanyo(cell, danyo);
+            }
+        }
+    }
+
+    // Realiza un ataque en área utilizando las estadísticas del atacante (usado por Mago, Tanque y Torreta destructora)
+    public static void EjecutarAtaqueArea(Card atacante, Cell centro, int radio)
+    {
+        if (atacante == null || centro == null) return;
+        bool esP1 = atacante.clickableObject.propietarioP1;
+
+        for (int dr = -radio; dr <= radio; dr++)
+        {
+            for (int dc = -radio; dc <= radio; dc++)
+            {
+                if (dr == 0 && dc == 0) continue; // El centro ya ha recibido el golpe normal
+                int r = centro.row + dr, c = centro.col + dc;
+                if (r < 0 || r >= Board.Instance.rows || c < 0 || c >= Board.Instance.columns) continue;
+                Cell cell = Board.Instance.cells[r, c];
+                if (!cell.ocupada || cell.cartaActual == null) continue;
+                if (cell.cartaActual.clickableObject.propietarioP1 == esP1) continue; // No dañar aliados
+                
+                int danyoFinal = CalcularDanyoAtacante(atacante, cell.cartaActual);
+                AplicarDanyo(cell, danyoFinal);
             }
         }
     }
@@ -308,25 +352,7 @@ public class PassiveMago : PassiveAbility
 {
     public override void OnDespuesDeAtacar(Card objetivo)
     {
-        if (objetivo.casilla == null) return;
-        bool esP1   = portador.clickableObject.propietarioP1;
-
-        for (int dr = -1; dr <= 1; dr++)
-        {
-            for (int dc = -1; dc <= 1; dc++)
-            {
-                if (dr == 0 && dc == 0) continue; // El centro ya ha recibido el golpe normal
-                int r = objetivo.casilla.row + dr;
-                int c = objetivo.casilla.col + dc;
-                if (r < 0 || r >= Board.Instance.rows || c < 0 || c >= Board.Instance.columns) continue;
-                Cell cell = Board.Instance.cells[r, c];
-                if (!cell.ocupada || cell.cartaActual == null) continue;
-                if (cell.cartaActual.clickableObject.propietarioP1 == esP1) continue; // No dañar aliados
-                
-                int danyoFinal = CalcularDanyoAtacante(portador, cell.cartaActual);
-                AplicarDanyo(cell, danyoFinal);
-            }
-        }
+        EjecutarAtaqueArea(portador, objetivo.casilla, 1);
     }
 }
 
@@ -334,7 +360,7 @@ public class PassiveMago : PassiveAbility
 /// adyacentes (8 casillas) pierden 10 PV.</summary>
 public class PassiveEsqueletoGigante : PassiveAbility
 {
-    public override void OnMorir() => AplicarDanyoAreaEnemigos(portador.casilla, 10, 1);
+    public override void OnMorir() => AplicarDanyoAreaGeneral(portador, portador.casilla, 10, 1);
 }
 
 /// <summary>Cura oscuro: puede atacar a enemigos o curar aliados con el mismo botón.</summary>
@@ -462,7 +488,7 @@ public class PassiveBebeDragon : PassiveAbility
 /// (8 casillas) pierden 5 PV.</summary>
 public class PassiveTanque : PassiveAbility
 {
-    public override void OnMorir() => AplicarDanyoAreaEnemigos(portador.casilla, 5, 1);
+    public override void OnMorir() => AplicarDanyoAreaGeneral(portador, portador.casilla, 5, 1);
 }
 
 /// <summary>Caballero: cada turno recupera 1 PV (sin superar el máximo).</summary>
@@ -495,14 +521,14 @@ public class PassiveCura : PassiveAbility
 public class PassiveArquero : PassiveAbility
 {
     public override int ModificarDanyoAtacante(Card objetivo)
-        => (objetivo.cardData is MonsterCardData) ? 1 : 0;
+        => (objetivo != null && objetivo.cardData is MonsterCardData) ? 1 : 0;
 }
 
 /// <summary>Guerrero: hace 2 puntos de daño más a estructuras.</summary>
 public class PassiveGuerrero : PassiveAbility
 {
     public override int ModificarDanyoAtacante(Card objetivo)
-        => (objetivo.cardData is StructureCardData) ? 2 : 0;
+        => (objetivo != null && objetivo.cardData is StructureCardData) ? 2 : 0;
 }
 
 /// <summary>Esqueleto quemado: pierde 1 PV por turno (efecto permanente desde el momento
@@ -525,6 +551,8 @@ public class PassiveEspia : PassiveAbility
 {
     public override int ModificarDanyoAtacante(Card objetivo)
     {
+        if (objetivo == null || objetivo.cardData == null || portador == null || portador.cardData == null)
+            return 0;
         if (objetivo.cardData is MonsterCardData)
             return (portador.cardData as DamageableCardData)?.ataque ?? 0; // +ataque = x2
         return 0;
@@ -563,9 +591,14 @@ public class PassiveCastillo : PassiveAbility
 /// turno hace 1 punto de daño más que el anterior. El contador se resetea cada turno.</summary>
 public class PassiveTorreInfernal : PassiveAbility
 {
-    private int ataquesTurno = 0;
+    private int ataquesTurno = 0; // Contador de ataques realizados en este turno
+    public int ataquesMaximos = 5; // Contador de ataques máximos permitidos en este turno
 
-    public override void OnTurnoInicio() => ataquesTurno = 0;
+    public override void OnTurnoInicio()
+    {
+        ataquesTurno = 0;
+        ataquesMaximos = 5;
+    }
 
     /// <summary>Daño extra acumulado: en el primer ataque +0, en el segundo +1, etc.</summary>
     public override int ModificarDanyoAtacante(Card objetivo) => ataquesTurno;
@@ -573,7 +606,7 @@ public class PassiveTorreInfernal : PassiveAbility
     public override void OnDespuesDeAtacar(Card objetivo)
     {
         ataquesTurno++;
-        if (ataquesTurno < 5)
+        if (ataquesTurno < ataquesMaximos)
             portador.clickableObject.ultimoAtaque = 0; // Permite otro ataque
     }
 }
@@ -591,7 +624,7 @@ public class PassiveTorreProtectora : PassiveAbility
 public class PassiveTorretaDestructora : PassiveAbility
 {
     public override int ModificarDanyoAtacante(Card objetivo)
-        => (objetivo.cardData is MonsterCardData) ? 3 : 0;
+        => (objetivo != null && objetivo.cardData is MonsterCardData) ? 3 : 0;
 }
 
 /// <summary>Muro reforzado: el daño recibido por turno se reduce en 3.</summary>
@@ -684,6 +717,8 @@ public class PassiveReyGuerrero : PassiveAbility
 
     public override int ModificarDanyoAtacante(Card objetivo)
     {
+        if (objetivo == null || objetivo.cardData == null || portador == null || portador.cardData == null)
+            return 0;
         if (objetivo.cardData is StructureCardData)
             return (portador.cardData as DamageableCardData)?.ataque ?? 0; // +ataque = x2
         return 0;
@@ -733,5 +768,5 @@ public class PassiveReyEsqueleto : PassiveAbility
             portador.UpdateVida(d.vidaMaxima);
     }
 
-    public override void OnMorir() => AplicarDanyoAreaEnemigos(portador.casilla, 20, 2);
+    public override void OnMorir() => AplicarDanyoAreaGeneral(portador, portador.casilla, 20, 2);
 }

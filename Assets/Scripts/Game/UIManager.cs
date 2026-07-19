@@ -94,8 +94,8 @@ public class UIManager : MonoBehaviour
                 cardUI.GirarCarta();
         }
 
-        // Resalta todas las cartas giradas
-        resaltarCartasMano();
+        // Refresca el resaltado de todas las cartas
+        Board.RefrescarResaltados();
     }
 
     // Gira las cartas al cambiar de turno para que el otro jugador no las vea
@@ -124,20 +124,10 @@ public class UIManager : MonoBehaviour
             visorCentral.gameObject.SetActive(false);
             botonEnergia.gameObject.SetActive(false);
 
-            // Actualizar cartas resaltadas con la nueva energía disponible
-            resaltarCartasMano();
+            // Actualiza el resaltado de la mano y del tablero con la nueva energía disponible
+            Board.RefrescarResaltados();
+            CameraController.Instance.RefrescarPanelActual();
         }
-    }
-
-    // Resalta las cartas disponibles del jugador actual
-    private void resaltarCartasMano()
-    {
-        CardSorter sorter;
-        if (TurnManager.turnoP1)
-            sorter = handPanelP1.GetComponent<CardSorter>();
-        else
-            sorter = handPanelP2.GetComponent<CardSorter>();
-        sorter?.Resaltar();
     }
 
 }

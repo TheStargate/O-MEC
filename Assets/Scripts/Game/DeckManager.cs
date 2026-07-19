@@ -448,7 +448,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 2,
                 costeHabilidad = 2,
                 ataque = 5,
-                turnos = 6
+                turnos = 6,
+                turnosMaximos = 6
             },
             new TrapCardData
             {
@@ -457,7 +458,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 2,
                 costeHabilidad = 2,
                 ataque = 3,
-                turnos = 9
+                turnos = 9,
+                turnosMaximos = 9
             },
             new TrapCardData
             {
@@ -466,7 +468,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 2,
                 costeHabilidad = 2,
                 ataque = 12,
-                turnos = 2
+                turnos = 2,
+                turnosMaximos = 2
             },
             new TrapCardData
             {
@@ -475,7 +478,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 3,
                 costeHabilidad = 1,
                 ataque = 7,
-                turnos = 3
+                turnos = 3,
+                turnosMaximos = 3
             },
             new TrapCardData
             {
@@ -484,7 +488,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 3,
                 costeHabilidad = 2,
                 ataque = 10,
-                turnos = 5
+                turnos = 5,
+                turnosMaximos = 5
             },
             new TrapCardData
             {
@@ -493,7 +498,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 3,
                 costeHabilidad = 2,
                 ataque = 6,
-                turnos = 8
+                turnos = 8,
+                turnosMaximos = 8
             },
             new MonsterCardData
             {

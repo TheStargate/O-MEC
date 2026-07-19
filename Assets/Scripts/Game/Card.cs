@@ -156,6 +156,7 @@ public class TrapCardData : CardData
 {
     public int ataque;
     public int turnos;
+    public int turnosMaximos;
 
     public override CardData Clone()
     {
@@ -168,7 +169,8 @@ public class TrapCardData : CardData
             imageUI = this.imageUI,
             costeHabilidad = this.costeHabilidad,
             ataque = this.ataque,
-            turnos = this.turnos
+            turnos = this.turnos,
+            turnosMaximos = this.turnosMaximos
         };
     }
 }
@@ -180,8 +182,12 @@ public class Card : MonoBehaviour
     public ClickableObject clickableObject; // Para establecer la carta como clickable
     [SerializeField] private TextMeshPro textoVida; // Indica la vida actual de la carta
     [SerializeField] private TextMeshPro textoVelocidad; // Indica la velocidad de la carta (para monstruos)
+    [SerializeField] private TextMeshPro textoAtaqueMonstruo; // Indica el ataque de la carta (para monstruos)
+    [SerializeField] private TextMeshPro textoAtaqueEstructura; // Indica el ataque de la carta (para estructuras)
     public GameObject background; // Fondo para que se vea bien textoVida
     public GameObject backgroundVelocidad; // Fondo para que se vea bien textoVelocidad
+    public GameObject backgroundAtaqueMonstruo; // Fondo para que se vea bien textoAtaqueMonstruo
+    public GameObject backgroundAtaqueEstructura; // Fondo para que se vea bien textoAtaqueEstructura
     public PassiveAbility pasiva; // Habilidad pasiva de la carta (null si no tiene)
     public ActiveAbility activa; // Habilidad activa de la carta (null si no tiene)
     
@@ -196,7 +202,7 @@ public class Card : MonoBehaviour
     public bool espiaActivoProximoAtaque = false;
 
     // Modificadores indefinidos
-    public int multDanyoIndefinido = 1; 
+    public int multDanyoIndefinido = 1;
 
     // Modificadores de trampas
     public int bonusDanyoTrampa = 0;
@@ -210,6 +216,8 @@ public class Card : MonoBehaviour
     {
         if (background != null) background.SetActive(false);
         if (backgroundVelocidad != null) backgroundVelocidad.SetActive(false);
+        if (backgroundAtaqueMonstruo != null) backgroundAtaqueMonstruo.SetActive(false);
+        if (backgroundAtaqueEstructura != null) backgroundAtaqueEstructura.SetActive(false);
         cardData = data.Clone();
         name = data.nombre;
         if (data.tipo != CardType.Trampa) // Si la carta es un trampa, no se muestra su imagen
@@ -224,11 +232,8 @@ public class Card : MonoBehaviour
             CardType.Energia => TipoObjeto.Energia,
             _ => TipoObjeto.Ninguno
         };
-
-        // Inicializar Habilidad Activa
-        activa = ActiveAbility.Crear(this);
-        if (activa != null)
-            activa.Inicializar(this);
+        
+        RefrescarAtaqueUI();
     }
 
     // Actualiza y muestra la nueva vida de la carta
@@ -253,6 +258,7 @@ public class Card : MonoBehaviour
         bonusDanyoProximoAtaque = 0;
         areaProximoAtaque = false;
         espiaActivoProximoAtaque = false;
+        RefrescarAtaqueUI();
     }
 
     // Actualiza y muestra la nueva velocidad de la carta (para monstruos)
@@ -266,8 +272,66 @@ public class Card : MonoBehaviour
             {
                 textoVelocidad.text = nuevaVelocidad.ToString();
                 textoVelocidad.gameObject.SetActive(true);
-                backgroundVelocidad.SetActive(true);
+                if (backgroundVelocidad != null) backgroundVelocidad.SetActive(true);
             }
+        }
+    }
+
+    // Actualiza y muestra el ataque calculado de todas las cartas
+    public void RefrescarAtaqueUI()
+    {
+        if (Board.Instance == null || Board.Instance.cells == null) return;
+
+        for (int row = 0; row < Board.Instance.rows; row++)
+        {
+            for (int col = 0; col < Board.Instance.columns; col++)
+            {
+                Cell cell = Board.Instance.cells[row, col];
+                if (cell != null && cell.ocupada && cell.cartaActual != null)
+                    RefrescarAtaqueUIParaCarta(cell.cartaActual);
+            }
+        }
+    }
+
+    private static void RefrescarAtaqueUIParaCarta(Card carta)
+    {
+        if (carta == null) return;
+
+        if (carta.textoAtaqueMonstruo != null) carta.textoAtaqueMonstruo.gameObject.SetActive(false);
+        if (carta.textoAtaqueEstructura != null) carta.textoAtaqueEstructura.gameObject.SetActive(false);
+        if (carta.backgroundAtaqueMonstruo != null) carta.backgroundAtaqueMonstruo.SetActive(false);
+        if (carta.backgroundAtaqueEstructura != null) carta.backgroundAtaqueEstructura.SetActive(false);
+
+        DamageableCardData data = carta.cardData as DamageableCardData;
+        if (data == null) return;
+
+        bool mostrarParaMonstruo = data is MonsterCardData;
+        bool mostrarParaEstructura = data is StructureCardData;
+        if (!mostrarParaMonstruo && !mostrarParaEstructura) return;
+
+        int ataqueBase = data.ataque;
+        int ataqueTotal = PassiveAbility.CalcularDanyoAtacante(carta, null);
+        bool ataqueModificado = ataqueTotal != ataqueBase;
+
+        if (mostrarParaEstructura)
+        {
+            if (carta.textoAtaqueEstructura != null)
+            {
+                carta.textoAtaqueEstructura.text = ataqueTotal.ToString();
+                carta.textoAtaqueEstructura.gameObject.SetActive(ataqueModificado);
+            }
+            if (carta.backgroundAtaqueEstructura != null && carta.textoAtaqueEstructura != null)
+                carta.backgroundAtaqueEstructura.SetActive(ataqueModificado && carta.textoAtaqueEstructura.gameObject.activeSelf);
+        }
+        else if (mostrarParaMonstruo)
+        {
+            if (carta.textoAtaqueMonstruo != null)
+            {
+                carta.textoAtaqueMonstruo.text = ataqueTotal.ToString();
+                carta.textoAtaqueMonstruo.gameObject.SetActive(ataqueModificado);
+            }
+            if (carta.backgroundAtaqueMonstruo != null && carta.textoAtaqueMonstruo != null)
+                carta.backgroundAtaqueMonstruo.SetActive(ataqueModificado && carta.textoAtaqueMonstruo.gameObject.activeSelf);
         }
     }
 
@@ -324,6 +388,16 @@ public class Card : MonoBehaviour
         background.SetActive(true);
         if (data.turnos == 0) // Si turnos llega a 0, se desturye la trampa
             casilla.LiberarCasilla(false);
+    }
+
+    // Restaura toda la durabilidad (turnos) de la trampa
+    public void RestaurarTurnosTrampa()
+    {
+        if (cardData is TrapCardData data)
+        {
+            data.turnos = data.turnosMaximos;
+            textoVida.text = data.turnos.ToString();
+        }
     }
 
 }

@@ -120,7 +120,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         {
             cell.Bloquear(); // Por defecto se bloquean todas las casillas
 
-            if (cell.cartaActual.cardData.nombre.Equals("Castillo") && cell.cartaActual.clickableObject.propietarioP1 == TurnManager.turnoP1)
+            if (cell.cartaActual != null && cell.cartaActual.cardData.nombre.Equals("Castillo") && cell.cartaActual.clickableObject.propietarioP1 == TurnManager.turnoP1)
             { // Guarda la posición del castillo
                 filaCastillo = cell.row;
                 columnaCastillo = cell.col;
@@ -444,6 +444,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                 TurnManager.energiaDisponible -= cartaPrefab.cardData.costoEnergia;
                 UIManager.textoEnergia.SetText(TurnManager.energiaDisponible.ToString());
                 sorter.Resaltar();
+                Board.RefrescarResaltados();
             }
 
             if (cartaPrefab.cardData.tipo == CardType.Hechizo && DeckManager.Instance != null)

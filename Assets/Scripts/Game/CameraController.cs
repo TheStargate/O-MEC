@@ -296,7 +296,7 @@ public class CameraController : MonoBehaviour
                     MonsterCardData data = carta.cardData as MonsterCardData;
                     
                     GameObject botonHabilidad = panelMonstruo.transform.Find("Hability").gameObject;
-                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && clickeable.turnoColocado < TurnManager.numTurno && data.costeHabilidad <= TurnManager.energiaDisponible)
                         botonHabilidad.SetActive(true);
                     else
                         botonHabilidad.SetActive(false);
@@ -324,7 +324,7 @@ public class CameraController : MonoBehaviour
                     StructureCardData data = carta.cardData as StructureCardData;
                     
                     GameObject botonHabilidad = panelEstructura.transform.Find("Hability").gameObject;
-                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && clickeable.turnoColocado < TurnManager.numTurno && data.costeHabilidad <= TurnManager.energiaDisponible)
                         botonHabilidad.SetActive(true);
                     else
                         botonHabilidad.SetActive(false);
@@ -352,9 +352,11 @@ public class CameraController : MonoBehaviour
                     panelTrampa?.SetActive(true);
                     Card carta = objetivoActual.GetComponent<Card>();
                     TrapCardData data = carta.cardData as TrapCardData;
-                    
+
+                    panelTrampa.transform.Find("View")?.gameObject.SetActive(true);
+
                     GameObject botonHabilidad = panelTrampa.transform.Find("Hability").gameObject;
-                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && clickeable.turnoColocado < TurnManager.numTurno && data.costeHabilidad <= TurnManager.energiaDisponible)
                         botonHabilidad.SetActive(true);
                     else
                         botonHabilidad.SetActive(false);
@@ -370,7 +372,7 @@ public class CameraController : MonoBehaviour
                     MonsterCardData data = carta.cardData as MonsterCardData;
                     
                     GameObject botonHabilidad = panelMonstruo.transform.Find("Hability").gameObject;
-                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && !clickeable.usado)
+                    if (data.costeHabilidad > 0 && !clickeable.habilidadUsada && clickeable.turnoColocado < TurnManager.numTurno && data.costeHabilidad <= TurnManager.energiaDisponible)
                         botonHabilidad.SetActive(true);
                     else
                         botonHabilidad.SetActive(false);
@@ -423,6 +425,12 @@ public class CameraController : MonoBehaviour
         botonVerTablero.SetActive(!enVisionTablero);
 
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
+    }
+
+    // Refresca el panel actual mostrado (para actualizar el botón de Habilidad cuando se modifica la energía disponible)
+    public void RefrescarPanelActual()
+    {
+        MostrarPanelSegunObjeto(objetivoActual != null ? objetivoActual.GetComponent<ClickableObject>() : null);
     }
     
     // Muestra el visor central y pone en pausa el juego
