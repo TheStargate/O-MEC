@@ -271,8 +271,19 @@ public class Card : MonoBehaviour
             if (textoVelocidad != null)
             {
                 textoVelocidad.text = nuevaVelocidad.ToString();
-                textoVelocidad.gameObject.SetActive(true);
-                if (backgroundVelocidad != null) backgroundVelocidad.SetActive(true);
+                
+                // Obtiene la velocidad original para ocultar el texto si no ha cambiado
+                int velocidadOriginal = nuevaVelocidad;
+                if (DeckManager.Instance != null)
+                {
+                    MonsterCardData originalData = DeckManager.Instance.GetCardDataByName(data.nombre) as MonsterCardData;
+                    if (originalData != null)
+                        velocidadOriginal = originalData.velocidad;
+                }
+
+                bool modificada = nuevaVelocidad != velocidadOriginal;
+                textoVelocidad.gameObject.SetActive(modificada);
+                if (backgroundVelocidad != null) backgroundVelocidad.SetActive(modificada);
             }
         }
     }

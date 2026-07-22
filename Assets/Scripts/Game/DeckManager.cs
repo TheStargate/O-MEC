@@ -11,14 +11,30 @@ public class DeckManager : MonoBehaviour
     public Transform handPanelP2; // Mano del jugador 2
     private CardData[] deckList; // Lista de cartas del juego (excepto energías)
     private CardData[] energyDeckList; // Lista de cartas de energía del juego
-    private Queue<CardData> descartadasP1 = new Queue<CardData>(); // Lista de cartas descartadas del jugador 1
-    private Queue<CardData> energiasDescartadasP1 = new Queue<CardData>(); // Lista de cartas de energía descartadas del jugador 1
-    private Queue<CardData> descartadasP2 = new Queue<CardData>(); // Lista de cartas descartadas del jugador 2
-    private Queue<CardData> energiasDescartadasP2 = new Queue<CardData>(); // Lista de cartas de energía descartadas del jugador 2
-    private Queue<CardData> deckP1 = new Queue<CardData>(); // Lista de cartas en la baraja principal del jugador 1
-    private Queue<CardData> energyDeckP1 = new Queue<CardData>(); // Lista de cartas en la baraja de energía del jugador 1
-    private Queue<CardData> deckP2 = new Queue<CardData>(); // Lista de cartas en la baraja principal del jugador 2
-    private Queue<CardData> energyDeckP2 = new Queue<CardData>(); // Lista de cartas en la baraja de energía del jugador 2
+    public Queue<CardData> descartadasP1 = new Queue<CardData>(); // Lista de cartas descartadas del jugador 1
+    public Queue<CardData> energiasDescartadasP1 = new Queue<CardData>(); // Lista de cartas de energía descartadas del jugador 1
+    public Queue<CardData> descartadasP2 = new Queue<CardData>(); // Lista de cartas descartadas del jugador 2
+    public Queue<CardData> energiasDescartadasP2 = new Queue<CardData>(); // Lista de cartas de energía descartadas del jugador 2
+    public Queue<CardData> deckP1 = new Queue<CardData>(); // Lista de cartas en la baraja principal del jugador 1
+    public Queue<CardData> energyDeckP1 = new Queue<CardData>(); // Lista de cartas en la baraja de energía del jugador 1
+    public Queue<CardData> deckP2 = new Queue<CardData>(); // Lista de cartas en la baraja principal del jugador 2
+    public Queue<CardData> energyDeckP2 = new Queue<CardData>(); // Lista de cartas en la baraja de energía del jugador 2
+
+    // Devuelve los datos originales de una carta a partir de su nombre (para cargar partida)
+    public CardData GetCardDataByName(string name)
+    {
+        if (deckList != null)
+        {
+            foreach (var card in deckList)
+                if (card.nombre == name) return card;
+        }
+        if (energyDeckList != null)
+        {
+            foreach (var card in energyDeckList)
+                if (card.nombre == name) return card;
+        }
+        return null;
+    }
 
     // Modelos de las barajas en el juego (solo se muestran si hay cartas disponibles para robar)
     [SerializeField] private GameObject DeckP1;

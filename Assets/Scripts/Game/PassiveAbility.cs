@@ -121,6 +121,7 @@ public abstract class PassiveAbility
         foreach (Cell cell in Board.Instance.cells)
         {
             if (!cell.ocupada || cell.cartaActual == null) continue;
+            if (cell.cartaActual.clickableObject == null) continue;
             if (cell.cartaActual.clickableObject.propietarioP1 != propietarioP1) continue;
             if (cell.cartaActual.pasiva is PassiveCasaConstructor)
                 bonus++;
@@ -388,7 +389,7 @@ public class PassiveDragonFuego : PassiveAbility
 /// <summary>Ninja: puede atacar dos veces por turno. El contador se resetea al inicio de turno.</summary>
 public class PassiveNinja : PassiveAbility
 {
-    private int ataquesTurno = 0;
+    public int ataquesTurno = 0;
 
     public override void OnTurnoInicio() => ataquesTurno = 0;
 
@@ -591,7 +592,7 @@ public class PassiveCastillo : PassiveAbility
 /// turno hace 1 punto de daño más que el anterior. El contador se resetea cada turno.</summary>
 public class PassiveTorreInfernal : PassiveAbility
 {
-    private int ataquesTurno = 0; // Contador de ataques realizados en este turno
+    public int ataquesTurno = 0; // Contador de ataques realizados en este turno
     public int ataquesMaximos = 5; // Contador de ataques máximos permitidos en este turno
 
     public override void OnTurnoInicio()
@@ -630,7 +631,7 @@ public class PassiveTorretaDestructora : PassiveAbility
 /// <summary>Muro reforzado: el daño recibido por turno se reduce en 3.</summary>
 public class PassiveMuroReforzado : PassiveAbility
 {
-    private int reduccionAplicada = 0;
+    public int reduccionAplicada = 0;
 
     public override void OnTurnoInicio() => reduccionAplicada = 0;
 
@@ -649,7 +650,7 @@ public class PassiveMuroReforzado : PassiveAbility
 /// <summary>Torre mágica: puede atacar 3 veces por turno. El contador se resetea cada turno.</summary>
 public class PassiveTorreMagica : PassiveAbility
 {
-    private int ataquesTurno = 0;
+    public int ataquesTurno = 0;
 
     public override void OnTurnoInicio() => ataquesTurno = 0;
 
@@ -684,7 +685,7 @@ public class PassiveTorreta : PassiveAbility
 /// <summary>Muro: el daño recibido por turno se reduce en 1.</summary>
 public class PassiveMuro : PassiveAbility
 {
-    private bool reduccionAplicada = false;
+    public bool reduccionAplicada = false;
 
     public override void OnTurnoInicio() => reduccionAplicada = false;
 

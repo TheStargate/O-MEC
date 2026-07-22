@@ -11,6 +11,7 @@ public class ClickableObject : MonoBehaviour
     public bool habilidadUsada = false; // Si la habilidad activa de la carta ya ha sido usada
     public bool usado; // Si el objeto ya ha sido usado, no se resalta ni permite atacar o moverse
     public Renderer renderizador; // Para controlar la textura y resaltado del objeto
+    [HideInInspector] public bool saltarAutoAsignacionPropietario = false;
 
     void Awake()
     {
@@ -20,7 +21,7 @@ public class ClickableObject : MonoBehaviour
     void Start()
     {
         // Se establecen los propietarios de las cartas
-        if (tipoObjeto != TipoObjeto.Menu && tipoObjeto != TipoObjeto.Baraja)
+        if (tipoObjeto != TipoObjeto.Menu && tipoObjeto != TipoObjeto.Baraja && !saltarAutoAsignacionPropietario)
         {
             propietarioP1 = TurnManager.turnoP1;
         }

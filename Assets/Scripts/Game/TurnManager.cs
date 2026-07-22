@@ -93,5 +93,9 @@ public class TurnManager : MonoBehaviour
             if (numTurno > 2)
                 sorter?.Resaltar();
         }
+
+        // Auto-guardado al terminar de cambiar el turno (a partir del segundo turno)
+        if (numTurno > 1 && SaveManager.Instance != null)
+            SaveManager.Instance.GuardarPartida();
     }
 }
