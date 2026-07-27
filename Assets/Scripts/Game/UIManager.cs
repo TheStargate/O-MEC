@@ -31,9 +31,19 @@ public class UIManager : MonoBehaviour
     public bool EstaSobreUI()
     {
         // Se obtiene la posición actual del ratón
+        Vector2 screenPos = Vector2.zero;
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+        }
+        else if (Mouse.current != null)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+        }
+
         PointerEventData pointerData = new PointerEventData(EventSystem.current)
         {
-            position = Mouse.current.position.ReadValue()
+            position = screenPos
         };
 
         // Se hace un "raycast" para ver si intercepta algún objeto del canvas

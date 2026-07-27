@@ -49,9 +49,23 @@ public class Board : MonoBehaviour
         {
             return;
         }
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        bool isPressed = false;
+        Vector2 screenPos = Vector2.zero;
+
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
+        {
+            isPressed = true;
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+        }
+        else if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            isPressed = true;
+            screenPos = Mouse.current.position.ReadValue();
+        }
+
+        if (isPressed)
         {  // Hace un raycast si se hace click para seleccionar una casilla para moverse / atacar
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            Ray ray = Camera.main.ScreenPointToRay(screenPos);
             if (CameraController.Instance.enVisionTablero && Physics.Raycast(ray, out RaycastHit hit) && !UIManager.EstaSobreUI())
             {
                 Cell cell = hit.collider.GetComponent<Cell>();
