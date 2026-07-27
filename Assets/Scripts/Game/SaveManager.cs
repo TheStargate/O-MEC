@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 using System.Linq;
 
 /// <summary>
-/// Gestor encargado de salvar y restaurar el estado completo de la partida en disco (formato JSON).
+/// Gestor encargado de guardar y restaurar el estado completo de la partida en disco (formato JSON).
 /// </summary>
 public class SaveManager : MonoBehaviour
 {
@@ -22,13 +22,13 @@ public class SaveManager : MonoBehaviour
 
     private System.Collections.IEnumerator Start()
     {
-        // Comprueba si el jugador pulsó "Cargar Partida" en el menú
+        // Comprueba si el jugador ha pulsado "Cargar Partida" en el menú
         if (PlayerPrefs.GetInt("CargarPartida", 0) == 1)
         {
             // Resetea la bandera para futuras ejecuciones
             PlayerPrefs.SetInt("CargarPartida", 0);
             
-            // Esperamos al final del frame para asegurarnos de que Board, DeckManager, etc. han terminado su Start()
+            // Espera al final del frame para asegurarse de que Board, DeckManager, etc. han terminado su Start()
             yield return new WaitForEndOfFrame();
             
             CargarPartida();
@@ -42,14 +42,28 @@ public class SaveManager : MonoBehaviour
     {
         SaveData_Game save = new SaveData_Game();
 
-        // 1. TurnManager
+        // TurnManager
         save.numTurno = TurnManager.numTurno;
         save.turnoP1 = TurnManager.turnoP1;
         save.energiaDisponible = TurnManager.energiaDisponible;
         save.bonusHerreriaActiva = TurnManager.bonusHerreriaActiva;
         save.robadoDisponible = TurnManager.robadoDisponible;
 
-        // 2. DeckManager (Mazos y descartes)
+        // WinManager (Final de partida)
+        if (WinManager.Instance != null)
+        {
+            save.partidaTerminada = WinManager.Instance.partidaTerminada;
+            save.perdedorEsP1 = WinManager.Instance.perdedorEsP1;
+        }
+
+        // PlayerNameManager (Nombres de los jugadores)
+        if (PlayerNameManager.Instance != null)
+        {
+            save.nombreP1 = PlayerNameManager.Instance.NombreP1;
+            save.nombreP2 = PlayerNameManager.Instance.NombreP2;
+        }
+
+        // DeckManager (Mazos y descartes)
         DeckManager dm = DeckManager.Instance;
         save.deckP1 = dm.deckP1.Select(c => c.nombre).ToList();
         save.energyDeckP1 = dm.energyDeckP1.Select(c => c.nombre).ToList();
@@ -61,7 +75,7 @@ public class SaveManager : MonoBehaviour
         save.discardP2 = dm.descartadasP2.Select(c => c.nombre).ToList();
         save.energyDiscardP2 = dm.energiasDescartadasP2.Select(c => c.nombre).ToList();
 
-        // 3. Manos
+        // Manos
         foreach (Transform child in dm.handPanelP1)
         {
             CardUI cardUI = child.GetComponent<CardUI>();
@@ -75,7 +89,7 @@ public class SaveManager : MonoBehaviour
                 save.handP2.Add(cardUI.cartaPrefab.cardData.nombre);
         }
 
-        // 4. Tablero
+        // Tablero
         foreach (Cell cell in Board.Instance.cells)
         {
             SaveData_Cell saveCell = new SaveData_Cell
@@ -167,7 +181,6 @@ public class SaveManager : MonoBehaviour
     public void GuardarYSalirAlMenu()
     {
         GuardarPartida();
-        // Asume que el menú principal es la escena anterior en el Build Index (como configuramos en MenuSystem)
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
     }
 
@@ -186,14 +199,17 @@ public class SaveManager : MonoBehaviour
         string json = File.ReadAllText(path);
         SaveData_Game save = JsonUtility.FromJson<SaveData_Game>(json);
 
-        // 1. Limpieza
+        // Restaurar nombres de jugadores
+        PlayerNameManager.Instance?.CargarNombres(save.nombreP1, save.nombreP2);
+
+        // Limpieza
         DeckManager dm = DeckManager.Instance;
         
-        // Destruir cartas en mano
+        // Destruye las cartas en mano
         foreach (Transform child in dm.handPanelP1) Destroy(child.gameObject);
         foreach (Transform child in dm.handPanelP2) Destroy(child.gameObject);
         
-        // Destruir cartas en el tablero y vaciar celdas
+        // Destruye las cartas en el tablero y vacía las celdas
         foreach (Cell cell in Board.Instance.cells)
         {
             if (cell.ocupada && cell.cartaActual != null)
@@ -204,19 +220,19 @@ public class SaveManager : MonoBehaviour
             cell.cartaActual = null;
         }
 
-        // Limpiar descartes
+        // Limpia los descartes
         dm.descartadasP1.Clear();
         dm.energiasDescartadasP1.Clear();
         dm.descartadasP2.Clear();
         dm.energiasDescartadasP2.Clear();
 
-        // Limpiar mazos
+        // Limpia los mazos
         dm.deckP1.Clear();
         dm.energyDeckP1.Clear();
         dm.deckP2.Clear();
         dm.energyDeckP2.Clear();
 
-        // 2. Restaurar Mazos y Descartes
+        // Restaura los mazos y descartes
         foreach (string cardName in save.deckP1) dm.deckP1.Enqueue(dm.GetCardDataByName(cardName));
         foreach (string cardName in save.energyDeckP1) dm.energyDeckP1.Enqueue(dm.GetCardDataByName(cardName));
         foreach (string cardName in save.deckP2) dm.deckP2.Enqueue(dm.GetCardDataByName(cardName));
@@ -227,7 +243,7 @@ public class SaveManager : MonoBehaviour
         foreach (string cardName in save.discardP2) dm.descartadasP2.Enqueue(dm.GetCardDataByName(cardName));
         foreach (string cardName in save.energyDiscardP2) dm.energiasDescartadasP2.Enqueue(dm.GetCardDataByName(cardName));
 
-        // 3. Restaurar Manos
+        // Restaura las manos
         bool p1Active = dm.handPanelP1.gameObject.activeSelf;
         bool p2Active = dm.handPanelP2.gameObject.activeSelf;
         dm.handPanelP1.gameObject.SetActive(true);
@@ -247,7 +263,7 @@ public class SaveManager : MonoBehaviour
         dm.handPanelP1.gameObject.SetActive(p1Active);
         dm.handPanelP2.gameObject.SetActive(p2Active);
 
-        // 4. Restaurar Tablero
+        // Restaura el tablero
         foreach (SaveData_Cell saveCell in save.tablero)
         {
             Cell cell = Board.Instance.cells[saveCell.row, saveCell.col];
@@ -264,12 +280,12 @@ public class SaveManager : MonoBehaviour
                 carta.transform.SetParent(cell.transform);
                 if (!saveCard.propietarioP1) carta.transform.Rotate(0, 180, 0);
 
-                // Inicializar pasiva y activa SIN llamar a OnColocar
+                // Inicializa la pasiva y la activa
                 carta.pasiva = PassiveAbility.Crear(carta.cardData.nombre, carta);
                 carta.activa = ActiveAbility.Crear(carta.cardData.nombre, carta);
 
-                // Restaurar estado
-                carta.clickableObject.saltarAutoAsignacionPropietario = true;
+                // Restaura el estado
+                carta.clickableObject.asignarAutomaticamente = false;
                 carta.clickableObject.propietarioP1 = saveCard.propietarioP1;
                 carta.clickableObject.ultimoMovimiento = saveCard.ultimoMovimiento;
                 carta.clickableObject.ultimoAtaque = saveCard.ultimoAtaque;
@@ -310,7 +326,7 @@ public class SaveManager : MonoBehaviour
                 if (carta.cardData is TrapCardData tData)
                     tData.turnos = saveCard.turnosTrampaActuales;
 
-                // Restaurar estados internos de la pasiva
+                // Restaura estados internos de la pasiva
                 if (carta.pasiva is PassiveNinja pNinja) pNinja.ataquesTurno = saveCard.pasiva_ataquesTurno;
                 if (carta.pasiva is PassiveTorreInfernal pTorre)
                 {
@@ -328,21 +344,21 @@ public class SaveManager : MonoBehaviour
             }
         }
 
-        // 5. Restaurar Turno y UI Global
+        // Restaura el turno y la UI global
         TurnManager.numTurno = save.numTurno;
         TurnManager.turnoP1 = save.turnoP1;
         TurnManager.energiaDisponible = save.energiaDisponible;
         TurnManager.bonusHerreriaActiva = save.bonusHerreriaActiva;
         TurnManager.robadoDisponible = save.robadoDisponible;
 
-        // Mostrar u ocultar paneles de mano según a quién le toque el turno
+        // Muestra u oculta los paneles de mano según a quién le toque el turno
         dm.handPanelP1.gameObject.SetActive(TurnManager.turnoP1);
         dm.handPanelP2.gameObject.SetActive(!TurnManager.turnoP1);
 
         if (UIManager.textoEnergia != null)
             UIManager.textoEnergia.SetText(TurnManager.energiaDisponible.ToString());
             
-        // 6. Actualizar el resaltado de todas las cartas ahora que el turno y las propiedades son correctas
+        // Actualiza el resaltado de todas las cartas ahora que el turno y las propiedades son correctos
         foreach (Cell cell in Board.Instance.cells)
         {
             if (cell.ocupada && cell.cartaActual != null && cell.cartaActual.clickableObject != null)
@@ -355,16 +371,24 @@ public class SaveManager : MonoBehaviour
             CameraController.Instance.VolverAPosicionOriginal();
         }
 
-        // 7. Actualizar el resaltado de la mano ahora que la energía es correcta
-        if (dm.handPanelP1 != null)
+        // Si la partida ya estaba terminada al guardarla, restaura el estado de fin de partida
+        if (save.partidaTerminada && WinManager.Instance != null)
         {
-            CardSorter sorterP1 = dm.handPanelP1.GetComponent<CardSorter>();
-            if (sorterP1 != null) sorterP1.Resaltar();
+            WinManager.Instance.FinPartida(save.perdedorEsP1);
         }
-        if (dm.handPanelP2 != null)
+        else
         {
-            CardSorter sorterP2 = dm.handPanelP2.GetComponent<CardSorter>();
-            if (sorterP2 != null) sorterP2.Resaltar();
+            // Resalta la mano si la partida sigue en curso
+            if (dm.handPanelP1 != null)
+            {
+                CardSorter sorterP1 = dm.handPanelP1.GetComponent<CardSorter>();
+                if (sorterP1 != null) sorterP1.Resaltar();
+            }
+            if (dm.handPanelP2 != null)
+            {
+                CardSorter sorterP2 = dm.handPanelP2.GetComponent<CardSorter>();
+                if (sorterP2 != null) sorterP2.Resaltar();
+            }
         }
         
         Debug.Log("Partida cargada exitosamente.");

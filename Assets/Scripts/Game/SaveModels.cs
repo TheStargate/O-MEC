@@ -28,6 +28,14 @@ public class SaveData_Game
     public List<string> handP2 = new List<string>();
 
     public List<SaveData_Cell> tablero = new List<SaveData_Cell>();
+
+    // Estado de fin de partida
+    public bool partidaTerminada = false; // True si la partida ya ha concluido
+    public bool perdedorEsP1 = false;     // True si el perdedor es el Jugador 1
+
+    // Nombres de los jugadores
+    public string nombreP1 = "Jugador 1";
+    public string nombreP2 = "Jugador 2";
 }
 
 /// <summary>

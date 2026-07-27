@@ -659,34 +659,28 @@ public class DeckManager : MonoBehaviour
             CardUI nuevaCarta;
             if (TurnManager.turnoP1)
             {
-                for (int i = 0; i < 20; i++)
+                if (deckP1.Count > 0)
                 {
-                    if (deckP1.Count > 0)
-                    {
-                        nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-                        nuevaCarta.Setup(deckP1.Dequeue());
-                    }
-                    if (energyDeckP1.Count > 0)
-                    {
-                        nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-                        nuevaCarta.Setup(energyDeckP1.Dequeue());
-                    }
+                    nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+                    nuevaCarta.Setup(deckP1.Dequeue());
+                }
+                if (energyDeckP1.Count > 0)
+                {
+                    nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+                    nuevaCarta.Setup(energyDeckP1.Dequeue());
                 }
             }
             else
             {
-                for (int i = 0; i < 20; i++)
+                if (deckP2.Count > 0)
                 {
-                    if (deckP2.Count > 0)
-                    {
-                        nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
-                        nuevaCarta.Setup(deckP2.Dequeue());
-                    }
-                    if (energyDeckP2.Count > 0)
-                    {
-                        nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
-                        nuevaCarta.Setup(energyDeckP2.Dequeue());
-                    }
+                    nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
+                    nuevaCarta.Setup(deckP2.Dequeue());
+                }
+                if (energyDeckP2.Count > 0)
+                {
+                    nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
+                    nuevaCarta.Setup(energyDeckP2.Dequeue());
                 }
             }
 

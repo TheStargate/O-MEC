@@ -582,9 +582,7 @@ public class PassiveCastillo : PassiveAbility
 {
     public override void OnMorir()
     {
-        string jugador = portador.clickableObject.propietarioP1 ? "1" : "2";
-        Debug.Log($"[Castillo] ¡El castillo del jugador {jugador} ha sido destruido! Fin de partida.");
-        // TODO: llamar a GameManager.FinPartida(perdedor) cuando esté implementado.
+        WinManager.Instance?.FinPartida(portador.clickableObject.propietarioP1);
     }
 }
 

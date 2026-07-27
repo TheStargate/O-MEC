@@ -378,8 +378,8 @@ public class Board : MonoBehaviour
         }
     }
 
-    // Resalta en verde todas las casillas ocupadas por cartas del jugador rival.
-    public void ResaltarCasillasVerde()
+    // Resalta en violeta todas las casillas ocupadas por cartas del jugador rival.
+    public void ResaltarCasillasVioleta()
     {
         for (int row = 0; row < rows; row++)
         {

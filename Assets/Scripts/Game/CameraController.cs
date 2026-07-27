@@ -42,6 +42,7 @@ public class CameraController : MonoBehaviour
     private bool volverAPosicionOriginal = false; // Indica si la cámarra se está moviendo a su posición original
     public bool enVisionTablero = false; // Indica que la cámara está en visión completa del tablero
     private bool pausado; // Indica si el juego está pausado
+    private bool partidaTerminada = false; // Cuando termina la partida, se bloquean los paneles de acción
     private Transform objetivoActual; // Indica el objeto al que se quiere mover la cámara
     public static CameraController Instance { get; private set; } // Instancia de la propia cámara para comunicarse con otros scripts
 
@@ -83,7 +84,7 @@ public class CameraController : MonoBehaviour
             {
                 moverCamara = false;
 
-                if (UIManager?.canvas == null)
+                if (UIManager?.canvas == null || partidaTerminada)
                     return;
 
                 if (bloqueado) // Si la cámara estaba bloqueada, solo se puede confirmar para volver a la visión de tablero
@@ -163,7 +164,7 @@ public class CameraController : MonoBehaviour
         moverCamara = true;
         volverAPosicionOriginal = false;
         enVisionTablero = false;
-        botonVolverVisionTablero.SetActive(false);
+        if (!partidaTerminada) botonVolverVisionTablero.SetActive(false);
         botonVerTablero.SetActive(false);
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
     }
@@ -196,7 +197,7 @@ public class CameraController : MonoBehaviour
             volverAPosicionOriginal = true;
             moverCamara = false;
             bloqueado = false;
-            botonVolverVisionTablero.gameObject.SetActive(false);
+            if (!partidaTerminada) botonVolverVisionTablero.gameObject.SetActive(false);
 
             MostrarPanelSegunObjeto(null); // No se muestra ningún panel
         }
@@ -216,7 +217,7 @@ public class CameraController : MonoBehaviour
         enVisionTablero = true;
         botonVerTablero.SetActive(!enVisionTablero);
 
-        botonVolverVisionTablero.SetActive(false);
+        if (!partidaTerminada) botonVolverVisionTablero.SetActive(false);
     }
 
     // Controla el movimiento y el zoom de la cámara cuando está en visión completa del tablero.
@@ -431,6 +432,16 @@ public class CameraController : MonoBehaviour
     public void RefrescarPanelActual()
     {
         MostrarPanelSegunObjeto(objetivoActual != null ? objetivoActual.GetComponent<ClickableObject>() : null);
+    }
+
+    // Llamado al terminar la partida: oculta todos los paneles de acción y evita que vuelvan a aparecer
+    public void FinalizarPartida()
+    {
+        partidaTerminada = true;
+        bloqueado = false;
+        objetivoActual = null;
+        MostrarPanelSegunObjeto(null); // Oculta panelConfirmar y todos los demás paneles
+        botonVolverVisionTablero?.SetActive(true); // Permite resetear la cámara libremente al terminar la partida
     }
     
     // Muestra el visor central y pone en pausa el juego

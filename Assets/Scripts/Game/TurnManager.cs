@@ -14,6 +14,10 @@ public class TurnManager : MonoBehaviour
         // Al inicio se muestra la mano del jugador 1
         DeckManager.Instance.handPanelP1.gameObject.SetActive(true);
         DeckManager.Instance.handPanelP2.gameObject.SetActive(false);
+
+        // Pedir el nombre al Jugador 1 al inicio de la partida
+        if(numTurno == 1)
+            PlayerNameManager.Instance?.PedirNombreP1();
     }
 
     // Pasa el turno de un jugador al otro
@@ -93,6 +97,10 @@ public class TurnManager : MonoBehaviour
             if (numTurno > 2)
                 sorter?.Resaltar();
         }
+
+        // Pedir el nombre al Jugador 2 en su primer turno
+        if (numTurno == 2)
+            PlayerNameManager.Instance?.PedirNombreP2();
 
         // Auto-guardado al terminar de cambiar el turno (a partir del segundo turno)
         if (numTurno > 1 && SaveManager.Instance != null)
