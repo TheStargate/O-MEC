@@ -48,6 +48,7 @@ public class CameraController : MonoBehaviour
 
     [SerializeField] private float velocidadDesplazamiento = 20f; // Velocidad a la que se mueve la cámara con el teclado en la visión de tablero
     [SerializeField] private float velocidadZoom = 200f; // Velocidad del zoom con la rueda del ratón en la visión de tablero
+    [SerializeField] private float sensibilidadToque = 0.025f; // Sensibilidad del paneo táctil en la visión de tablero
     [SerializeField] private float zoomMinY = 10f; // Zoom mínimo en la visión de tablero
     [SerializeField] private float zoomMaxY = 60f; // Zoom máximo en la visión de tablero
     [SerializeField] private GameObject botonVolverVisionTablero; // Para volver a la posición original de la visión de tablero
@@ -74,7 +75,13 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        bool isPressed = false;
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
+            isPressed = true;
+        else if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            isPressed = true;
+
+        if (isPressed)
             ClickIzquierdo();
 
         if (moverCamara)
@@ -121,7 +128,17 @@ public class CameraController : MonoBehaviour
             return;
 
         // Hace un raycast para comprobar si se ha clickado una carta u objeto clickable válido
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        Vector2 screenPos = Vector2.zero;
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+        }
+        else if (Mouse.current != null)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+        }
+
+        Ray ray = Camera.main.ScreenPointToRay(screenPos);
         if (!Physics.Raycast(ray, out RaycastHit hit))
             return;
 
@@ -252,6 +269,42 @@ public class CameraController : MonoBehaviour
             botonVolverVisionTablero.SetActive(true);
         }
 
+        // Contar toques activos para móviles
+        int activeTouches = 0;
+        if (Touchscreen.current != null)
+        {
+            foreach (var t in Touchscreen.current.touches)
+            {
+                if (t.press.isPressed)
+                    activeTouches++;
+            }
+        }
+
+        // Movimiento con un solo dedo en móviles (equivalente a WASD en PC)
+        if (!CardUI.estaArrastrando && activeTouches == 1)
+        {
+            var t0 = Touchscreen.current.primaryTouch;
+            Vector2 delta = t0.delta.ReadValue();
+
+            // Solo si hay movimiento apreciable (evita pequeños temblores)
+            if (delta.sqrMagnitude > 1f)
+            {
+                // Invertir ejes: arrastrar en pantalla mueve la cámara hacia el lado contrario
+                Vector3 direccionVertical = TurnManager.turnoP1 ? Vector3.forward : Vector3.back;
+                Vector3 direccionHorizontal = TurnManager.turnoP1 ? Vector3.right : Vector3.left;
+
+                // Movemos la cámara restando el delta para que actúe como un "arrastre" de la superficie
+                Vector3 desplazamiento = (direccionVertical * (-delta.y) + direccionHorizontal * (-delta.x)) * sensibilidadToque;
+                Vector3 nuevaPos = Camera.main.transform.position + desplazamiento;
+
+                nuevaPos.x = Mathf.Clamp(nuevaPos.x, limiteMinX, limiteMaxX);
+                nuevaPos.z = Mathf.Clamp(nuevaPos.z, limiteMinZ, limiteMaxZ);
+
+                Camera.main.transform.position = nuevaPos;
+                botonVolverVisionTablero.SetActive(true);
+            }
+        }
+
         if (Mouse.current != null)
         {
             Vector2 scroll = Mouse.current.scroll.ReadValue();
@@ -266,6 +319,44 @@ public class CameraController : MonoBehaviour
                     Camera.main.transform.position = nuevaPosicion;
 
                 botonVolverVisionTablero.SetActive(true);
+            }
+        }
+
+        // Control de zoom con dos dedos para móviles
+        if (!CardUI.estaArrastrando && activeTouches >= 2)
+        {
+            UnityEngine.InputSystem.Controls.TouchControl t0 = null;
+            UnityEngine.InputSystem.Controls.TouchControl t1 = null;
+
+            foreach (var t in Touchscreen.current.touches)
+            {
+                if (t.press.isPressed)
+                {
+                    if (t0 == null) t0 = t;
+                    else if (t1 == null) { t1 = t; break; }
+                }
+            }
+
+            if (t0 != null && t1 != null)
+            {
+                Vector2 pos0 = t0.position.ReadValue();
+                Vector2 pos1 = t1.position.ReadValue();
+
+                Vector2 prevPos0 = pos0 - t0.delta.ReadValue();
+                Vector2 prevPos1 = pos1 - t1.delta.ReadValue();
+
+                float delta = Vector2.Distance(pos0, pos1) - Vector2.Distance(prevPos0, prevPos1);
+
+                if (Mathf.Abs(delta) > 0.05f)
+                {
+                    Vector3 direccionZoom = Camera.main.transform.forward;
+                    Vector3 nuevaPosicion = Camera.main.transform.position + direccionZoom * (delta * 0.05f);
+
+                    if (nuevaPosicion.y >= zoomMinY && nuevaPosicion.y <= zoomMaxY)
+                        Camera.main.transform.position = nuevaPosicion;
+
+                    botonVolverVisionTablero.SetActive(true);
+                }
             }
         }
     }

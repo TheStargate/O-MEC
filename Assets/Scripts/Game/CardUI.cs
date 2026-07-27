@@ -88,9 +88,12 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         }
     }
 
+    public static bool estaArrastrando = false; // Indica si se está arrastrando alguna carta actualmente
+
     // Configura la carta al empezar a arrastrarla y resalta las casillas disponibles para colocarla
     public void OnBeginDrag(PointerEventData eventData)
     {
+        estaArrastrando = true;
         posicionInicial = rectTransform.anchoredPosition; // Guarda la posición inicial
         canvasGroup.blocksRaycasts = false;
         canvasGroup.alpha = 0.6f; // Añade algo de transparencia a la carta
@@ -261,8 +264,18 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         // Actualiza la posición de la carta arrastrada según el movimiento del ratón
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
 
-        // Convierte la posición del ratón en un "raycast"
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        // Convierte la posición del ratón/toque en un raycast.
+        Vector2 screenPos = eventData.position; // Fallback
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+        }
+        else if (Mouse.current != null)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+        }
+
+        Ray ray = Camera.main.ScreenPointToRay(screenPos);
         if (Physics.Raycast(ray, out RaycastHit hit))
         { // Comprueba si el rayo ha colisionado con algo (una casilla o una carta)
             Cell casilla = hit.collider.GetComponent<Cell>();
@@ -396,6 +409,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     // Coloca la carta o la devuelve a la mano del jugador al dejar de arrastrarla
     public void OnEndDrag(PointerEventData eventData)
     {
+        estaArrastrando = false;
 
         CameraController.Instance.VolverAPosicionOriginal();
 
