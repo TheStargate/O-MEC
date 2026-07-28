@@ -63,10 +63,10 @@ public class CameraController : MonoBehaviour
     void Start()
     {
         // Establece posiciones y rotaciones originales de la cámara
-        posicionOriginalCamaraP1 = new Vector3(0, 35, 0);
-        rotacionOriginalCamaraP1 = Quaternion.Euler(40f, 0f, 0f);
-        posicionOriginalCamaraP2 = new Vector3(0, 35, 100);
-        rotacionOriginalCamaraP2 = Quaternion.Euler(40f, 180f, 0f);
+        posicionOriginalCamaraP1 = new Vector3(0, 20, 20);
+        rotacionOriginalCamaraP1 = Quaternion.Euler(50f, 0f, 0f);
+        posicionOriginalCamaraP2 = new Vector3(0, 20, 80);
+        rotacionOriginalCamaraP2 = Quaternion.Euler(50f, 180f, 0f);
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
         botonVolverVisionTablero.SetActive(false);
         botonVerTablero.SetActive(!enVisionTablero);
@@ -170,7 +170,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = hit.transform;
 
         // Calcula la posición y rotación objetivo de la cámara para el objeto seleccionado.
-        Vector3 offset = clickeable.offsetDesdeEsteObjeto;
+        Vector3 offset = clickeable.offsetObjeto;
         if (!clickeable.propietarioP1)
             offset.z *= -1; // Si es del jugador contrario, hay que ver el objeto desde el otro lado
 
@@ -568,7 +568,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = deckActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = deckActual.offsetDesdeEsteObjeto;
+        Vector3 offset = deckActual.offsetObjeto;
         if (!deckActual.propietarioP1)
             offset.z *= -1;
 
@@ -599,7 +599,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = menuActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = menuActual.offsetDesdeEsteObjeto;
+        Vector3 offset = menuActual.offsetObjeto;
         if (!menuActual.propietarioP1)
             offset.z *= -1;
 
