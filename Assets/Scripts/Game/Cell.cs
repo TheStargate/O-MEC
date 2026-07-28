@@ -55,7 +55,7 @@ public class Cell : MonoBehaviour
 
         // Se instancia la carta
         cartaActual = Instantiate(cartaPrefab, transform.position + Vector3.up * 0.1f, Quaternion.Euler(0, 180, 0));
-        cartaActual.cardData = cartaPrefab.cardData;
+        cartaActual.Setup(cartaPrefab.cardData);
         cartaActual.transform.localScale = new Vector3(0.285f, 1, 0.445f); // Reestablece la escala original
         cartaActual.casilla = this;
         cartaActual.transform.SetParent(this.transform); // Establecer la carta como hijo de la casilla

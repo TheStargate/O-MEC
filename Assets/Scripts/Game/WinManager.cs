@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.UI;
 
 /// <summary>
 /// Gestiona el fin de partida: activa la visión de tablero con casillas en violeta,
@@ -10,15 +11,17 @@ public class WinManager : MonoBehaviour
 {
     public static WinManager Instance { get; private set; }
 
-    [SerializeField] private TextMeshProUGUI textoGanador; // Texto que indica qué jugador ha ganado
-
+    public TextMeshProUGUI textoGanador; // Texto que indica qué jugador ha ganado
+    [SerializeField] private Image fondoGanador; // Fondo del texto del ganador
     public bool partidaTerminada = false; // Para evitar que el método se llame dos veces
     public bool perdedorEsP1 = false;
 
     void Awake()
     {
-        if (Instance == null)
+        if (Instance == null) {
             Instance = this;
+            fondoGanador?.gameObject.SetActive(false);
+        }
         else
             Destroy(gameObject);
     }
@@ -32,6 +35,8 @@ public class WinManager : MonoBehaviour
     {
         if (partidaTerminada) return;
         partidaTerminada = true;
+
+        fondoGanador?.gameObject.SetActive(true);
 
         string nombreGanador = perdedorEsP1
             ? (PlayerNameManager.Instance?.NombreP2 ?? "Jugador 2")

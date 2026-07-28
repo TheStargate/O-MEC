@@ -12,7 +12,6 @@ public class CameraController : MonoBehaviour
     [SerializeField] private GameObject panelHechizo;
     [SerializeField] private GameObject panelTrampa;
     [SerializeField] private GameObject panelEnergia;
-    [SerializeField] private GameObject panelBaraja;
     [SerializeField] private GameObject panelMenu;
     [SerializeField] private GameObject panelConfirmar;
     [SerializeField] private GameObject panelPausa; // Para cuando el juego está pausado
@@ -49,7 +48,7 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float velocidadDesplazamiento = 20f; // Velocidad a la que se mueve la cámara con el teclado en la visión de tablero
     [SerializeField] private float velocidadZoom = 200f; // Velocidad del zoom con la rueda del ratón en la visión de tablero
     [SerializeField] private float sensibilidadToque = 0.025f; // Sensibilidad del paneo táctil en la visión de tablero
-    [SerializeField] private float zoomMinY = 10f; // Zoom mínimo en la visión de tablero
+    [SerializeField] private float zoomMinY = 5f; // Zoom mínimo en la visión de tablero
     [SerializeField] private float zoomMaxY = 60f; // Zoom máximo en la visión de tablero
     [SerializeField] private GameObject botonVolverVisionTablero; // Para volver a la posición original de la visión de tablero
     [SerializeField] private GameObject botonVerTablero; // Botón para entrar en visión de tablero
@@ -154,11 +153,8 @@ public class CameraController : MonoBehaviour
         if (clickeable == null)
             return;
 
-        if ((clickeable.tipoObjeto == TipoObjeto.Baraja || clickeable.tipoObjeto == TipoObjeto.Menu) && clickeable.propietarioP1 != TurnManager.turnoP1)
-            return; // No se pueden seleccionar barajas o menús de otro jugador
-
-        if (clickeable.tipoObjeto == TipoObjeto.Baraja && !TurnManager.robadoDisponible)
-            return; // No se pueden seleccionar barajas si no se permite robar
+        if (clickeable.tipoObjeto == TipoObjeto.Menu && clickeable.propietarioP1 != TurnManager.turnoP1)
+            return; // No se pueden seleccionar el menú de otro jugador
 
         if (clickeable.tipoObjeto == TipoObjeto.Menu && TurnManager.numTurno <= 2)
         {
@@ -170,7 +166,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = hit.transform;
 
         // Calcula la posición y rotación objetivo de la cámara para el objeto seleccionado.
-        Vector3 offset = clickeable.offsetObjeto;
+        Vector3 offset = clickeable.offsetDelObjeto;
         if (!clickeable.propietarioP1)
             offset.z *= -1; // Si es del jugador contrario, hay que ver el objeto desde el otro lado
 
@@ -258,7 +254,10 @@ public class CameraController : MonoBehaviour
                 direccionHorizontal = -direccionHorizontal;
             }
 
-            Vector3 desplazamiento = (direccionVertical * movimiento.z + direccionHorizontal * movimiento.x) * velocidadDesplazamiento * Time.deltaTime;
+            float zoomFactor = Mathf.InverseLerp(zoomMinY, zoomMaxY, Camera.main.transform.position.y);
+            float velocidadActual = velocidadDesplazamiento * Mathf.Lerp(0.5f, 1.8f, zoomFactor);
+
+            Vector3 desplazamiento = (direccionVertical * movimiento.z + direccionHorizontal * movimiento.x) * velocidadActual * Time.deltaTime;
             Vector3 nuevaPos = Camera.main.transform.position + desplazamiento;
 
             nuevaPos.x = Mathf.Clamp(nuevaPos.x, limiteMinX, limiteMaxX);
@@ -293,8 +292,11 @@ public class CameraController : MonoBehaviour
                 Vector3 direccionVertical = TurnManager.turnoP1 ? Vector3.forward : Vector3.back;
                 Vector3 direccionHorizontal = TurnManager.turnoP1 ? Vector3.right : Vector3.left;
 
+                float zoomFactor = Mathf.InverseLerp(zoomMinY, zoomMaxY, Camera.main.transform.position.y);
+                float sensibilidadActual = sensibilidadToque * Mathf.Lerp(0.5f, 1.8f, zoomFactor);
+
                 // Movemos la cámara restando el delta para que actúe como un "arrastre" de la superficie
-                Vector3 desplazamiento = (direccionVertical * (-delta.y) + direccionHorizontal * (-delta.x)) * sensibilidadToque;
+                Vector3 desplazamiento = (direccionVertical * (-delta.y) + direccionHorizontal * (-delta.x)) * sensibilidadActual;
                 Vector3 nuevaPos = Camera.main.transform.position + desplazamiento;
 
                 nuevaPos.x = Mathf.Clamp(nuevaPos.x, limiteMinX, limiteMaxX);
@@ -370,7 +372,6 @@ public class CameraController : MonoBehaviour
         panelHechizo?.SetActive(false);
         panelTrampa?.SetActive(false);
         panelEnergia?.SetActive(false);
-        panelBaraja?.SetActive(false);
         panelMenu?.SetActive(false);
         panelConfirmar?.SetActive(false);
         if (!pausado)
@@ -490,9 +491,6 @@ public class CameraController : MonoBehaviour
                 else
                     panelConfirmar?.SetActive(true);
                 break;
-            case TipoObjeto.Baraja:
-                panelBaraja?.SetActive(true);
-                break;
             case TipoObjeto.Menu:
                 panelMenu?.SetActive(true);
                 break;
@@ -568,7 +566,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = deckActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = deckActual.offsetObjeto;
+        Vector3 offset = deckActual.offsetDelObjeto;
         if (!deckActual.propietarioP1)
             offset.z *= -1;
 
@@ -599,7 +597,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = menuActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = menuActual.offsetObjeto;
+        Vector3 offset = menuActual.offsetDelObjeto;
         if (!menuActual.propietarioP1)
             offset.z *= -1;
 

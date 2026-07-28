@@ -72,6 +72,13 @@ public class PlayerNameManager : MonoBehaviour
         {
             NombreP1 = string.IsNullOrEmpty(nombre) ? "Jugador 1" : nombre;
             esperandoP1 = false;
+            TurnManager.ActualizarTextoTurno();
+
+            if (NombreP2 == "Jugador 2")
+            {
+                PedirNombreP2();
+                return;
+            }
         }
         else if (esperandoP2)
         {
@@ -82,6 +89,7 @@ public class PlayerNameManager : MonoBehaviour
         if (panelNombre != null)
             panelNombre.SetActive(false);
 
+        TurnManager.ActualizarTextoTurno();
     }
 
     /// <summary>

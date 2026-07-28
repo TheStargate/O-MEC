@@ -657,8 +657,10 @@ public class DeckManager : MonoBehaviour
         {
             // Comprueba que la baraja del jugador actual tenga cartas disponibles para robar
             CardUI nuevaCarta;
+            CardSorter sorter = null;
             if (TurnManager.turnoP1)
             {
+                sorter = handPanelP1.GetComponent<CardSorter>();
                 if (deckP1.Count > 0)
                 {
                     nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
@@ -672,6 +674,7 @@ public class DeckManager : MonoBehaviour
             }
             else
             {
+                sorter = handPanelP2.GetComponent<CardSorter>();
                 if (deckP2.Count > 0)
                 {
                     nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
@@ -684,6 +687,7 @@ public class DeckManager : MonoBehaviour
                 }
             }
 
+            sorter?.Ordenar();
             recolocarBarajas(false);
             TurnManager.robadoDisponible = false;
         }

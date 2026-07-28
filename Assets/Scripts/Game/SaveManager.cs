@@ -11,6 +11,7 @@ using System.Linq;
 public class SaveManager : MonoBehaviour
 {
     public static SaveManager Instance { get; private set; }
+    private bool cargandoPartida;
 
     private void Awake()
     {
@@ -18,12 +19,14 @@ public class SaveManager : MonoBehaviour
             Instance = this;
         else
             Destroy(gameObject);
+
+        cargandoPartida = PlayerPrefs.GetInt("CargarPartida", 0) == 1;
     }
 
     private System.Collections.IEnumerator Start()
     {
         // Comprueba si el jugador ha pulsado "Cargar Partida" en el menú
-        if (PlayerPrefs.GetInt("CargarPartida", 0) == 1)
+        if (cargandoPartida)
         {
             // Resetea la bandera para futuras ejecuciones
             PlayerPrefs.SetInt("CargarPartida", 0);
@@ -32,6 +35,7 @@ public class SaveManager : MonoBehaviour
             yield return new WaitForEndOfFrame();
             
             CargarPartida();
+            cargandoPartida = false;
         }
     }
 
@@ -202,6 +206,13 @@ public class SaveManager : MonoBehaviour
         // Restaurar nombres de jugadores
         PlayerNameManager.Instance?.CargarNombres(save.nombreP1, save.nombreP2);
 
+        // Restaurar el estado de turno antes de crear las cartas en mano
+        TurnManager.turnoP1 = save.turnoP1;
+        TurnManager.numTurno = save.numTurno;
+        TurnManager.energiaDisponible = save.energiaDisponible;
+        TurnManager.bonusHerreriaActiva = save.bonusHerreriaActiva;
+        TurnManager.robadoDisponible = save.robadoDisponible;
+
         // Limpieza
         DeckManager dm = DeckManager.Instance;
         
@@ -345,15 +356,14 @@ public class SaveManager : MonoBehaviour
         }
 
         // Restaura el turno y la UI global
-        TurnManager.numTurno = save.numTurno;
-        TurnManager.turnoP1 = save.turnoP1;
-        TurnManager.energiaDisponible = save.energiaDisponible;
-        TurnManager.bonusHerreriaActiva = save.bonusHerreriaActiva;
-        TurnManager.robadoDisponible = save.robadoDisponible;
+        if (UIManager.textoEnergia != null)
+            UIManager.textoEnergia.SetText(TurnManager.energiaDisponible.ToString());
 
         // Muestra u oculta los paneles de mano según a quién le toque el turno
         dm.handPanelP1.gameObject.SetActive(TurnManager.turnoP1);
         dm.handPanelP2.gameObject.SetActive(!TurnManager.turnoP1);
+
+        TurnManager.ActualizarTextoTurno();
 
         if (UIManager.textoEnergia != null)
             UIManager.textoEnergia.SetText(TurnManager.energiaDisponible.ToString());

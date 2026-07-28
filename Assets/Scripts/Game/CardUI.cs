@@ -46,14 +46,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
             girada = false;
         }
 
-        GameObject panel;
-        if (TurnManager.turnoP1)
-            panel = GameObject.Find("Hand Panel P1");
-        else
-            panel = GameObject.Find("Hand Panel P2");
-        if (panel != null)
+        if (transform.parent != null)
         {
-            sorter = panel.GetComponent<CardSorter>();
+            sorter = transform.parent.GetComponent<CardSorter>();
             sorter?.Ordenar(); // Ordena la nueva carta
         }
     }
@@ -61,6 +56,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     // Oculta o muestra la carta en el centro de la interfaz al hacer click en ella
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (Time.timeScale == 0f)
+            return;
+
         if (UIManager.visorCentral != null)
         {
             // Oculta la carta clickada si ya se estaba mostrando en el visor central
@@ -93,8 +91,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     // Configura la carta al empezar a arrastrarla y resalta las casillas disponibles para colocarla
     public void OnBeginDrag(PointerEventData eventData)
     {
-        estaArrastrando = true;
         posicionInicial = rectTransform.anchoredPosition; // Guarda la posición inicial
+        if (Time.timeScale == 0f)
+            return;
+        estaArrastrando = true;
         canvasGroup.blocksRaycasts = false;
         canvasGroup.alpha = 0.6f; // Añade algo de transparencia a la carta
 
@@ -261,6 +261,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     // Actualiza las casillas y la posición de la carta seleccionada al arrastrarla
     public void OnDrag(PointerEventData eventData)
     {
+        if (Time.timeScale == 0f)
+            return;
+
         // Actualiza la posición de la carta arrastrada según el movimiento del ratón
         rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
 

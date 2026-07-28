@@ -3,7 +3,7 @@ using UnityEngine;
 public class ClickableObject : MonoBehaviour
 {
     public TipoObjeto tipoObjeto = TipoObjeto.Ninguno;
-    [HideInInspector] public Vector3 offsetObjeto = new Vector3(0, 7, -3f); // Posición relativa donde se debe quedar la cámara al seleccionar el objeto
+    [HideInInspector] public Vector3 offsetDelObjeto = new Vector3(0, 7.5f, -3.5f); // Posición relativa donde se debe quedar la cámara al seleccionar el objeto
     public bool propietarioP1; // Jugador al que pertenece el objeto
     public int ultimoAtaque = 0; // Turno en el que la carta realizó el último ataque
     public int ultimoMovimiento = 0; // Turno en el que la carta realizó el último movimiento
@@ -21,7 +21,7 @@ public class ClickableObject : MonoBehaviour
     void Start()
     {
         // Se establecen los propietarios de las cartas
-        if (tipoObjeto != TipoObjeto.Menu && tipoObjeto != TipoObjeto.Baraja && asignarAutomaticamente)
+        if (tipoObjeto != TipoObjeto.Menu && asignarAutomaticamente)
         {
             propietarioP1 = TurnManager.turnoP1;
         }
@@ -38,9 +38,6 @@ public class ClickableObject : MonoBehaviour
             else
                 renderizador.material.color = Color.lightPink;
         }
-        // Resalta las cartas del jugador actual en blanco (o en gris si no se pueden usar)
-        else if (tipoObjeto == TipoObjeto.Baraja && propietarioP1 != TurnManager.turnoP1)
-            renderizador.material.color = Color.gray;
         else if (usado)
         {
             // Aunque esté "usada", puede seguir sin estar gris si su habilidad activa sigue disponible
@@ -72,7 +69,6 @@ public enum TipoObjeto
 {
     Ninguno,
     Menu,
-    Baraja,
     Monstruo,
     Estructura,
     Hechizo,

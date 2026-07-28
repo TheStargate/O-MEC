@@ -17,6 +17,8 @@ public class UIManager : MonoBehaviour
     public static Button botonEnergia; // Botón que aparece al seleccionar una carta de energía para poder usarla
     public static TextMeshProUGUI textoEnergia; // Indica la cantidad de energía disponible para usar
 
+    private GraphicRaycaster graphicRaycaster;
+
     void Awake()
     {
         // Por defecto no hay ninguna carta seleccionada
@@ -25,6 +27,61 @@ public class UIManager : MonoBehaviour
         botonEnergia = GameObject.Find("Use Energy")?.GetComponent<Button>();
         botonEnergia.gameObject.SetActive(false);
         textoEnergia = GameObject.Find("Amount")?.GetComponent<TextMeshProUGUI>();
+        graphicRaycaster = canvas != null ? canvas.GetComponentInParent<GraphicRaycaster>() : null;
+    }
+
+    void Update()
+    {
+        bool pointerPressed = false;
+
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            pointerPressed = true;
+        else if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
+            pointerPressed = true;
+
+        // Si el visor central está activo y se pulsa fuera de cualquier botón, lo ocultamos.
+        if (visorCentral != null && visorCentral.gameObject.activeSelf && pointerPressed && Time.timeScale != 0f)
+        {
+            bool overUIButton = false;
+            if (EventSystem.current != null && graphicRaycaster != null)
+            {
+                PointerEventData pointerData = new PointerEventData(EventSystem.current);
+                if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+                    pointerData.position = Touchscreen.current.primaryTouch.position.ReadValue();
+                else if (Mouse.current != null)
+                    pointerData.position = Mouse.current.position.ReadValue();
+
+                List<RaycastResult> results = new List<RaycastResult>();
+                graphicRaycaster.Raycast(pointerData, results);
+
+                foreach (RaycastResult result in results)
+                {
+                    if (result.gameObject == null) continue;
+                    if (result.gameObject.GetComponentInParent<Button>() != null)
+                    {
+                        overUIButton = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!overUIButton)
+                OcultarVisorCentral();
+        }
+    }
+
+    // Oculta el visor central de una carta
+    private void OcultarVisorCentral()
+    {
+        if (visorCentral != null)
+        {
+            visorCentral.gameObject.SetActive(false);
+            visorCentral.sprite = null;
+        }
+
+        CardUI.cartaUISeleccionada = null;
+        if (botonEnergia != null)
+            botonEnergia.gameObject.SetActive(false);
     }
 
     // Comprueba si el cursor está sobre un elemento de la UI

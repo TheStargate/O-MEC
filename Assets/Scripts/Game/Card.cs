@@ -220,18 +220,28 @@ public class Card : MonoBehaviour
         if (backgroundAtaqueEstructura != null) backgroundAtaqueEstructura.SetActive(false);
         cardData = data.Clone();
         name = data.nombre;
-        if (data.tipo != CardType.Trampa) // Si la carta es un trampa, no se muestra su imagen
+
+        if (clickableObject == null)
+            clickableObject = GetComponent<ClickableObject>();
+        if (clickableObject != null && clickableObject.renderizador == null)
+            clickableObject.renderizador = clickableObject.GetComponent<Renderer>();
+
+        if (data.tipo != CardType.Trampa && clickableObject?.renderizador != null && data.imagenCarta != null) // Si la carta es una trampa, no se muestra su imagen
             clickableObject.renderizador.material.mainTexture = data.imagenCarta.texture;
-        clickableObject.tipoObjeto = data.tipo switch
+
+        if (clickableObject != null)
         {
-            CardType.Monstruo => TipoObjeto.Monstruo,
-            CardType.Estructura => TipoObjeto.Estructura,
-            CardType.Hechizo => TipoObjeto.Hechizo,
-            CardType.Trampa => TipoObjeto.Trampa,
-            CardType.MonstruoLeg => TipoObjeto.MonstruoLeg,
-            CardType.Energia => TipoObjeto.Energia,
-            _ => TipoObjeto.Ninguno
-        };
+            clickableObject.tipoObjeto = data.tipo switch
+            {
+                CardType.Monstruo => TipoObjeto.Monstruo,
+                CardType.Estructura => TipoObjeto.Estructura,
+                CardType.Hechizo => TipoObjeto.Hechizo,
+                CardType.Trampa => TipoObjeto.Trampa,
+                CardType.MonstruoLeg => TipoObjeto.MonstruoLeg,
+                CardType.Energia => TipoObjeto.Energia,
+                _ => TipoObjeto.Ninguno
+            };
+        }
         
         RefrescarAtaqueUI();
     }

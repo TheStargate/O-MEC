@@ -47,11 +47,9 @@ public class KeyboardManager : MonoBehaviour
     private Key keyMenuNextTurn = Key.P;
     private Key keyResetCamera = Key.P;
     private Key keyDeckBack = Key.V;
-    private Key keyDeckDraw = Key.R;
     private Key keyBoardView = Key.O;
 
-    [Header("Teclas para acceso rápido a Deck y Menu")]
-    private Key keyAccessDeck = Key.R;
+    [Header("Teclas para acceso rápido al Menu")]
     private Key keyAccessMenu = Key.E;
 
     void Awake()
@@ -128,27 +126,15 @@ public class KeyboardManager : MonoBehaviour
         if (Keyboard.current[keyDeckBack].wasPressedThisFrame)
             InvokeButton(botonDeckBack);
 
-        if (Keyboard.current[keyDeckDraw].wasPressedThisFrame)
-            InvokeButton(botonDeckDraw);
-
         if (Keyboard.current[keyResetCamera].wasPressedThisFrame)
             InvokeButton(botonResetCamera);
 
         if (Keyboard.current[keyBoardView].wasPressedThisFrame)
             InvokeButton(botonBoardView);
 
-        // Acceso rápido a Deck y Menu
-        if (Keyboard.current[keyAccessDeck].wasPressedThisFrame)
-            MoverAlDeck();
-
+        // Acceso rápido a Menu
         if (Keyboard.current[keyAccessMenu].wasPressedThisFrame)
             MoverAlMenu();
-    }
-
-    private void MoverAlDeck()
-    {
-        if (CameraController.Instance != null)
-            CameraController.Instance.MoverAlDeck();
     }
 
     private void MoverAlMenu()
