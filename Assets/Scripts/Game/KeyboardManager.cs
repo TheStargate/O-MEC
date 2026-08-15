@@ -9,7 +9,6 @@ public class KeyboardManager : MonoBehaviour
     public Vector2 movimientoCamara { get; private set; } // Indica el movimiento que hace la cámara al pulsar las flechas en la visión de tablero activada
 
     [Header("Botones de la UI")]
-    [SerializeField] private Button botonTurnCards;
     [SerializeField] private Button botonUseEnergy;
     [SerializeField] private Button botonMonsterBack;
     [SerializeField] private Button botonMonsterMove;
@@ -27,10 +26,8 @@ public class KeyboardManager : MonoBehaviour
     [SerializeField] private Button botonDeckBack;
     [SerializeField] private Button botonDeckDraw;
     [SerializeField] private Button botonResetCamera;
-    [SerializeField] private Button botonBoardView;
 
     [Header("Teclas asignadas")]
-    private Key keyTurnCards = Key.G;
     private Key keyUseEnergy = Key.U;
     private Key keyMonsterBack = Key.V;
     private Key keyMonsterMove = Key.M;
@@ -45,12 +42,11 @@ public class KeyboardManager : MonoBehaviour
     private Key keyConfirmConfirm = Key.C;
     private Key keyMenuBack = Key.V;
     private Key keyMenuNextTurn = Key.P;
-    private Key keyResetCamera = Key.P;
+    private Key keyResetCamera = Key.R;
     private Key keyDeckBack = Key.V;
-    private Key keyBoardView = Key.O;
 
     [Header("Teclas para acceso rápido al Menu")]
-    private Key keyAccessMenu = Key.E;
+    private Key keyAccessMenu = Key.P;
 
     void Awake()
     {
@@ -77,9 +73,6 @@ public class KeyboardManager : MonoBehaviour
             movimiento.x += 1f;
 
         movimientoCamara = movimiento;
-
-        if (Keyboard.current[keyTurnCards].wasPressedThisFrame)
-            InvokeButton(botonTurnCards);
 
         if (Keyboard.current[keyUseEnergy].wasPressedThisFrame)
             InvokeButton(botonUseEnergy);
@@ -128,9 +121,6 @@ public class KeyboardManager : MonoBehaviour
 
         if (Keyboard.current[keyResetCamera].wasPressedThisFrame)
             InvokeButton(botonResetCamera);
-
-        if (Keyboard.current[keyBoardView].wasPressedThisFrame)
-            InvokeButton(botonBoardView);
 
         // Acceso rápido a Menu
         if (Keyboard.current[keyAccessMenu].wasPressedThisFrame)

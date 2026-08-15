@@ -47,6 +47,10 @@ public class DeckManager : MonoBehaviour
     {
         Instance = this;
 
+        // Añade el componente de deslizamiento automáticamente a los paneles de mano
+        if (handPanelP1 != null) handPanelP1.gameObject.AddComponent<HandPanelSlider>();
+        if (handPanelP2 != null) handPanelP2.gameObject.AddComponent<HandPanelSlider>();
+
         // INSTANCIAR TODAS LAS CARTAS DEL JUEGO
 
         deckList = new CardData[]
@@ -651,7 +655,6 @@ public class DeckManager : MonoBehaviour
     // Si se puede, roba cartas de los mazos del jugador actual y las instancia
     public void SpawnCard()
     {
-
         // Comprueba si se puede robar en este turno
         if (TurnManager.robadoDisponible)
         {
@@ -666,10 +669,13 @@ public class DeckManager : MonoBehaviour
                     nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
                     nuevaCarta.Setup(deckP1.Dequeue());
                 }
-                if (energyDeckP1.Count > 0)
+                for (int i = 0; i < 2; i++)
                 {
-                    nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-                    nuevaCarta.Setup(energyDeckP1.Dequeue());
+                    if (energyDeckP1.Count > 0)
+                    {
+                        nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+                        nuevaCarta.Setup(energyDeckP1.Dequeue());
+                    }
                 }
             }
             else
@@ -680,10 +686,13 @@ public class DeckManager : MonoBehaviour
                     nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
                     nuevaCarta.Setup(deckP2.Dequeue());
                 }
-                if (energyDeckP2.Count > 0)
+                for (int i = 0; i < 2; i++)
                 {
-                    nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
-                    nuevaCarta.Setup(energyDeckP2.Dequeue());
+                    if (energyDeckP2.Count > 0)
+                    {
+                        nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
+                        nuevaCarta.Setup(energyDeckP2.Dequeue());
+                    }
                 }
             }
 

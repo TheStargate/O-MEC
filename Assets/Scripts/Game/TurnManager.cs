@@ -27,8 +27,6 @@ public class TurnManager : MonoBehaviour
             energiaDisponible = 0;
             bonusHerreriaActiva = 0;
             robadoDisponible = false;
-            UIManager.giradasP1 = false;
-            UIManager.giradasP2 = false;
             CardUI.cartaUISeleccionada = null;
             CardUI.estaArrastrando = false;
 
@@ -44,11 +42,6 @@ public class TurnManager : MonoBehaviour
 
             if (PlayerNameManager.Instance != null)
                 PlayerNameManager.Instance.CargarNombres("Jugador 1", "Jugador 2");
-        }
-        else if (numTurno > 2)
-        {
-            UIManager.giradasP1 = true;
-            UIManager.giradasP2 = true;
         }
 
         // Al inicio se muestra la mano del jugador 1

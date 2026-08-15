@@ -12,8 +12,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Transform handPanelP1; // Contiene las cartas de la mano del jugador 1
     [SerializeField] private Transform handPanelP2; // Contiene las cartas de la mano del jugador 2
     public static Image visorCentral; // Imagen de la carta seleccionada de la mano del jugador que aparece en el centro de la pantalla
-    public static bool giradasP1 = false; // Indica si las cartas del jugador 1 están giradas
-    public static bool giradasP2 = false; // Indica si las cartas del jugador 2 están giradas
     public static Button botonEnergia; // Botón que aparece al seleccionar una carta de energía para poder usarla
     public static TextMeshProUGUI textoEnergia; // Indica la cantidad de energía disponible para usar
 
@@ -39,7 +37,7 @@ public class UIManager : MonoBehaviour
         else if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
             pointerPressed = true;
 
-        // Si el visor central está activo y se pulsa fuera de cualquier botón, lo ocultamos.
+        // Si el visor central está activo y se pulsa fuera de cualquier botón, se oculta
         if (visorCentral != null && visorCentral.gameObject.activeSelf && pointerPressed && Time.timeScale != 0f)
         {
             bool overUIButton = false;
@@ -133,48 +131,6 @@ public class UIManager : MonoBehaviour
     {
         return carta;
     }
-
-    // Gira las cartas de la mano del jugador para ocultarlas o mostrarlas
-    public void GirarCartas()
-    {
-        // Deja de visualizar la carta seleccionada
-        visorCentral.gameObject.SetActive(false);
-        botonEnergia.gameObject.SetActive(false);
-
-        Transform handPanel;
-        if (TurnManager.turnoP1)
-        {
-            giradasP1 = !giradasP1;
-            handPanel = handPanelP1;
-        }
-        else
-        {
-            giradasP2 = !giradasP2;
-            handPanel = handPanelP2;
-        }
-
-        // Gira las cartas del jugador actual
-        foreach (Transform child in handPanel)
-        {
-            CardUI cardUI = child.GetComponent<CardUI>();
-            if (cardUI != null)
-                cardUI.GirarCarta();
-        }
-
-        // Refresca el resaltado de todas las cartas
-        Board.RefrescarResaltados();
-    }
-
-    // Gira las cartas al cambiar de turno para que el otro jugador no las vea
-    public void GirarSiempre()
-    {
-        // Gira las cartas si no están ocultas a partir del segundo turno de cada jugador
-        if (TurnManager.numTurno > 2 && ((TurnManager.turnoP1 && !giradasP1) || (!TurnManager.turnoP1 && !giradasP2)))
-        {
-            GirarCartas();
-        }
-    }
-
 
     // Gasta la carta de energía seleccionada y actualiza la energía disponible para usar
     public void ActualizarEnergia()

@@ -35,6 +35,7 @@ public class WinManager : MonoBehaviour
     {
         if (partidaTerminada) return;
         partidaTerminada = true;
+        this.perdedorEsP1 = perdedorEsP1;
 
         fondoGanador?.gameObject.SetActive(true);
 

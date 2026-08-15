@@ -13,9 +13,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     private CanvasGroup canvasGroup; // Para controlar la carta al arrastrarla
     private Vector2 posicionInicial; // Posición inicial de la carta en la mano del jugador
     [SerializeField] public Image imagenUI; // Imagen de la carta que se muestra
-    [SerializeField] public Sprite spriteReverso; // Parte de atrás de la carta
     private Cell casillaAnterior = null; // Indica la casilla anterior seleccionada para colocar la carta arrastrada
-    private bool girada; // Indica si se debe mostrar la parte de atrás de la carta
     public static CardUI cartaUISeleccionada; // Indica la carta seleccionada de la mano del jugador
     private CardSorter sorter; // Para ordenar y resaltar las cartas de la mano
     private List<Cell> casillasAreaActual = new List<Cell>(); // Casillas que se resaltan al arrastrar una carta que actúa en un área
@@ -33,18 +31,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         cartaPrefab = Instantiate(cartaPrefab, transform);
         cartaPrefab.Setup(data);
         name = data.nombre;
-
-        // Pone la carta girada si el resto también lo están
-        if ((TurnManager.turnoP1 && UIManager.giradasP1) || (!TurnManager.turnoP1 && UIManager.giradasP2))
-        {
-            imagenUI.sprite = spriteReverso;
-            girada = true;
-        }
-        else
-        {
-            imagenUI.sprite = data.imagenCarta;
-            girada = false;
-        }
+        imagenUI.sprite = data.imagenCarta;
 
         if (transform.parent != null)
         {
@@ -58,6 +45,10 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
     {
         if (Time.timeScale == 0f)
             return;
+
+        // Expande el panel de la mano si está colapsado
+        HandPanelSlider slider = GetComponentInParent<HandPanelSlider>();
+        slider?.Expandir();
 
         if (UIManager.visorCentral != null)
         {
@@ -479,14 +470,93 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         casillaAnterior = null; // Ya no hay ninguna casilla seleccionada
     }
 
-    public void GirarCarta()
-    {
-        if (girada)
-            imagenUI.sprite = cartaPrefab.cardData.imagenCarta;
-        else
-            imagenUI.sprite = spriteReverso;
+}
 
-        girada = !girada;
+/// <summary>
+/// El panel de las cartas se mantiene abajo por defecto y sube cuando el jugador
+/// hace click/toca cualquier carta de la mano. Al moverse la cámara, vuelve a bajar.
+/// </summary>
+public class HandPanelSlider : MonoBehaviour
+{
+    [SerializeField] private float posYColapsada = -130f;   // Posición Y cuando las cartas están bajadas
+    [SerializeField] private float posYExpandida  = 0f;     // Posición Y cuando las cartas están a la altura normal
+    [SerializeField] private float velocidadSlide = 10f;    // Velocidad de la animación de deslizamiento
+
+    private RectTransform rt;
+    private bool expandido = false;
+
+    public static HandPanelSlider Instance_P1 { get; private set; }
+    public static HandPanelSlider Instance_P2 { get; private set; }
+
+    private Vector3 ultimaPosCamara;
+    private Quaternion ultimaRotCamara;
+
+    void Awake()
+    {
+        rt = GetComponent<RectTransform>();
     }
 
+    void Start()
+    {
+        if (name.Contains("P1") || name.Contains("1"))
+            Instance_P1 = this;
+        else
+            Instance_P2 = this;
+
+        // Registrar la posición inicial de la cámara para la detección de movimiento
+        if (Camera.main != null)
+        {
+            ultimaPosCamara = Camera.main.transform.position;
+            ultimaRotCamara = Camera.main.transform.rotation;
+        }
+
+        // Empieza abajo
+        SetY(posYColapsada);
+    }
+
+    void Update()
+    {
+        // Anima el panel hacia la posición objetivo
+        float objetivo = expandido ? posYExpandida : posYColapsada;
+        Vector2 pos = rt.anchoredPosition;
+        pos.y = Mathf.Lerp(pos.y, objetivo, Time.deltaTime * velocidadSlide);
+        rt.anchoredPosition = pos;
+
+        // Detecta si se ha producido movimiento de cámara para volver a bajar
+        if (expandido && Camera.main != null)
+        {
+            float dist = Vector3.Distance(Camera.main.transform.position, ultimaPosCamara);
+            float angle = Quaternion.Angle(Camera.main.transform.rotation, ultimaRotCamara);
+
+            // Si la cámara se ha movido o rotado de forma apreciable, vuelve a bajar el panel de la mano
+            if (dist > 0.05f || angle > 0.1f)
+            {
+                Colapsar();
+            }
+        }
+
+        // Actualizar la última posición y rotación registrada de la cámara
+        if (Camera.main != null)
+        {
+            ultimaPosCamara = Camera.main.transform.position;
+            ultimaRotCamara = Camera.main.transform.rotation;
+        }
+    }
+
+    public void Expandir()
+    {
+        expandido = true;
+    }
+
+    public void Colapsar()
+    {
+        expandido = false;
+    }
+
+    public void SetY(float y)
+    {
+        Vector2 pos = rt.anchoredPosition;
+        pos.y = y;
+        rt.anchoredPosition = pos;
+    }
 }

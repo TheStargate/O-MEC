@@ -3,7 +3,7 @@ using UnityEngine;
 public class ClickableObject : MonoBehaviour
 {
     public TipoObjeto tipoObjeto = TipoObjeto.Ninguno;
-    [HideInInspector] public Vector3 offsetDelObjeto = new Vector3(0, 7.5f, -3.5f); // Posición relativa donde se debe quedar la cámara al seleccionar el objeto
+    [HideInInspector] public Vector3 offsetDelObjetoClickable = new Vector3(0, 10f, -5f); // Posición relativa donde se debe quedar la cámara al seleccionar el objeto
     public bool propietarioP1; // Jugador al que pertenece el objeto
     public int ultimoAtaque = 0; // Turno en el que la carta realizó el último ataque
     public int ultimoMovimiento = 0; // Turno en el que la carta realizó el último movimiento

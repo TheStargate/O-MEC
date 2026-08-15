@@ -68,9 +68,9 @@ public class CardSorter : MonoBehaviour
             foreach (var carta in cartas)
             {
                 CardData data = carta.cartaPrefab.cardData;
-                if (data.tipo != CardType.Energia && data.costoEnergia > TurnManager.energiaDisponible && carta.imagenUI.sprite != carta.spriteReverso)
+                if (data.tipo != CardType.Energia && data.costoEnergia > TurnManager.energiaDisponible)
                     carta.imagenUI.color = Color.gray;
-                else // Si la carta se puede usar o está girada, se resalta
+                else // Si la carta se puede usar, se resalta
                     carta.imagenUI.color = Color.white;
             }
         }

@@ -25,7 +25,6 @@ public class CameraController : MonoBehaviour
     // Paneles referentes a las manos de cada jugador
     [SerializeField] private Transform handPanelP1;
     [SerializeField] private Transform handPanelP2;
-    [SerializeField] private GameObject botonGirar; // Para girar las cartas
 
     private Vector3 objetivoPosicion; // Posición a la que se quiere mover la cámara al clickar un objeto
     private Quaternion objetivoRotacion; // Rotación a la que se quiere poner la cámara al clickar un objeto
@@ -43,6 +42,8 @@ public class CameraController : MonoBehaviour
     private bool pausado; // Indica si el juego está pausado
     private bool partidaTerminada = false; // Cuando termina la partida, se bloquean los paneles de acción
     private Transform objetivoActual; // Indica el objeto al que se quiere mover la cámara
+    private float cooldownRotacion180 = 0f; // Evita disparar la rotación 180º varias veces seguidas
+    private bool vistaInvertida = false;    // Indica si la cámara ha sido girada 180º respecto a la posición por defecto
     public static CameraController Instance { get; private set; } // Instancia de la propia cámara para comunicarse con otros scripts
 
     [SerializeField] private float velocidadDesplazamiento = 20f; // Velocidad a la que se mueve la cámara con el teclado en la visión de tablero
@@ -51,8 +52,7 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float zoomMinY = 5f; // Zoom mínimo en la visión de tablero
     [SerializeField] private float zoomMaxY = 60f; // Zoom máximo en la visión de tablero
     [SerializeField] private GameObject botonVolverVisionTablero; // Para volver a la posición original de la visión de tablero
-    [SerializeField] private GameObject botonVerTablero; // Botón para entrar en visión de tablero
-    [SerializeField] private Vector3 posicionVisionTableroDefault = new Vector3(0, 50, 50);
+    [SerializeField] private Vector3 posicionVisionTablero = new Vector3(0, 40, 50);
     [SerializeField] private Vector3 rotacionVisionTableroDefaultEuler = new Vector3(90f, 0f, 0f);
     [SerializeField] private float limiteMinX = -15f; // Desplazamiento X mínimo en la visión de tablero
     [SerializeField] private float limiteMaxX = 15f; // Desplazamiento X máximo en la visión de tablero
@@ -68,7 +68,6 @@ public class CameraController : MonoBehaviour
         rotacionOriginalCamaraP2 = Quaternion.Euler(50f, 180f, 0f);
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
         botonVolverVisionTablero.SetActive(false);
-        botonVerTablero.SetActive(!enVisionTablero);
         Instance = this;
     }
 
@@ -111,10 +110,13 @@ public class CameraController : MonoBehaviour
                 volverAPosicionOriginal = false;
                 objetivoActual = null;
                 enVisionTablero = false;
-                botonVerTablero.SetActive(!enVisionTablero);
                 MostrarPanelSegunObjeto(null); // No se muestra ningún panel
             });
         }
+
+        // Si el jugador mueve la cámara sin estar en visión tablero, se activa automáticamente
+        if (!enVisionTablero && !moverCamara && !volverAPosicionOriginal && !pausado)
+            DetectarInputParaVisionTablero();
 
         if (enVisionTablero && !moverCamara && !volverAPosicionOriginal && !pausado)
             ControlarVisionTablero();
@@ -143,11 +145,11 @@ public class CameraController : MonoBehaviour
 
         Card carta = hit.transform.GetComponent<Card>();
             
-        if (carta != null && (!bloqueado || carta.casilla.GetColor() == Color.violet))
+        if (carta != null && !bloqueado)
             UIManager.SetCartaSeleccionada(carta); // Marca la carta como seleccionada
 
-        if (bloqueado && (carta == null || (carta.casilla.GetColor() != Color.green && carta.casilla.GetColor() != Color.violet)))
-            return; // En la visión de tablero no se pueden clickar cartas que no estén resaltadas en verde o violeta
+        if (bloqueado && (carta == null || carta.casilla.GetColor() != Color.green))
+            return; // En la visión de tablero no se pueden clickar cartas que no estén resaltadas en verde
 
         ClickableObject clickeable = hit.transform.GetComponent<ClickableObject>();
         if (clickeable == null)
@@ -162,11 +164,34 @@ public class CameraController : MonoBehaviour
                 return; // En el primer turno de cada jugador, no se puede seleccionar el menú hasta colocar todas las cartas
         }
 
+        // Si la cámara ya está enfocada en este mismo objeto (segundo click) y es de tipo carta,
+        // muestra su imagen e información en el visor central
+        bool esTipoCarta = clickeable.tipoObjeto == TipoObjeto.Monstruo   ||
+                           clickeable.tipoObjeto == TipoObjeto.MonstruoLeg ||
+                           clickeable.tipoObjeto == TipoObjeto.Estructura  ||
+                           clickeable.tipoObjeto == TipoObjeto.Hechizo     ||
+                           clickeable.tipoObjeto == TipoObjeto.Trampa;
+
+        if (!moverCamara && objetivoActual == hit.transform && esTipoCarta && carta != null)
+        {
+            if (UIManager.visorCentral != null)
+            {
+                if (UIManager.visorCentral.sprite == carta.cardData.imagenCarta)
+                    UIManager.visorCentral.gameObject.SetActive(!UIManager.visorCentral.gameObject.activeSelf);
+                else
+                {
+                    UIManager.visorCentral.sprite = carta.cardData.imagenCarta;
+                    UIManager.visorCentral.gameObject.SetActive(true);
+                }
+            }
+            return; // No vuelve a mover la cámara
+        }
+
         // Después de validar, se marca el objeto clickado como objetivo para mover la cámara
         objetivoActual = hit.transform;
 
         // Calcula la posición y rotación objetivo de la cámara para el objeto seleccionado.
-        Vector3 offset = clickeable.offsetDelObjeto;
+        Vector3 offset = clickeable.offsetDelObjetoClickable;
         if (!clickeable.propietarioP1)
             offset.z *= -1; // Si es del jugador contrario, hay que ver el objeto desde el otro lado
 
@@ -178,7 +203,6 @@ public class CameraController : MonoBehaviour
         volverAPosicionOriginal = false;
         enVisionTablero = false;
         if (!partidaTerminada) botonVolverVisionTablero.SetActive(false);
-        botonVerTablero.SetActive(false);
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
     }
 
@@ -195,7 +219,7 @@ public class CameraController : MonoBehaviour
 
         // Indica si la cámara ha llegado a su destino
         bool posicionLista = Vector3.Distance(Camera.main.transform.position, destino) < 0.1f;
-        bool rotacionLista = Quaternion.Angle(Camera.main.transform.rotation, rotacionDestino) < 1f;
+        bool rotacionLista = Quaternion.Angle(Camera.main.transform.rotation, rotacionDestino) < 0.001f;
 
         if (posicionLista && rotacionLista)
             onComplete?.Invoke(); // Ejecuta el método establecido al llegar al destino
@@ -219,7 +243,7 @@ public class CameraController : MonoBehaviour
     // Vuelve a la posición y rotación por defecto de la visión de tablero según el turno actual
     public void VolverAPosicionVisionTablero()
     {
-        objetivoPosicion = posicionVisionTableroDefault;
+        objetivoPosicion = posicionVisionTablero;
         
         if (TurnManager.turnoP1)
             objetivoRotacion = Quaternion.Euler(rotacionVisionTableroDefaultEuler);
@@ -228,9 +252,45 @@ public class CameraController : MonoBehaviour
         
         moverCamara = true;
         enVisionTablero = true;
-        botonVerTablero.SetActive(!enVisionTablero);
 
         if (!partidaTerminada) botonVolverVisionTablero.SetActive(false);
+    }
+
+    // Detecta si el jugador está intentando mover la cámara estando en la posición por defecto para activar automáticamente la visión del tablero
+    private void DetectarInputParaVisionTablero()
+    {
+        // Solo actua si la cámara está en la posición por defecto (no mirando ningún objeto)
+        if (objetivoActual != null)
+            return;
+
+        bool hayInput = false;
+
+        // WASD / flechas de teclado
+        if (KeyboardManager.Instance != null && KeyboardManager.Instance.movimientoCamara.sqrMagnitude > 0f)
+            hayInput = true;
+
+        // Rueda del ratón (scroll)
+        if (!hayInput && Mouse.current != null && Mouse.current.scroll.ReadValue().y != 0f)
+            hayInput = true;
+
+        // Detección táctil en móvil (solo se activa con 2 o más dedos)
+        if (!hayInput && Touchscreen.current != null)
+        {
+            int activeTouches = 0;
+            foreach (var t in Touchscreen.current.touches)
+                if (t.press.isPressed) activeTouches++;
+
+            // Dos o más dedos en móvil
+            if (!CardUI.estaArrastrando && activeTouches >= 2)
+                hayInput = true;
+        }
+
+        if (hayInput)
+        {
+            // Activa la visión completa del tablero
+            VisionTablero();
+            Board.Instance?.ResaltarCasillasVioleta();
+        }
     }
 
     // Controla el movimiento y el zoom de la cámara cuando está en visión completa del tablero.
@@ -245,14 +305,10 @@ public class CameraController : MonoBehaviour
         // Si hay movimiento por teclado, desplaza la cámara en la dirección correspondiente.
         if (movimiento.sqrMagnitude > 0f)
         {
-            Vector3 direccionVertical = Vector3.forward;
-            Vector3 direccionHorizontal = Vector3.right;
-
-            if (!TurnManager.turnoP1)
-            {
-                direccionVertical = -direccionVertical;
-                direccionHorizontal = -direccionHorizontal;
-            }
+            // Las direcciones se invierten si el turno es de P2 o si la cámara ha sido girada 180º
+            bool perspectivaNormal = TurnManager.turnoP1 != vistaInvertida;
+            Vector3 direccionVertical   = perspectivaNormal ? Vector3.forward : Vector3.back;
+            Vector3 direccionHorizontal = perspectivaNormal ? Vector3.right   : Vector3.left;
 
             float zoomFactor = Mathf.InverseLerp(zoomMinY, zoomMaxY, Camera.main.transform.position.y);
             float velocidadActual = velocidadDesplazamiento * Mathf.Lerp(0.5f, 1.8f, zoomFactor);
@@ -289,8 +345,10 @@ public class CameraController : MonoBehaviour
             if (delta.sqrMagnitude > 1f)
             {
                 // Invertir ejes: arrastrar en pantalla mueve la cámara hacia el lado contrario
-                Vector3 direccionVertical = TurnManager.turnoP1 ? Vector3.forward : Vector3.back;
-                Vector3 direccionHorizontal = TurnManager.turnoP1 ? Vector3.right : Vector3.left;
+                // También se invierte si la cámara ha sido girada 180º con Q/E
+                bool perspectivaNormal = TurnManager.turnoP1 != vistaInvertida;
+                Vector3 direccionVertical   = perspectivaNormal ? Vector3.forward : Vector3.back;
+                Vector3 direccionHorizontal = perspectivaNormal ? Vector3.right   : Vector3.left;
 
                 float zoomFactor = Mathf.InverseLerp(zoomMinY, zoomMaxY, Camera.main.transform.position.y);
                 float sensibilidadActual = sensibilidadToque * Mathf.Lerp(0.5f, 1.8f, zoomFactor);
@@ -324,7 +382,7 @@ public class CameraController : MonoBehaviour
             }
         }
 
-        // Control de zoom con dos dedos para móviles
+        // Control de zoom con dos dedos para móviles + detección de giro brusco 180º
         if (!CardUI.estaArrastrando && activeTouches >= 2)
         {
             UnityEngine.InputSystem.Controls.TouchControl t0 = null;
@@ -347,20 +405,61 @@ public class CameraController : MonoBehaviour
                 Vector2 prevPos0 = pos0 - t0.delta.ReadValue();
                 Vector2 prevPos1 = pos1 - t1.delta.ReadValue();
 
-                float delta = Vector2.Distance(pos0, pos1) - Vector2.Distance(prevPos0, prevPos1);
-
-                if (Mathf.Abs(delta) > 0.05f)
+                // Zoom (pinch)
+                float deltaPinch = Vector2.Distance(pos0, pos1) - Vector2.Distance(prevPos0, prevPos1);
+                if (Mathf.Abs(deltaPinch) > 0.05f)
                 {
                     Vector3 direccionZoom = Camera.main.transform.forward;
-                    Vector3 nuevaPosicion = Camera.main.transform.position + direccionZoom * (delta * 0.05f);
+                    Vector3 nuevaPosicion = Camera.main.transform.position + direccionZoom * (deltaPinch * 0.05f);
 
                     if (nuevaPosicion.y >= zoomMinY && nuevaPosicion.y <= zoomMaxY)
                         Camera.main.transform.position = nuevaPosicion;
 
                     botonVolverVisionTablero.SetActive(true);
                 }
+
+                // Rotación brusca con dos dedos: si detecta un giro rápido rota la cámara 180º
+                float anguloActual  = Mathf.Atan2(pos1.y - pos0.y, pos1.x - pos0.x) * Mathf.Rad2Deg;
+                float anguloAnterior = Mathf.Atan2(prevPos1.y - prevPos0.y, prevPos1.x - prevPos0.x) * Mathf.Rad2Deg;
+                float deltaAngulo = Mathf.DeltaAngle(anguloAnterior, anguloActual);
+
+                if (cooldownRotacion180 <= 0f && Mathf.Abs(deltaAngulo) > 5f)
+                    RotarCamara180();
             }
         }
+
+        // Rotación 180º de la cámara con Q o E (teclado)
+        if (cooldownRotacion180 <= 0f && Keyboard.current != null &&
+            (Keyboard.current.qKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame))
+            RotarCamara180();
+
+        // Decrementar cooldown de rotación
+        if (cooldownRotacion180 > 0f)
+            cooldownRotacion180 -= Time.deltaTime;
+    }
+
+    // Rota la cámara 180º alrededor del centro del tablero (cambia de perspectiva)
+    private void RotarCamara180()
+    {
+        cooldownRotacion180 = 0.1f; // 0.1 segundos de cooldown para evitar dobles activaciones
+        vistaInvertida = !vistaInvertida; // Alterna el estado de inversión
+
+        Vector3 posActual = Camera.main.transform.position;
+        float centroZ = (limiteMinZ + limiteMaxZ) / 2f; // Centro del tablero en Z
+
+        // Reflejar la posición alrededor del centro del tablero (x=0, z=centroZ)
+        objetivoPosicion = new Vector3(-posActual.x, posActual.y, 2f * centroZ - posActual.z);
+
+        // Seleccionar la rotación exacta predefinida según el turno y el estado de inversión
+        // perspectivaNormal = true: rotación P1 (Euler 90,0,0)
+        // perspectivaNormal = false: rotación P2 (Euler 90,0,180)
+        bool perspectivaNormal = TurnManager.turnoP1 != vistaInvertida;
+        objetivoRotacion = perspectivaNormal
+            ? Quaternion.Euler(90f, 0f, 0f)
+            : Quaternion.Euler(90f, 0f, 180f);
+
+        moverCamara = true;
+        botonVolverVisionTablero.SetActive(true);
     }
 
     // Muestra el panel del objeto clickable seleccionado (o ninguno si se indica null)
@@ -503,8 +602,9 @@ public class CameraController : MonoBehaviour
     {
         enVisionTablero = true;
         bloqueado = mostrarPanel;
+        vistaInvertida = false; // Siempre se empieza con la orientación por defecto del jugador
 
-        objetivoPosicion = new Vector3(0, 50, 50);
+        objetivoPosicion = posicionVisionTablero;
         if (TurnManager.turnoP1)
             objetivoRotacion = Quaternion.Euler(90f, 0f, 0f);
         else
@@ -512,7 +612,6 @@ public class CameraController : MonoBehaviour
 
         moverCamara = true;
         volverAPosicionOriginal = false;
-        botonVerTablero.SetActive(!enVisionTablero);
 
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
     }
@@ -538,7 +637,6 @@ public class CameraController : MonoBehaviour
     {
         pausado = true;
         Time.timeScale = 0f;
-        botonGirar.SetActive(false);
         panelPausa.SetActive(true);
     }
 
@@ -548,7 +646,6 @@ public class CameraController : MonoBehaviour
         UIManager.visorCentral.gameObject.SetActive(false);
         pausado = false;
         Time.timeScale = 1f;
-        botonGirar.SetActive(true);
         panelPausa.SetActive(false);
     }
 
@@ -566,7 +663,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = deckActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = deckActual.offsetDelObjeto;
+        Vector3 offset = deckActual.offsetDelObjetoClickable;
         if (!deckActual.propietarioP1)
             offset.z *= -1;
 
@@ -597,7 +694,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = menuActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = menuActual.offsetDelObjeto;
+        Vector3 offset = menuActual.offsetDelObjetoClickable;
         if (!menuActual.propietarioP1)
             offset.z *= -1;
 
