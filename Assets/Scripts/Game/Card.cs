@@ -188,6 +188,7 @@ public class Card : MonoBehaviour
     public GameObject backgroundVelocidad; // Fondo para que se vea bien textoVelocidad
     public GameObject backgroundAtaqueMonstruo; // Fondo para que se vea bien textoAtaqueMonstruo
     public GameObject backgroundAtaqueEstructura; // Fondo para que se vea bien textoAtaqueEstructura
+    public GameObject indicadorHabilidadUsada; // Indica visualmente que la habilidad activa ya se ha usado
     public PassiveAbility pasiva; // Habilidad pasiva de la carta (null si no tiene)
     public ActiveAbility activa; // Habilidad activa de la carta (null si no tiene)
     
@@ -218,6 +219,7 @@ public class Card : MonoBehaviour
         if (backgroundVelocidad != null) backgroundVelocidad.SetActive(false);
         if (backgroundAtaqueMonstruo != null) backgroundAtaqueMonstruo.SetActive(false);
         if (backgroundAtaqueEstructura != null) backgroundAtaqueEstructura.SetActive(false);
+        if (indicadorHabilidadUsada != null) indicadorHabilidadUsada.SetActive(false);
         cardData = data.Clone();
         name = data.nombre;
 
@@ -242,8 +244,29 @@ public class Card : MonoBehaviour
                 _ => TipoObjeto.Ninguno
             };
         }
-        
+
+        RefrescarIndicadorHabilidadUsada();
+        RefrescarDurabilidadTrampa();
         RefrescarAtaqueUI();
+    }
+
+    // Actualiza y muestra si se ha usado la habildiad de la carta
+    public void RefrescarIndicadorHabilidadUsada()
+    {
+        if (indicadorHabilidadUsada != null)
+            indicadorHabilidadUsada.SetActive(clickableObject != null && clickableObject.habilidadUsada);
+    }
+
+    // Actualiza y muestra la durabilidad de la trampa
+    public void RefrescarDurabilidadTrampa()
+    {
+        if (cardData is TrapCardData trapData)
+        {
+            if (textoVida != null)
+                textoVida.text = trapData.turnos.ToString();
+            if (background != null)
+                background.SetActive(trapData.turnos < trapData.turnosMaximos);
+        }
     }
 
     // Actualiza y muestra la nueva vida de la carta
@@ -404,9 +427,7 @@ public class Card : MonoBehaviour
     {
         TrapCardData data = cardData as TrapCardData;
         data.turnos--;
-        // textoVida en este caso indica los turnos restantes para que la trampa se rompa
-        textoVida.text = data.turnos.ToString();
-        background.SetActive(true);
+        RefrescarDurabilidadTrampa();
         if (data.turnos == 0) // Si turnos llega a 0, se desturye la trampa
             casilla.LiberarCasilla(false);
     }
@@ -417,7 +438,7 @@ public class Card : MonoBehaviour
         if (cardData is TrapCardData data)
         {
             data.turnos = data.turnosMaximos;
-            textoVida.text = data.turnos.ToString();
+            RefrescarDurabilidadTrampa();
         }
     }
 

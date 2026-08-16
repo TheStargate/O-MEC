@@ -65,7 +65,8 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
         if (UIManager.visorCentral.gameObject.activeSelf)
         { // Establece la carta como seleccionada
             cartaUISeleccionada = this;
-            if (cartaPrefab.cardData.tipo == CardType.Energia)
+            UIManager.botonEnergia.gameObject.SetActive(true);
+            if (TurnManager.numTurno > 2)
                 UIManager.botonEnergia.gameObject.SetActive(true);
             else
                 UIManager.botonEnergia.gameObject.SetActive(false);
@@ -478,7 +479,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
 /// </summary>
 public class HandPanelSlider : MonoBehaviour
 {
-    [SerializeField] private float posYColapsada = -130f;   // Posición Y cuando las cartas están bajadas
+    [SerializeField] private float posYColapsada = -110f;   // Posición Y cuando las cartas están bajadas
     [SerializeField] private float posYExpandida  = 0f;     // Posición Y cuando las cartas están a la altura normal
     [SerializeField] private float velocidadSlide = 10f;    // Velocidad de la animación de deslizamiento
 

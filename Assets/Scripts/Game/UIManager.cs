@@ -44,6 +44,7 @@ public class UIManager : MonoBehaviour
         if (visorCentral != null && visorCentral.gameObject.activeSelf && pointerPressed && Time.timeScale != 0f)
         {
             bool overUIButton = false;
+            bool overVisorOInfo = false;
             if (EventSystem.current != null && graphicRaycaster != null)
             {
                 PointerEventData pointerData = new PointerEventData(EventSystem.current);
@@ -55,18 +56,33 @@ public class UIManager : MonoBehaviour
                 List<RaycastResult> results = new List<RaycastResult>();
                 graphicRaycaster.Raycast(pointerData, results);
 
+                GameObject infoContainer = textoInfoCarta != null ? textoInfoCarta.transform.parent.parent.parent.gameObject : null;
+
                 foreach (RaycastResult result in results)
                 {
                     if (result.gameObject == null) continue;
+
                     if (result.gameObject.GetComponentInParent<Button>() != null)
                     {
                         overUIButton = true;
                         break;
                     }
+
+                    if (visorCentral != null && (result.gameObject == visorCentral.gameObject || result.gameObject.transform.IsChildOf(visorCentral.transform)))
+                    {
+                        overVisorOInfo = true;
+                        break;
+                    }
+
+                    if (infoContainer != null && (result.gameObject == infoContainer || result.gameObject.transform.IsChildOf(infoContainer.transform)))
+                    {
+                        overVisorOInfo = true;
+                        break;
+                    }
                 }
             }
 
-            if (!overUIButton)
+            if (!overUIButton && !overVisorOInfo)
                 OcultarVisorCentral();
         }
 
@@ -142,31 +158,45 @@ public class UIManager : MonoBehaviour
         carta = c;
     }
 
-    // Devuelve la carta seleccionada de la mano del jugadors
+    // Devuelve la carta seleccionada de la mano del jugador
     public Card GetCartaSeleccionada()
     {
         return carta;
     }
 
-    // Gasta la carta de energía seleccionada y actualiza la energía disponible para usar
+    // Gasta la carta seleccionada para obtener energía disponible para usar.
+    // Si la carta no es de energía o Monstruo Legendario, se obtiene la mitad de su coste (redondeado hacia abajo).
     public void ActualizarEnergia()
     {
+        if (CardUI.cartaUISeleccionada == null || CardUI.cartaUISeleccionada.cartaPrefab == null)
+            return;
+
         CardData data = CardUI.cartaUISeleccionada.cartaPrefab.cardData;
-        if (data.tipo == CardType.Energia)
+        if (data == null)
+            return;
+
+        int energiaGanada = (data.tipo == CardType.Energia || data.tipo == CardType.MonstruoLeg) ? data.costoEnergia : Mathf.FloorToInt(data.costoEnergia / 2f);
+
+        if (DeckManager.Instance != null)
         {
-            // Actualiza la energía disponible
-            TurnManager.energiaDisponible += data.costoEnergia;
-            textoEnergia.SetText(TurnManager.energiaDisponible.ToString());
-
-            // Destruye la carta de energía utilizada
-            Destroy(CardUI.cartaUISeleccionada.gameObject);
-            visorCentral.gameObject.SetActive(false);
-            botonEnergia.gameObject.SetActive(false);
-
-            // Actualiza el resaltado de la mano y del tablero con la nueva energía disponible
-            Board.RefrescarResaltados();
-            CameraController.Instance.RefrescarPanelActual();
+            if (data.tipo == CardType.Energia)
+                DeckManager.Instance.descartarEnergia();
+            else if(data.tipo != CardType.MonstruoLeg)
+                DeckManager.Instance.descartar(data, TurnManager.turnoP1);
         }
+
+        // Actualiza la energía disponible
+        TurnManager.energiaDisponible += energiaGanada;
+        textoEnergia.SetText(TurnManager.energiaDisponible.ToString());
+
+        // Destruye la carta utilizada
+        Destroy(CardUI.cartaUISeleccionada.gameObject);
+        visorCentral.gameObject.SetActive(false);
+        botonEnergia.gameObject.SetActive(false);
+
+        // Actualiza el resaltado de la mano y del tablero con la nueva energía disponible
+        Board.RefrescarResaltados();
+        CameraController.Instance.RefrescarPanelActual();
     }
 
     // Genera el texto de información detallada de una carta del tablero para mostrar en la consola
@@ -177,14 +207,9 @@ public class UIManager : MonoBehaviour
         var sb = new System.Text.StringBuilder();
         CardData data = carta.cardData;
         ClickableObject co = carta.clickableObject;
-        string propietario = (co != null)
-            ? (co.propietarioP1 ? "Jugador 1" : "Jugador 2")
-            : "?";
 
         // CABECERA
         sb.AppendLine($"<b>── {data.nombre.ToUpper()} ──</b>");
-        sb.AppendLine($"Tipo: {data.tipo}   |   Propietario: {propietario}");
-        sb.AppendLine($"Turno actual: {TurnManager.numTurno}");
         sb.AppendLine();
 
         // ESTADÍSTICAS BASE
@@ -203,49 +228,29 @@ public class UIManager : MonoBehaviour
             }
             bool velocidadModificada = mData.velocidad != velocidadOriginal;
 
-            sb.AppendLine($"  Vida:      {mData.vida} / {mData.vidaMaxima}");
-            sb.AppendLine($"  Ataque:    {mData.ataque}" + (ataqueTotal != mData.ataque ? $" (modificado a <color=yellow>{ataqueTotal}</color>)" : ""));
-            sb.AppendLine($"  Velocidad: {mData.velocidad}" + (velocidadModificada ? $" (modificado a <color=yellow>{mData.velocidad}</color>)" : "") + $"   |   Alcance: {mData.alcance}");
+            sb.AppendLine($"Vida: {mData.vida} / {mData.vidaMaxima}");
+            sb.AppendLine($"Ataque: {ataqueTotal}" + (ataqueTotal != mData.ataque ? " (modificado)" : ""));
+            sb.AppendLine($"Velocidad: {mData.velocidad}" + (velocidadModificada ? " (modificado)" : ""));
+            sb.AppendLine($"Alcance: {mData.alcance}");
         }
         else if (data is StructureCardData sData)
         {
             int ataqueTotal = PassiveAbility.CalcularDanyoAtacante(carta, null);
-            sb.AppendLine($"  Vida:   {sData.vida} / {sData.vidaMaxima}");
-            sb.AppendLine($"  Ataque: {sData.ataque}" + (ataqueTotal != sData.ataque ? $" (modificado a <color=yellow>{ataqueTotal}</color>)" : ""));
-            sb.AppendLine($"  Alcance: {sData.alcance}");
+            sb.AppendLine($"Vida: {sData.vida} / {sData.vidaMaxima}");
+            sb.AppendLine($"Ataque: {ataqueTotal}" + (ataqueTotal != sData.ataque ? " (modificado)" : ""));
+            sb.AppendLine($"Alcance: {sData.alcance}");
         }
         else if (data is TrapCardData tData)
         {
-            sb.AppendLine($"  Daño de trampa: {tData.ataque}");
-            sb.AppendLine($"  Durabilidad: {tData.turnos} / {tData.turnosMaximos} turnos");
+            sb.AppendLine($"Daño de trampa: {tData.ataque}");
+            sb.AppendLine($"Durabilidad: {tData.turnos} / {tData.turnosMaximos} turnos");
         }
-        if (data.costeHabilidad > 0)
-            sb.AppendLine($"  Coste habilidad: {data.costeHabilidad} energía");
         sb.AppendLine();
 
-        // ESTADO DE TURNO
-        if (co != null)
-        {
-            sb.AppendLine("<b>[ ESTADO DE TURNO ]</b>");
-            sb.AppendLine($"  Turno colocada:    {co.turnoColocado}");
-            
-            // Comprobación de Aturdimiento: si el último movimiento y el ataque están bloqueados más allá del turno actual + 1
-            bool aturdido = co.ultimoMovimiento >= TurnManager.numTurno + 2 || co.ultimoAtaque >= TurnManager.numTurno + 2;
-            if (aturdido)
-                sb.AppendLine("  😵 <color=red><b>¡ATURDIDO!</b></color> (No puede moverse ni atacar este turno)");
-
-            bool puedeMoverse = co.ultimoMovimiento < TurnManager.numTurno;
-            bool puedeAtacar  = co.ultimoAtaque  < TurnManager.numTurno;
-            sb.AppendLine($"  Puede moverse:  " + (puedeMoverse ? "<color=green>Sí</color>" : "<color=red>No</color>") + $"  (último movimiento en turno {co.ultimoMovimiento})");
-            sb.AppendLine($"  Puede atacar:   " + (puedeAtacar  ? "<color=green>Sí</color>" : "<color=red>No</color>") + $"  (último ataque en turno {co.ultimoAtaque})");
-            if (carta.activa != null)
-                sb.AppendLine($"  Habilidad activa: " + (co.habilidadUsada ? "<color=red>YA USADA este turno</color>" : "<color=green>Disponible</color>"));
-            sb.AppendLine($"  Usada (sin acciones): " + (co.usado ? "<color=gray>Sí</color>" : "No"));
-            sb.AppendLine();
-        }
-
         // MODIFICADORES ACTIVOS
-        bool hayModificadores = carta.invulnerableHastaProximoTurno ||
+        bool aturdido = co != null && (co.ultimoMovimiento >= TurnManager.numTurno + 2 || co.ultimoAtaque >= TurnManager.numTurno + 2);
+        bool hayModificadores = aturdido ||
+                                carta.invulnerableHastaProximoTurno ||
                                 carta.inmuneHechizosIndefinido ||
                                 carta.bonusDanyoProximoAtaque != 0 ||
                                 carta.multDanyoProximoAtaque != 1 ||
@@ -260,46 +265,36 @@ public class UIManager : MonoBehaviour
 
         if (hayModificadores)
         {
-            sb.AppendLine("<b>[ MODIFICADORES ACTIVOS ]</b>");
-            if (carta.invulnerableHastaProximoTurno) sb.AppendLine("  🛡 Invulnerable hasta el próximo turno");
-            if (carta.inmuneHechizosIndefinido)      sb.AppendLine("  ✨ Inmunidad a hechizos indefinida");
-            if (carta.multDanyoIndefinido != 1)      sb.AppendLine($"  ⚔ Multiplicador de daño indefinido: x{carta.multDanyoIndefinido}");
-            if (carta.bonusDanyoProximoAtaque != 0)  sb.AppendLine($"  ⚔ Bonus del próximo ataque: +{carta.bonusDanyoProximoAtaque}");
-            if (carta.multDanyoProximoAtaque != 1)   sb.AppendLine($"  ⚔ Multiplicador del próximo ataque: x{carta.multDanyoProximoAtaque}");
-            if (carta.areaProximoAtaque)             sb.AppendLine("  💥 Próximo ataque en área");
-            if (carta.espiaActivoProximoAtaque)      sb.AppendLine("  🕵 Bonus de triple de daño al castillo");
-            if (carta.bonusDanyoTrampa != 0)         sb.AppendLine($"  💣 Bonus de daño: +{carta.bonusDanyoTrampa}");
-            if (carta.multDanyoTrampa != 1)          sb.AppendLine($"  💣 Multiplicador de daño: x{carta.multDanyoTrampa}");
-            if (carta.trampaAplicaAturdimiento)      sb.AppendLine("  😵 Aplica Aturdimiento");
-            if (carta.trampaAplicaRalentizacion)     sb.AppendLine("  🐢 Aplica Ralentización");
-            if (carta.trampaAplicaFuego > 0)         sb.AppendLine($"  🔥 Aplica Fuego ({carta.trampaAplicaFuego} daño por turno)");
+            sb.AppendLine("<b>[ MODIFICADORES ]</b>");
+            if (aturdido) sb.AppendLine("😵 Aturdido hasta el próximo turno");
+            if (carta.invulnerableHastaProximoTurno) sb.AppendLine("🛡 Invulnerable hasta el próximo turno");
+            if (carta.inmuneHechizosIndefinido)      sb.AppendLine("✨ Inmunidad a hechizos indefinida");
+            if (carta.multDanyoIndefinido != 1)      sb.AppendLine($"⚔ Multiplicador de daño indefinido: x{carta.multDanyoIndefinido}");
+            if (carta.bonusDanyoProximoAtaque != 0)  sb.AppendLine($"⚔ Bonus del próximo ataque: +{carta.bonusDanyoProximoAtaque}");
+            if (carta.multDanyoProximoAtaque != 1)   sb.AppendLine($"⚔ Multiplicador del próximo ataque: x{carta.multDanyoProximoAtaque}");
+            if (carta.areaProximoAtaque)             sb.AppendLine("💥 Próximo ataque en área");
+            if (carta.espiaActivoProximoAtaque)      sb.AppendLine("🕵 Bonus de triple de daño al castillo");
+            if (carta.bonusDanyoTrampa != 0)         sb.AppendLine($"💣 Bonus de daño: +{carta.bonusDanyoTrampa}");
+            if (carta.multDanyoTrampa != 1)          sb.AppendLine($"💣 Multiplicador de daño: x{carta.multDanyoTrampa}");
+            if (carta.trampaAplicaAturdimiento)      sb.AppendLine("😵 Aplica Aturdimiento");
+            if (carta.trampaAplicaRalentizacion)     sb.AppendLine("🐢 Aplica Ralentización");
+            if (carta.trampaAplicaFuego > 0)         sb.AppendLine($"🔥 Aplica Fuego ({carta.trampaAplicaFuego} daño por turno)");
             sb.AppendLine();
         }
 
         // EFECTOS DE DAÑO CONTINUO
         if (data is DamageableCardData dData && dData.efectosDanyo != null && dData.efectosDanyo.Count > 0)
         {
-            sb.AppendLine("<b>[ EFECTOS DE DAÑO CONTINUO ]</b>");
+            sb.AppendLine("<b>[ DAÑO POR TURNO ]</b>");
             int danyoTotalEfectos = 0;
             foreach (var efecto in dData.efectosDanyo)
             {
                 string turnos = efecto.turnosRestantes == -1 ? "∞ turnos" : $"{efecto.turnosRestantes} turnos rest.";
-                sb.AppendLine($"  🩸 {efecto.nombre}: -{efecto.danyo} daño por turno ({turnos})");
+                sb.AppendLine($"🩸 {efecto.nombre}: -{efecto.danyo} vida ({turnos})");
                 danyoTotalEfectos += efecto.danyo;
             }
-            sb.AppendLine($"  Total daño continuo: -{danyoTotalEfectos} daño este turno");
+            sb.AppendLine($"Total: {danyoTotalEfectos} daño por turno");
             sb.AppendLine();
-        }
-
-        // HABILIDADES
-        if (carta.pasiva != null || carta.activa != null)
-        {
-            sb.AppendLine("<b>[ HABILIDADES ]</b>");
-            if (carta.pasiva != null)
-                sb.AppendLine($"  Pasiva: {carta.pasiva.GetType().Name}");
-            if (carta.activa != null)
-                sb.AppendLine($"  Activa: {carta.activa.GetType().Name}" +
-                    (data.costeHabilidad > 0 ? $" (coste: {data.costeHabilidad})" : ""));
         }
 
         return sb.ToString();

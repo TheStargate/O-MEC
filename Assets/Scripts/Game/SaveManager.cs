@@ -303,6 +303,7 @@ public class SaveManager : MonoBehaviour
                 carta.clickableObject.usado = saveCard.usado;
                 carta.clickableObject.habilidadUsada = saveCard.habilidadUsada;
                 carta.clickableObject.turnoColocado = saveCard.turnoColocado;
+                carta.RefrescarIndicadorHabilidadUsada();
 
                 carta.invulnerableHastaProximoTurno = saveCard.invulnerableHastaProximoTurno;
                 carta.inmuneHechizosIndefinido = saveCard.inmuneHechizosIndefinido;
@@ -335,7 +336,10 @@ public class SaveManager : MonoBehaviour
                     carta.UpdateVelocidad(saveCard.velocidadActual);
                 
                 if (carta.cardData is TrapCardData tData)
+                {
                     tData.turnos = saveCard.turnosTrampaActuales;
+                    carta.RefrescarDurabilidadTrampa();
+                }
 
                 // Restaura estados internos de la pasiva
                 if (carta.pasiva is PassiveNinja pNinja) pNinja.ataquesTurno = saveCard.pasiva_ataquesTurno;
@@ -348,6 +352,8 @@ public class SaveManager : MonoBehaviour
                 if (carta.pasiva is PassiveMuroReforzado pMuroR) pMuroR.reduccionAplicada = saveCard.pasiva_reduccionAplicadaInt;
                 if (carta.pasiva is PassiveMuro pMuro) pMuro.reduccionAplicada = saveCard.pasiva_reduccionAplicadaBool;
 
+                carta.RefrescarIndicadorHabilidadUsada();
+                carta.RefrescarDurabilidadTrampa();
                 carta.RefrescarAtaqueUI();
 
                 cell.cartaActual = carta;

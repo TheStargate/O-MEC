@@ -152,7 +152,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = hit.transform;
 
         // Calcula la posición y rotación objetivo de la cámara para el objeto seleccionado.
-        Vector3 offset = clickeable.offsetDelObjetoClickable;
+        Vector3 offset = clickeable.offsetDeObjetoClickable;
         if (!clickeable.propietarioP1)
             offset.z *= -1; // Si es del jugador contrario, hay que ver el objeto desde el otro lado
 
@@ -473,7 +473,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = deckActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = deckActual.offsetDelObjetoClickable;
+        Vector3 offset = deckActual.offsetDeObjetoClickable;
         if (!deckActual.propietarioP1)
             offset.z *= -1;
 
@@ -504,7 +504,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = menuActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = menuActual.offsetDelObjetoClickable;
+        Vector3 offset = menuActual.offsetDeObjetoClickable;
         if (!menuActual.propietarioP1)
             offset.z *= -1;
 
@@ -668,7 +668,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = deckActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = deckActual.offsetDelObjetoClickable;
+        Vector3 offset = deckActual.offsetDeObjetoClickable;
         if (!deckActual.propietarioP1)
             offset.z *= -1;
 
@@ -699,7 +699,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = menuActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = menuActual.offsetDelObjetoClickable;
+        Vector3 offset = menuActual.offsetDeObjetoClickable;
         if (!menuActual.propietarioP1)
             offset.z *= -1;
 

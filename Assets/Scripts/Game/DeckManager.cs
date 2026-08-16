@@ -669,13 +669,10 @@ public class DeckManager : MonoBehaviour
                     nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
                     nuevaCarta.Setup(deckP1.Dequeue());
                 }
-                for (int i = 0; i < 2; i++)
+                if (energyDeckP1.Count > 0)
                 {
-                    if (energyDeckP1.Count > 0)
-                    {
-                        nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
-                        nuevaCarta.Setup(energyDeckP1.Dequeue());
-                    }
+                    nuevaCarta = Instantiate(cartaPrefab, handPanelP1);
+                    nuevaCarta.Setup(energyDeckP1.Dequeue());
                 }
             }
             else
@@ -686,13 +683,10 @@ public class DeckManager : MonoBehaviour
                     nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
                     nuevaCarta.Setup(deckP2.Dequeue());
                 }
-                for (int i = 0; i < 2; i++)
+                if (energyDeckP2.Count > 0)
                 {
-                    if (energyDeckP2.Count > 0)
-                    {
-                        nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
-                        nuevaCarta.Setup(energyDeckP2.Dequeue());
-                    }
+                    nuevaCarta = Instantiate(cartaPrefab, handPanelP2);
+                    nuevaCarta.Setup(energyDeckP2.Dequeue());
                 }
             }
 

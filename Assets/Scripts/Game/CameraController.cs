@@ -14,6 +14,7 @@ public class CameraController : MonoBehaviour
     [SerializeField] private GameObject panelEnergia;
     [SerializeField] private GameObject panelMenu;
     [SerializeField] private GameObject panelConfirmar;
+    [SerializeField] private GameObject panelVolver;
     [SerializeField] private GameObject panelPausa; // Para cuando el juego está pausado
 
     // Objetos Deck y Menu para acceso por teclado
@@ -38,6 +39,8 @@ public class CameraController : MonoBehaviour
     private bool moverCamara = false; // Indica si se está moviendo la cámara
     private bool bloqueado = false; // Bloquea la cámara si está en visión completa del tablero
     private bool volverAPosicionOriginal = false; // Indica si la cámarra se está moviendo a su posición original
+    private bool activarPanelVolver = false; // Si la visión del tablero se activa con casillas violeta, debe mostrar panelVolver en vez de panelConfirmar
+    private bool volverAVisionTableroVioleta = false; // Si se sale de la vista violeta para enfocar una carta, volver debe restaurarla.
     public bool enVisionTablero = false; // Indica que la cámara está en visión completa del tablero
     private bool pausado; // Indica si el juego está pausado
     private bool partidaTerminada = false; // Cuando termina la partida, se bloquean los paneles de acción
@@ -50,7 +53,7 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float velocidadZoom = 200f; // Velocidad del zoom con la rueda del ratón en la visión de tablero
     [SerializeField] private float sensibilidadToque = 0.025f; // Sensibilidad del paneo táctil en la visión de tablero
     [SerializeField] private float zoomMinY = 5f; // Zoom mínimo en la visión de tablero
-    [SerializeField] private float zoomMaxY = 60f; // Zoom máximo en la visión de tablero
+    [SerializeField] private float zoomMaxY = 40f; // Zoom máximo en la visión de tablero
     [SerializeField] private GameObject botonVolverVisionTablero; // Para volver a la posición original de la visión de tablero
     [SerializeField] private Vector3 posicionVisionTablero = new Vector3(0, 40, 50);
     [SerializeField] private Vector3 rotacionVisionTableroDefaultEuler = new Vector3(90f, 0f, 0f);
@@ -58,6 +61,11 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float limiteMaxX = 15f; // Desplazamiento X máximo en la visión de tablero
     [SerializeField] private float limiteMinZ = 30f; // Desplazamiento Z mínimo en la visión de tablero
     [SerializeField] private float limiteMaxZ = 70f; // Desplazamiento Z máximo en la visión de tablero
+
+    private float tiempoTactilVioleta = 0f; // Tiempo que lleva pulsado el toque en modo violeta
+    private const float tiempoLongPressVioleta = 1f; // Tiempo necesario para long press en modo violeta (1 segundo)
+    private bool fueClickLargoPorVioleta = false; // Indica si el último click fue un long press en violeta
+    private bool yaProcesoLongPressVioleta = false; // Para evitar procesar el long press múltiples veces en el mismo toque
 
     void Start()
     {
@@ -73,14 +81,40 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
+        // Maneja el long press en modo violeta con touchscreen
+        bool modoVioleta = bloqueado && activarPanelVolver;
+        bool touchActivo = Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed;
+        
+        if (modoVioleta && touchActivo)
+        {
+            tiempoTactilVioleta += Time.deltaTime;
+            if (tiempoTactilVioleta >= tiempoLongPressVioleta && !yaProcesoLongPressVioleta)
+            {
+                // Se han alcanzado 1 segundo: procesar el long press
+                fueClickLargoPorVioleta = true;
+                yaProcesoLongPressVioleta = true;
+                ClickIzquierdo(); // Llamar directamente aquí cuando se alcanza el tiempo
+            }
+        }
+        else if (!touchActivo || !modoVioleta)
+        {
+            // Soltar o cambiar de modo: resetear
+            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasReleasedThisFrame)
+            {
+                tiempoTactilVioleta = 0f;
+                fueClickLargoPorVioleta = false;
+                yaProcesoLongPressVioleta = false;
+            }
+        }
+
         bool isPressed = false;
         if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
             isPressed = true;
         else if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             isPressed = true;
 
-        if (isPressed)
-            ClickIzquierdo();
+        if (isPressed && !(modoVioleta && Touchscreen.current != null))
+            ClickIzquierdo(); // Solo llamar por click inicial si NO estamos en modo violeta con toque
 
         if (moverCamara)
         {
@@ -92,8 +126,13 @@ public class CameraController : MonoBehaviour
                 if (UIManager?.canvas == null || partidaTerminada)
                     return;
 
-                if (bloqueado) // Si la cámara estaba bloqueada, solo se puede confirmar para volver a la visión de tablero
-                    panelConfirmar?.SetActive(true);
+                if (bloqueado)
+                { // Si la cámara está bloqueada, solo se pude confirmar para volver a la visión de tablero
+                    if (activarPanelVolver)
+                        panelVolver?.SetActive(true);
+                    else
+                        panelConfirmar?.SetActive(true);
+                }
                 else
                     MostrarPanelSegunObjeto(objetivoActual != null ? objetivoActual.GetComponent<ClickableObject>() : null);
             });
@@ -128,6 +167,12 @@ public class CameraController : MonoBehaviour
         if (UIManager == null || UIManager.canvas == null || UIManager.EstaSobreUI())
             return;
 
+        // En modo violeta, con touchscreen, se requiere un long press para hacer click en cartas
+        bool modoVioleta = bloqueado && activarPanelVolver;
+        bool isTouchscreen = Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed;
+        if (modoVioleta && isTouchscreen && !fueClickLargoPorVioleta)
+            return; // Ignorar clicks que no cumplan con long press en modo violeta con toque
+
         // Hace un raycast para comprobar si se ha clickado una carta u objeto clickable válido
         Vector2 screenPos = Vector2.zero;
         if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
@@ -144,14 +189,15 @@ public class CameraController : MonoBehaviour
             return;
 
         Card carta = hit.transform.GetComponent<Card>();
-            
+
         if (carta != null && !bloqueado)
             UIManager.SetCartaSeleccionada(carta); // Marca la carta como seleccionada
 
-        if (bloqueado && (carta == null || carta.casilla.GetColor() != Color.green))
-            return; // En la visión de tablero no se pueden clickar cartas que no estén resaltadas en verde
-
         ClickableObject clickeable = hit.transform.GetComponent<ClickableObject>();
+        bool permiteClickCartaEnVisionTablero = bloqueado && activarPanelVolver && carta != null;
+        if (bloqueado && !permiteClickCartaEnVisionTablero && (carta == null || carta.casilla.GetColor() != Color.green))
+            return; // En la visión de tablero normal sólo se permiten clicks sobre las casillas verdes. Con la vista violeta, una carta también puede abrirse normalmente
+
         if (clickeable == null)
             return;
 
@@ -205,11 +251,22 @@ public class CameraController : MonoBehaviour
             return; // No vuelve a mover la cámara
         }
 
+        // Si se estaba en la vista de tablero violeta y se pulsa una carta, hay que salir del bloqueo
+        // del tablero para que muestre el menú normal de la carta, pero recordando ese estado para
+        // restaurarlo al pulsar volver.
+        if (bloqueado && activarPanelVolver && carta != null)
+        {
+            volverAVisionTableroVioleta = true;
+            bloqueado = false;
+            fueClickLargoPorVioleta = false; // Resetear el long press tras procesar el click
+        }
+
         // Después de validar, se marca el objeto clickado como objetivo para mover la cámara
         objetivoActual = hit.transform;
+        activarPanelVolver = false;
 
         // Calcula la posición y rotación objetivo de la cámara para el objeto seleccionado.
-        Vector3 offset = clickeable.offsetDelObjetoClickable;
+        Vector3 offset = clickeable.offsetDeObjetoClickable;
         if (!clickeable.propietarioP1)
             offset.z *= -1; // Si es del jugador contrario, hay que ver el objeto desde el otro lado
 
@@ -247,15 +304,59 @@ public class CameraController : MonoBehaviour
     // Lleva la cámara a su posición original
     public void VolverAPosicionOriginal()
     {
+        if (volverAVisionTableroVioleta)
+        {
+            volverAVisionTableroVioleta = false;
+            objetivoActual = null;
+            moverCamara = false;
+            bloqueado = true;
+            activarPanelVolver = true;
+            enVisionTablero = true;
+            VisionTablero(true);
+            Board.Instance?.ResaltarCasillasVioleta();
+            return;
+        }
+
         if (!volverAPosicionOriginal)
         {
             volverAPosicionOriginal = true;
             moverCamara = false;
             bloqueado = false;
+            activarPanelVolver = false;
             if (!partidaTerminada) botonVolverVisionTablero.gameObject.SetActive(false);
-
+            volverAVisionTableroVioleta = false;
             MostrarPanelSegunObjeto(null); // No se muestra ningún panel
         }
+    }
+
+    // Vuelve a enfocar la carta que acaba de atacar o moverse para continuar con esa carta
+    public void VolverACarta(Card carta)
+    {
+        if (carta == null || carta.clickableObject == null || carta.transform == null)
+            return;
+
+        UIManager?.SetCartaSeleccionada(carta);
+        objetivoActual = carta.transform;
+        activarPanelVolver = false;
+
+        Vector3 offset = carta.clickableObject.offsetDeObjetoClickable;
+        if (!carta.clickableObject.propietarioP1)
+            offset.z *= -1;
+
+        objetivoPosicion = carta.transform.position + offset;
+        Vector3 direccion = (carta.transform.position - objetivoPosicion).normalized;
+        objetivoRotacion = Quaternion.LookRotation(direccion);
+
+        moverCamara = true;
+        volverAPosicionOriginal = false;
+        enVisionTablero = false;
+        if (!partidaTerminada) botonVolverVisionTablero.SetActive(false);
+        MostrarPanelSegunObjeto(null);
+    }
+
+    public void ResetearEstadoVisionTableroVioleta()
+    {
+        volverAVisionTableroVioleta = false;
     }
 
     // Vuelve a la posición y rotación por defecto de la visión de tablero según el turno actual
@@ -305,7 +406,9 @@ public class CameraController : MonoBehaviour
 
         if (hayInput)
         {
-            // Activa la visión completa del tablero
+            // Activa la visión completa del tablero con casillas resaltadas en violeta y muestra el panel de volver.
+            volverAVisionTableroVioleta = false;
+            activarPanelVolver = true;
             VisionTablero();
             Board.Instance?.ResaltarCasillasVioleta();
         }
@@ -491,6 +594,7 @@ public class CameraController : MonoBehaviour
         panelEnergia?.SetActive(false);
         panelMenu?.SetActive(false);
         panelConfirmar?.SetActive(false);
+        panelVolver?.SetActive(false);
         if (!pausado)
             panelPausa?.SetActive(false);
 
@@ -524,7 +628,7 @@ public class CameraController : MonoBehaviour
                         panelMonstruo.transform.Find("Move").gameObject.SetActive(false);
                 }
                 else
-                    panelConfirmar?.SetActive(true);
+                    panelVolver?.SetActive(true);
                 break;
             case TipoObjeto.Estructura:
                 if (TurnManager.turnoP1 == clickeable.propietarioP1)
@@ -548,13 +652,13 @@ public class CameraController : MonoBehaviour
                         panelEstructura.transform.Find("Attack").gameObject.SetActive(false);
                 }
                 else
-                    panelConfirmar?.SetActive(true);
+                    panelVolver?.SetActive(true);
                 break;
             case TipoObjeto.Hechizo:
                 if (TurnManager.turnoP1 == clickeable.propietarioP1)
                     panelHechizo?.SetActive(true);
                 else
-                    panelConfirmar?.SetActive(true);
+                    panelVolver?.SetActive(true);
                 break;
             case TipoObjeto.Trampa:
                 if (TurnManager.turnoP1 == clickeable.propietarioP1)
@@ -572,7 +676,7 @@ public class CameraController : MonoBehaviour
                         botonHabilidad.SetActive(false);
                 }
                 else
-                    panelConfirmar?.SetActive(true);
+                    panelVolver?.SetActive(true);
                 break;
             case TipoObjeto.MonstruoLeg:
                 if (TurnManager.turnoP1 == clickeable.propietarioP1)
@@ -600,13 +704,13 @@ public class CameraController : MonoBehaviour
                         panelMonstruo.transform.Find("Move").gameObject.SetActive(false);
                 }
                 else
-                    panelConfirmar?.SetActive(true);
+                    panelVolver?.SetActive(true);
                 break;
             case TipoObjeto.Energia:
                 if (TurnManager.turnoP1 == clickeable.propietarioP1)
                     panelEnergia?.SetActive(true);
                 else
-                    panelConfirmar?.SetActive(true);
+                    panelVolver?.SetActive(true);
                 break;
             case TipoObjeto.Menu:
                 panelMenu?.SetActive(true);
@@ -614,15 +718,68 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    // Según la velocidad / alcance de la carta, se aplica una cantidad de zoom a la cámara para mostrar hasta donde puede llegar
+    private float CalcularDistanciaFocoCarta(Card carta)
+    {
+        if (carta == null)
+            return 20f;
+
+        int valorBase = 0;
+        bool atacando = Board.Instance != null && Board.Instance.EstaSeleccionandoAtaque;
+
+        if (carta.cardData is MonsterCardData monsterData)
+            valorBase = atacando ? monsterData.alcance : monsterData.velocidad;
+        else if (carta.cardData is DamageableCardData damageData)
+            valorBase = damageData.alcance;
+
+        // Si supera 4, la cámara no necesita enfocarse en la carta y debe centrarse en el tablero como en la vista normal.
+        if (valorBase > 4)
+            return -1f;
+
+        if (valorBase <= 1) return 10f;
+        if (valorBase == 2) return 20f;
+        if (valorBase == 3) return 30f;
+        return 40f;
+    }
+
+    // Para saber si ya hay una carta para enfocar
+    public bool TieneObjetivoEnfocado(Transform objetivo)
+    {
+        return objetivo != null && objetivoActual != null && objetivoActual == objetivo;
+    }
+
     // Pone la cámara en visión completa del tablero.
-    // mostrarPanel: si es false, la cámara se mueve sin bloquear ni mostrar panelConfirmar al llegar
-    public void VisionTablero(bool mostrarPanel = true)
+    // mostrarPanel: si es false, la cámara se mueve sin bloquear ni mostrar panelConfirmar al llegar.
+    // objetivoEnfocado: si se indica, la cámara se centra en ese objeto antes de la vista general del tablero.
+    public void VisionTablero(bool mostrarPanel = true, Transform objetivoEnfocado = null)
     {
         enVisionTablero = true;
         bloqueado = mostrarPanel;
         vistaInvertida = false; // Siempre se empieza con la orientación por defecto del jugador
 
-        objetivoPosicion = posicionVisionTablero;
+        if (objetivoEnfocado != null)
+        {
+            Card cartaEnfocada = objetivoEnfocado.GetComponent<Card>();
+            float distanciaFoco = CalcularDistanciaFocoCarta(cartaEnfocada);
+
+            if (distanciaFoco > 0f)
+            {
+                objetivoActual = objetivoEnfocado;
+                Vector3 offset = new Vector3(0f, distanciaFoco, 0f);
+                objetivoPosicion = objetivoEnfocado.position + offset;
+            }
+            else
+            {
+                objetivoActual = null;
+                objetivoPosicion = posicionVisionTablero;
+            }
+        }
+        else
+        {
+            objetivoActual = null;
+            objetivoPosicion = posicionVisionTablero;
+        }
+
         if (TurnManager.turnoP1)
             objetivoRotacion = Quaternion.Euler(90f, 0f, 0f);
         else
@@ -630,6 +787,9 @@ public class CameraController : MonoBehaviour
 
         moverCamara = true;
         volverAPosicionOriginal = false;
+
+        if (!mostrarPanel)
+            activarPanelVolver = false;
 
         MostrarPanelSegunObjeto(null); // No se muestra ningún panel
     }
@@ -646,6 +806,7 @@ public class CameraController : MonoBehaviour
         partidaTerminada = true;
         bloqueado = false;
         objetivoActual = null;
+        activarPanelVolver = false;
         MostrarPanelSegunObjeto(null); // Oculta panelConfirmar y todos los demás paneles
         botonVolverVisionTablero?.SetActive(true); // Permite resetear la cámara libremente al terminar la partida
     }
@@ -681,7 +842,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = deckActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = deckActual.offsetDelObjetoClickable;
+        Vector3 offset = deckActual.offsetDeObjetoClickable;
         if (!deckActual.propietarioP1)
             offset.z *= -1;
 
@@ -712,7 +873,7 @@ public class CameraController : MonoBehaviour
         objetivoActual = menuActual.transform;
 
         // Calcula la posición y rotación objetivo igual que en ClickIzquierdo
-        Vector3 offset = menuActual.offsetDelObjetoClickable;
+        Vector3 offset = menuActual.offsetDeObjetoClickable;
         if (!menuActual.propietarioP1)
             offset.z *= -1;
 

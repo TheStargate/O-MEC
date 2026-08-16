@@ -40,6 +40,12 @@ public class PlayerNameManager : MonoBehaviour
         esperandoP1 = true;
         esperandoP2 = false;
 
+        if (DeckManager.Instance != null)
+        {
+            DeckManager.Instance.handPanelP1.gameObject.SetActive(false);
+            DeckManager.Instance.handPanelP2.gameObject.SetActive(false);
+        }
+
         if (textoPrompt != null) textoPrompt.text = "Jugador 1, introduce tu nombre:";
         if (inputNombre != null) inputNombre.text = NombreP1 == "Jugador 1" ? "" : NombreP1;
 
@@ -54,6 +60,12 @@ public class PlayerNameManager : MonoBehaviour
         if (panelNombre == null) return;
         esperandoP1 = false;
         esperandoP2 = true;
+
+        if (DeckManager.Instance != null)
+        {
+            DeckManager.Instance.handPanelP1.gameObject.SetActive(false);
+            DeckManager.Instance.handPanelP2.gameObject.SetActive(false);
+        }
 
         if (textoPrompt != null) textoPrompt.text = "Jugador 2, introduce tu nombre:";
         if (inputNombre != null) inputNombre.text = NombreP2 == "Jugador 2" ? "" : NombreP2;
@@ -88,6 +100,17 @@ public class PlayerNameManager : MonoBehaviour
 
         if (panelNombre != null)
             panelNombre.SetActive(false);
+
+        if (!esperandoP1 && !esperandoP2 && DeckManager.Instance != null)
+        {
+            DeckManager.Instance.handPanelP1.gameObject.SetActive(TurnManager.turnoP1);
+            DeckManager.Instance.handPanelP2.gameObject.SetActive(!TurnManager.turnoP1);
+
+            foreach (var cardUI in DeckManager.Instance.handPanelP1.GetComponentsInChildren<CardUI>())
+                cardUI.cartaPrefab?.clickableObject?.actualizarResaltado();
+            foreach (var cardUI in DeckManager.Instance.handPanelP2.GetComponentsInChildren<CardUI>())
+                cardUI.cartaPrefab?.clickableObject?.actualizarResaltado();
+        }
 
         TurnManager.ActualizarTextoTurno();
     }

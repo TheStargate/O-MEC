@@ -18,6 +18,7 @@ public class Board : MonoBehaviour
     private List<Card> objetivosHabilidad = new List<Card>(); // Objetivos seleccionados para aplicar la habilidad
     private Cell casillaOriginal; // Casilla que indica la carta que se ha seleccionado para moverse o atacar
     private Cell casillaSeleccionada; // Casilla objetivo donde mover o atacar
+    public bool EstaSeleccionandoAtaque => seleccionandoAtaque;
 
     void Start()
     {
@@ -168,6 +169,13 @@ public class Board : MonoBehaviour
                 UIManager.visorCentral.sprite = trapCardData.imagenCarta;
                 UIManager.visorCentral.gameObject.SetActive(true);
 
+                if (UIManager.textoInfoCarta != null)
+                {
+                    string info = UIManager.GenerarInfoCarta(trampa);
+                    UIManager.textoInfoCarta.text = info;
+                    UIManager.textoInfoCarta.transform.parent.parent.parent.gameObject.SetActive(!string.IsNullOrEmpty(info));
+                }
+
                 int danyoTrampa = trapCardData.ataque;
                 danyoTrampa += trampa.bonusDanyoTrampa;
                 danyoTrampa *= trampa.multDanyoTrampa;
@@ -283,17 +291,9 @@ public class Board : MonoBehaviour
         }
         if (carta.clickableObject != null && carta.clickableObject.ultimoMovimiento == TurnManager.numTurno && carta.clickableObject.ultimoAtaque == TurnManager.numTurno)
             carta.clickableObject.usar(); // Marca la carta como usada si no quedan acciones disponibles
-    }
 
-    // Muestra momentáneamente la imagen de la trampa seleccionada
-    public void VerTrampa()
-    {
-        Card carta = UIManager.GetCartaSeleccionada();
-        if (carta == null || carta.cardData == null) return;
-
-        UIManager.visorCentral.sprite = carta.cardData.imagenCarta;
-        UIManager.visorCentral.gameObject.SetActive(true);
-        CameraController.Instance.MantenerVisor();
+        if (CameraController.Instance != null)
+            CameraController.Instance.VolverACarta(carta);
     }
 
     // Obtiene la carta seleccionada desde la UI y permite aplicar su habilidad activa
@@ -337,7 +337,7 @@ public class Board : MonoBehaviour
                         casilla.SetColor(Color.yellow);
                 }
             }
-            CameraController.Instance.VisionTablero(true);
+            CameraController.Instance.VisionTablero(true, carta.transform);
         }
         else
         { // La habilidad se ejecuta de forma inmediata y no requiere seleciconar objetivos
@@ -346,6 +346,7 @@ public class Board : MonoBehaviour
             RefrescarResaltados();
 
             carta.clickableObject.habilidadUsada = true;
+            carta.indicadorHabilidadUsada.SetActive(true);
             carta.activa.Ejecutar();
 
             if (carta.cardData.tipo == CardType.Trampa)
@@ -360,7 +361,7 @@ public class Board : MonoBehaviour
     public void ConfirmarHabilidad()
     {
         Card carta = UIManager.GetCartaSeleccionada();
-        // Guardamos los objetivos ANTES de DesactivarMovimiento (que los borra con Clear())
+        // Guarda los objetivos ANTES de DesactivarMovimiento (que los borra con Clear())
         List<Card> objetivosConfirmados = new List<Card>(objetivosHabilidad);
 
         CameraController.Instance.enVisionTablero = true;
@@ -379,6 +380,7 @@ public class Board : MonoBehaviour
             RefrescarResaltados();
 
             carta.clickableObject.habilidadUsada = true;
+            carta.indicadorHabilidadUsada.SetActive(true);
             carta.activa.Ejecutar(objetivosConfirmados);
 
             if (carta.cardData.tipo == CardType.Trampa)
@@ -397,15 +399,20 @@ public class Board : MonoBehaviour
             for (int col = 0; col < columns; col++)
             {
                 Cell casilla = cells[row, col];
-                if (casilla.ocupada && casilla.cartaActual.clickableObject.propietarioP1 != TurnManager.turnoP1)
+                if (casilla == null || !casilla.ocupada || casilla.cartaActual == null || casilla.cartaActual.clickableObject == null)
+                    continue;
+
+                if (casilla.cartaActual.clickableObject.propietarioP1 != TurnManager.turnoP1)
                     casilla.SetColor(Color.violet);
             }
         }
     }
 
+
     // Activa la visión de tablero para seleccionar una casilla para moverse / atacar
     public void ActivarMovimiento(bool ataque)
     {
+        CameraController.Instance?.ResetearEstadoVisionTableroVioleta();
         seleccionandoCasilla = true;
         seleccionandoAtaque = ataque;
         casillaSeleccionada = null;
@@ -416,6 +423,14 @@ public class Board : MonoBehaviour
 
         // Establece la casilla seleccionada originalmente
         casillaOriginal = cartaSeleccionada.casilla;
+
+        // Si ya estamos enfocando la carta atacante, no se mueve la cámara al seleccionar un objetivo válido
+        bool yaEnfocadaLaCarta = CameraController.Instance != null &&
+            CameraController.Instance.enVisionTablero &&
+            CameraController.Instance.TieneObjetivoEnfocado(cartaSeleccionada.transform);
+
+        if (!yaEnfocadaLaCarta)
+            CameraController.Instance.VisionTablero(true, cartaSeleccionada.transform);
 
         // Según si se quiere mover / atacar se calcula una distancia distinta
         if (ataque)
@@ -536,6 +551,8 @@ public class Board : MonoBehaviour
 
         // Datos de la carta seleccionada para moverse
         MonsterCardData monsterData = cartaSeleccionada.cardData as MonsterCardData;
+        if (monsterData == null)
+            return;
 
         // Calcula la distancia BFS con una cola y marcando las visitadas
         Queue<(Cell cell, int distancia)> cola = new Queue<(Cell, int)>();
@@ -615,21 +632,42 @@ public class Board : MonoBehaviour
     // Desactiva la visión de tablero para seleccionar una casilla para moverse / atacar (o la activa si no estaba puesta)
     public void DesactivarMovimiento()
     {
-        // Para poder desactivar las acciones del tablero, la cámara debe estar en visión tablero
-        if (CameraController.Instance.enVisionTablero)
-        {
-            seleccionandoCasilla = false;
-            seleccionandoHabilidad = false;
-            objetivosHabilidad.Clear();
+        bool estabaEnVisionTablero = CameraController.Instance != null && CameraController.Instance.enVisionTablero;
+        bool estabaSeleccionandoCasilla = seleccionandoCasilla;
 
+        if (estabaEnVisionTablero)
+        {
             foreach (Cell casilla in cells)
             {
                 casilla.ResetColor();
             }
+
+            seleccionandoCasilla = false;
+            seleccionandoHabilidad = false;
+            objetivosHabilidad.Clear();
+            if (CameraController.Instance != null)
+                CameraController.Instance.enVisionTablero = false;
+            return;
         }
-        else if (seleccionandoCasilla)
+
+        if (estabaSeleccionandoCasilla && CameraController.Instance != null)
         { // Activa la visión de tablero si no lo estaba antes (al pulsar "volver" mirando un objeto clickable)
-            CameraController.Instance.VisionTablero(true);
+            Card cartaSeleccionada = UIManager.GetCartaSeleccionada();
+            if (cartaSeleccionada != null && cartaSeleccionada.transform != null)
+                CameraController.Instance.VisionTablero(true, cartaSeleccionada.transform);
+            else
+                CameraController.Instance.VisionTablero(true);
+            seleccionandoCasilla = true; // Volver a activar la selección para poder hacer click en las casillas
+        }
+        else
+        {
+            foreach (Cell casilla in cells)
+            {
+                casilla.ResetColor();
+            }
+            seleccionandoCasilla = false;
+            seleccionandoHabilidad = false;
+            objetivosHabilidad.Clear();
         }
     }
 
