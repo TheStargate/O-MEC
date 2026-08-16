@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 
 public enum CardType
@@ -189,6 +190,11 @@ public class Card : MonoBehaviour
     public GameObject backgroundAtaqueMonstruo; // Fondo para que se vea bien textoAtaqueMonstruo
     public GameObject backgroundAtaqueEstructura; // Fondo para que se vea bien textoAtaqueEstructura
     public GameObject indicadorHabilidadUsada; // Indica visualmente que la habilidad activa ya se ha usado
+    [SerializeField] private TextMeshPro TextoDanyo; // Texto flotante para daño / curación
+    [SerializeField] private Vector3 offsetTextoDanyo = new Vector3(0f, 1.5f, 0.2f);
+    [SerializeField] private float tiempoTextoDanyo = 5f;
+    [SerializeField] private float escalaTextoDanyo = 1.25f;
+    private Coroutine corutinaTextoDanyo;
     public PassiveAbility pasiva; // Habilidad pasiva de la carta (null si no tiene)
     public ActiveAbility activa; // Habilidad activa de la carta (null si no tiene)
     
@@ -269,18 +275,116 @@ public class Card : MonoBehaviour
         }
     }
 
-    // Actualiza y muestra la nueva vida de la carta
+    // Crea y reutiliza un TextMeshPro hijo de la carta para mostrar el texto flotante de daño/curación.
+    private TextMeshPro ObtenerTextoDanyo()
+    {
+        if (TextoDanyo != null)
+            return TextoDanyo;
+
+        GameObject go = new GameObject("TextoDanyo", typeof(TextMeshPro));
+        go.transform.SetParent(transform, false);
+        go.transform.localPosition = offsetTextoDanyo;
+
+        TextoDanyo = go.GetComponent<TextMeshPro>();
+        TextoDanyo.alignment = TextAlignmentOptions.Center;
+        TextoDanyo.fontSize = 32;
+        TextoDanyo.raycastTarget = false;
+        TextoDanyo.alpha = 1f;
+        TextoDanyo.transform.localScale = Vector3.one * escalaTextoDanyo;
+        TextoDanyo.transform.localRotation = Quaternion.Euler(0f, clickableObject != null && clickableObject.propietarioP1 == TurnManager.turnoP1 ? 180f : 0f, 0f);
+        TextoDanyo.gameObject.SetActive(false);
+        return TextoDanyo;
+    }
+
+    // Muestra un número flotante sobre la carta: -2 si recibe daño, +5 si se cura.
+    public void MostrarTextoCambioVida(int cantidad)
+    {
+        if (cantidad == 0 || cardData is not DamageableCardData)
+            return;
+
+        TextMeshPro tmp = ObtenerTextoDanyo();
+        if (tmp == null)
+            return;
+
+        bool esCuracion = cantidad > 0;
+        int magnitud = Mathf.Abs(cantidad);
+        float escalaBase = Mathf.Clamp(1.2f + magnitud * 0.22f, 1.2f, 6f);
+        float alturaExtra = Mathf.Clamp(magnitud * 0.2f, 0f, 2.2f);
+        float alturaInicial = Mathf.Clamp(offsetTextoDanyo.y + alturaExtra * 0.8f, 1.2f, 5f);
+
+        tmp.text = (esCuracion ? "+" : "-") + magnitud.ToString();
+        tmp.transform.localScale = Vector3.one * escalaBase;
+        tmp.transform.localPosition = new Vector3(offsetTextoDanyo.x, alturaInicial, offsetTextoDanyo.z);
+        bool rotar180 = clickableObject != null && clickableObject.propietarioP1 == TurnManager.turnoP1;
+        tmp.transform.localRotation = Quaternion.Euler(0f, rotar180 ? 180f : 0f, 0f);
+        tmp.color = esCuracion ? UnityEngine.Color.green : UnityEngine.Color.red;
+        tmp.gameObject.SetActive(true);
+
+        if (corutinaTextoDanyo != null)
+            StopCoroutine(corutinaTextoDanyo);
+
+        corutinaTextoDanyo = StartCoroutine(CorutinaTextoCambioVida(tmp, escalaBase, alturaExtra));
+    }
+
+    // Animación del texto flotante: pequeño pop, luego sube y se desvanece antes de desaparecer.
+    private IEnumerator CorutinaTextoCambioVida(TextMeshPro texto, float escalaInicial, float alturaExtra)
+    {
+        if (texto == null)
+            yield break;
+
+        float tiempo = 0f;
+        Vector3 posicionInicial = texto.transform.localPosition;
+        UnityEngine.Color colorInicial = texto.color;
+
+        while (tiempo < tiempoTextoDanyo)
+        {
+            tiempo += Time.deltaTime;
+            float progreso = Mathf.Clamp01(tiempo / tiempoTextoDanyo);
+
+            // Pop más agresivo cuando el valor es grande; además sube más alto.
+            float escalaActual = Mathf.Lerp(escalaInicial * 1.35f, escalaInicial, Mathf.Clamp01(progreso * 2.5f));
+            texto.transform.localScale = Vector3.one * escalaActual;
+
+            float alturaMovimiento = (0.9f + alturaExtra) * progreso;
+            texto.transform.localPosition = posicionInicial + Vector3.up * alturaMovimiento;
+
+            UnityEngine.Color color = texto.color;
+            color.a = 1f - progreso;
+            texto.color = color;
+            yield return null;
+        }
+
+        texto.gameObject.SetActive(false);
+        texto.color = colorInicial;
+        texto.transform.localPosition = posicionInicial;
+        texto.transform.localScale = Vector3.one * escalaInicial;
+    }
+
+    // Actualiza y muestra la nueva vida de la carta.
     public void UpdateVida(int nuevaVida)
     {
         DamageableCardData data = cardData as DamageableCardData;
+        if (data == null)
+            return;
+
+        int vidaAnterior = data.vida;
+
         // Si la carta recibe daño y es invulnerable, ignorarlo
         if (nuevaVida < data.vida && PassiveAbility.EsInvulnerableATodo(this)) return;
         data.vida = nuevaVida;
-        textoVida.text = data.vida.ToString();
-        if (data.vidaMaxima == nuevaVida)
-            background.SetActive(false);
-        else
-            background.SetActive(true);
+        if (textoVida != null)
+            textoVida.text = data.vida.ToString();
+        if (background != null)
+        {
+            if (data.vidaMaxima == nuevaVida)
+                background.SetActive(false);
+            else
+                background.SetActive(true);
+        }
+
+        int diferencia = nuevaVida - vidaAnterior;
+        if (diferencia != 0)
+            MostrarTextoCambioVida(diferencia);
     }
 
     // Limpia los estados de habilidades activas que duran hasta el próximo turno
