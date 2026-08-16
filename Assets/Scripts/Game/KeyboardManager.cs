@@ -23,8 +23,6 @@ public class KeyboardManager : MonoBehaviour
     [SerializeField] private Button botonConfirmConfirm;
     [SerializeField] private Button botonMenuBack;
     [SerializeField] private Button botonMenuNextTurn;
-    [SerializeField] private Button botonDeckBack;
-    [SerializeField] private Button botonDeckDraw;
     [SerializeField] private Button botonResetCamera;
 
     [Header("Teclas asignadas")]
@@ -43,7 +41,6 @@ public class KeyboardManager : MonoBehaviour
     private Key keyMenuBack = Key.V;
     private Key keyMenuNextTurn = Key.P;
     private Key keyResetCamera = Key.R;
-    private Key keyDeckBack = Key.V;
 
     [Header("Teclas para acceso rápido al Menu")]
     private Key keyAccessMenu = Key.P;
@@ -115,9 +112,6 @@ public class KeyboardManager : MonoBehaviour
 
         if (Keyboard.current[keyMenuNextTurn].wasPressedThisFrame)
             InvokeButton(botonMenuNextTurn);
-
-        if (Keyboard.current[keyDeckBack].wasPressedThisFrame)
-            InvokeButton(botonDeckBack);
 
         if (Keyboard.current[keyResetCamera].wasPressedThisFrame)
             InvokeButton(botonResetCamera);

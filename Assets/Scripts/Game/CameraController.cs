@@ -174,6 +174,7 @@ public class CameraController : MonoBehaviour
 
         if (!moverCamara && objetivoActual == hit.transform && esTipoCarta && carta != null)
         {
+            bool visorActivo = false;
             if (UIManager.visorCentral != null)
             {
                 if (UIManager.visorCentral.sprite == carta.cardData.imagenCarta)
@@ -183,7 +184,24 @@ public class CameraController : MonoBehaviour
                     UIManager.visorCentral.sprite = carta.cardData.imagenCarta;
                     UIManager.visorCentral.gameObject.SetActive(true);
                 }
+                visorActivo = UIManager.visorCentral.gameObject.activeSelf;
             }
+
+            // Muestra la consola de información detallada de la carta
+            if (UIManager.textoInfoCarta != null)
+            {
+                if (visorActivo)
+                {
+                    string info = UIManager.GenerarInfoCarta(carta);
+                    UIManager.textoInfoCarta.text = info;
+                    UIManager.textoInfoCarta.transform.parent.parent.parent.gameObject.SetActive(!string.IsNullOrEmpty(info));
+                }
+                else
+                {
+                    UIManager.textoInfoCarta.transform.parent.parent.parent.gameObject.SetActive(false);
+                }
+            }
+
             return; // No vuelve a mover la cámara
         }
 
