@@ -118,14 +118,19 @@ public class Board : MonoBehaviour
                         return;
 
                     if (cell != null && (cell.GetColor() == Color.blue || cell.GetColor() == Color.orange))
-                    { // Selecciona la casilla si está disponible para moverse / atacar (color azul / naranja)
-                        ActivarMovimiento(seleccionandoAtaque);
+                    { // Solo puede haber una casilla activa en verde a la vez. Si ya había otra seleccionada,
+                      // se reestablece su color original antes de marcar la nueva.
+                        if (casillaSeleccionada != null && casillaSeleccionada != cell && casillaSeleccionada.GetColor() == Color.green)
+                            casillaSeleccionada.SetColor(seleccionandoAtaque ? Color.orange : Color.blue);
+
                         cell.SetColor(Color.green);
                         casillaSeleccionada = cell;
                     }
                     else if (card != null && card.casilla != null && card.casilla.GetColor() == Color.orange)
-                    { // Selecciona la casilla si se selecciona una carta disponible para ser atacada
-                        ActivarMovimiento(seleccionandoAtaque);
+                    { // Mismo caso: no puede quedar más de un objetivo verde a la vez.
+                        if (casillaSeleccionada != null && casillaSeleccionada != card.casilla && casillaSeleccionada.GetColor() == Color.green)
+                            casillaSeleccionada.SetColor(seleccionandoAtaque ? Color.orange : Color.blue);
+
                         card.casilla.SetColor(Color.green);
                         casillaSeleccionada = card.casilla;
                     }
@@ -424,7 +429,9 @@ public class Board : MonoBehaviour
         // Establece la casilla seleccionada originalmente
         casillaOriginal = cartaSeleccionada.casilla;
 
-        // Si ya estamos enfocando la carta atacante, no se mueve la cámara al seleccionar un objetivo válido
+        // Si la cámara aún no está enfocada en la carta atacante, hay que centrarla
+        // con el zoom calculado por CalcularDistanciaFocoCarta para que la vista de
+        // selección se muestre como corresponde. Si ya está enfocada, no se repite el movimiento.
         bool yaEnfocadaLaCarta = CameraController.Instance != null &&
             CameraController.Instance.enVisionTablero &&
             CameraController.Instance.TieneObjetivoEnfocado(cartaSeleccionada.transform);

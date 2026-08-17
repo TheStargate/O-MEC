@@ -91,6 +91,9 @@ public class Cell : MonoBehaviour
             if (!movimiento)
                 cartaActual.pasiva?.OnMorir();
 
+            if (!movimiento)
+                cartaActual.MostrarTextoMuerte();
+
             // Si la carta se ha movido a otra casilla o es un Monstruo Legendario, no se pone en la pila de descartes
             if (cartaActual.cardData != null && cartaActual.cardData.tipo != CardType.MonstruoLeg && !movimiento && cartaActual.clickableObject != null)
                 DeckManager.Instance.descartar(cartaActual.cardData, cartaActual.clickableObject.propietarioP1);

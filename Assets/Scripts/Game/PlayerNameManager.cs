@@ -115,6 +115,11 @@ public class PlayerNameManager : MonoBehaviour
         TurnManager.ActualizarTextoTurno();
     }
 
+    public bool NombresCompletados()
+    {
+        return !esperandoP1 && !esperandoP2 && (panelNombre == null || !panelNombre.activeSelf);
+    }
+
     /// <summary>
     /// Restaura los nombres desde el archivo de guardado.
     /// </summary>

@@ -332,6 +332,9 @@ public class CameraController : MonoBehaviour
     // Vuelve a enfocar la carta que acaba de atacar o moverse para continuar con esa carta
     public void VolverACarta(Card carta)
     {
+        if (partidaTerminada)
+            return; // Si la partida ya terminó, la cámara no puede volver a ninguna carta anterior.
+
         if (carta == null || carta.clickableObject == null || carta.transform == null)
             return;
 
@@ -753,6 +756,7 @@ public class CameraController : MonoBehaviour
     // objetivoEnfocado: si se indica, la cámara se centra en ese objeto antes de la vista general del tablero.
     public void VisionTablero(bool mostrarPanel = true, Transform objetivoEnfocado = null)
     {
+
         enVisionTablero = true;
         bloqueado = mostrarPanel;
         vistaInvertida = false; // Siempre se empieza con la orientación por defecto del jugador
@@ -800,13 +804,23 @@ public class CameraController : MonoBehaviour
         MostrarPanelSegunObjeto(objetivoActual != null ? objetivoActual.GetComponent<ClickableObject>() : null);
     }
 
-    // Llamado al terminar la partida: oculta todos los paneles de acción y evita que vuelvan a aparecer
+    // Llamado al terminar la partida: oculta todos los paneles de acción y fuerza la vista general del tablero
     public void FinalizarPartida()
     {
         partidaTerminada = true;
         bloqueado = false;
         objetivoActual = null;
         activarPanelVolver = false;
+        volverAPosicionOriginal = false;
+        moverCamara = false;
+        enVisionTablero = true;
+
+        objetivoPosicion = posicionVisionTablero;
+        objetivoRotacion = TurnManager.turnoP1
+            ? Quaternion.Euler(90f, 0f, 0f)
+            : Quaternion.Euler(90f, 0f, 180f);
+
+        moverCamara = true;
         MostrarPanelSegunObjeto(null); // Oculta panelConfirmar y todos los demás paneles
         botonVolverVisionTablero?.SetActive(true); // Permite resetear la cámara libremente al terminar la partida
     }

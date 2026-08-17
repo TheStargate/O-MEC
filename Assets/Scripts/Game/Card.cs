@@ -326,6 +326,34 @@ public class Card : MonoBehaviour
         corutinaTextoDanyo = StartCoroutine(CorutinaTextoCambioVida(tmp, escalaBase, alturaExtra));
     }
 
+    // Muestra un símbolo de calavera para indicar que se ha eliminado la carta
+    public void MostrarTextoMuerte()
+    {
+        if (cardData == null)
+            return;
+
+        Transform parent = casilla != null ? casilla.transform : transform.parent;
+        if (parent == null)
+            return;
+
+        GameObject popup = new GameObject("PopupMuerte", typeof(TextMeshPro));
+        popup.transform.SetParent(parent, false);
+        popup.transform.position = transform.position + Vector3.up * 5f;
+        popup.transform.localScale = Vector3.one * 1.5f;
+        popup.transform.localRotation = Quaternion.Euler(0f, clickableObject != null && clickableObject.propietarioP1 == TurnManager.turnoP1 ? 180f : 0f, 0f);
+
+        TextMeshPro tmp = popup.GetComponent<TextMeshPro>();
+        tmp.text = "💀";
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.fontSize = 64;
+        tmp.raycastTarget = false;
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.color = UnityEngine.Color.white;
+        tmp.enableAutoSizing = false;
+
+        popup.AddComponent<PopupMuerteAnim>();
+    }
+
     // Animación del texto flotante: pequeño pop, luego sube y se desvanece antes de desaparecer.
     private IEnumerator CorutinaTextoCambioVida(TextMeshPro texto, float escalaInicial, float alturaExtra)
     {
@@ -546,4 +574,45 @@ public class Card : MonoBehaviour
         }
     }
 
+}
+
+public class PopupMuerteAnim : MonoBehaviour
+{
+    private TextMeshPro texto;
+
+    private void Start()
+    {
+        texto = GetComponent<TextMeshPro>();
+        if (texto == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        StartCoroutine(CorutinaMuerte());
+    }
+
+    private IEnumerator CorutinaMuerte()
+    {
+        Vector3 posicionInicio = transform.localPosition;
+        Vector3 posicionFinal = posicionInicio + Vector3.up * 5.3f;
+        float duracion = 10f; // Sigue visible 10 segundos, pero más arriba y con un efecto más limpio.
+        float tiempo = 0f;
+
+        while (tiempo < duracion)
+        {
+            tiempo += Time.deltaTime;
+            float progreso = Mathf.Clamp01(tiempo / duracion);
+
+            transform.localPosition = Vector3.Lerp(posicionInicio, posicionFinal, progreso);
+            transform.localScale = Vector3.one * Mathf.Lerp(1.8f, 3.4f, progreso);
+
+            UnityEngine.Color color = texto.color;
+            color.a = 1f - progreso;
+            texto.color = color;
+            yield return null;
+        }
+
+        Destroy(gameObject);
+    }
 }

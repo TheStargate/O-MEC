@@ -42,9 +42,6 @@ public class KeyboardManager : MonoBehaviour
     private Key keyMenuNextTurn = Key.P;
     private Key keyResetCamera = Key.R;
 
-    [Header("Teclas para acceso rápido al Menu")]
-    private Key keyAccessMenu = Key.P;
-
     void Awake()
     {
         Instance = this;
@@ -53,6 +50,9 @@ public class KeyboardManager : MonoBehaviour
     void Update()
     {
         if (Keyboard.current == null)
+            return;
+
+        if (PlayerNameManager.Instance != null && !PlayerNameManager.Instance.NombresCompletados())
             return;
 
         Vector2 movimiento = Vector2.zero;
@@ -115,10 +115,6 @@ public class KeyboardManager : MonoBehaviour
 
         if (Keyboard.current[keyResetCamera].wasPressedThisFrame)
             InvokeButton(botonResetCamera);
-
-        // Acceso rápido a Menu
-        if (Keyboard.current[keyAccessMenu].wasPressedThisFrame)
-            MoverAlMenu();
     }
 
     private void MoverAlMenu()

@@ -273,7 +273,7 @@ public class UIManager : MonoBehaviour
             if (carta.bonusDanyoProximoAtaque != 0) sb.AppendLine($"⚔️ Bonus del próximo ataque: +{carta.bonusDanyoProximoAtaque}");
             if (carta.multDanyoProximoAtaque != 1) sb.AppendLine($"⚔️ Multiplicador del próximo ataque: x{carta.multDanyoProximoAtaque}");
             if (carta.areaProximoAtaque) sb.AppendLine("💥 Próximo ataque en área");
-            if (carta.espiaActivoProximoAtaque) sb.AppendLine("🕵 Bonus de triple de daño al castillo");
+            if (carta.espiaActivoProximoAtaque) sb.AppendLine("⚔️ Bonus de triple de daño al castillo");
             if (carta.bonusDanyoTrampa != 0) sb.AppendLine($"💣 Bonus de daño: +{carta.bonusDanyoTrampa}");
             if (carta.multDanyoTrampa != 1) sb.AppendLine($"💣 Multiplicador de daño: x{carta.multDanyoTrampa}");
             if (carta.trampaAplicaAturdimiento) sb.AppendLine("😵 Aplica Aturdimiento");
@@ -290,10 +290,10 @@ public class UIManager : MonoBehaviour
             foreach (var efecto in dData.efectosDanyo)
             {
                 string turnos = efecto.turnosRestantes == -1 ? "∞ turnos" : $"{efecto.turnosRestantes} turnos rest.";
-                sb.AppendLine($"🩸 {efecto.nombre}: -{efecto.danyo} vida ({turnos})");
+                sb.AppendLine($"{efecto.nombre}: -{efecto.danyo} vida ({turnos})");
                 danyoTotalEfectos += efecto.danyo;
             }
-            sb.AppendLine($"Total: {danyoTotalEfectos} daño por turno");
+            sb.AppendLine($"🩸 Total: {danyoTotalEfectos} daño por turno");
             sb.AppendLine();
         }
 

@@ -588,8 +588,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 2,
                 vida = 100,
                 vidaMaxima = 100,
-                ataque = 0,
-                alcance = 0,
+                ataque = 99,
+                alcance = 99,
                 costeHabilidad = 3
             }
         };

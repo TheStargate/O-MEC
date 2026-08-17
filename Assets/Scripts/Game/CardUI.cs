@@ -479,7 +479,7 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
 /// </summary>
 public class HandPanelSlider : MonoBehaviour
 {
-    [SerializeField] private float posYColapsada = -110f;   // Posición Y cuando las cartas están bajadas
+    [SerializeField] private float posYColapsada = -100f;   // Posición Y cuando las cartas están bajadas
     [SerializeField] private float posYExpandida  = 0f;     // Posición Y cuando las cartas están a la altura normal
     [SerializeField] private float velocidadSlide = 10f;    // Velocidad de la animación de deslizamiento
 

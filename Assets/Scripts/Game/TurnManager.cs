@@ -68,7 +68,7 @@ public class TurnManager : MonoBehaviour
         string nombreTurno = turnoP1
             ? (PlayerNameManager.Instance?.NombreP1 ?? "Jugador 1")
             : (PlayerNameManager.Instance?.NombreP2 ?? "Jugador 2");
-        string turno = $"Turno de {nombreTurno}";
+        string turno = $"Turno de\n{nombreTurno}";
 
         textoTurno?.SetText(turno);
     }
