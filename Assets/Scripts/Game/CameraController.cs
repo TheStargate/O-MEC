@@ -63,7 +63,7 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float limiteMaxZ = 70f; // Desplazamiento Z máximo en la visión de tablero
 
     private float tiempoTactilVioleta = 0f; // Tiempo que lleva pulsado el toque en modo violeta
-    private const float tiempoLongPressVioleta = 1f; // Tiempo necesario para long press en modo violeta (1 segundo)
+    private const float tiempoLongPressVioleta = 0.5f; // Tiempo necesario para long press en modo violeta
     private bool fueClickLargoPorVioleta = false; // Indica si el último click fue un long press en violeta
     private bool yaProcesoLongPressVioleta = false; // Para evitar procesar el long press múltiples veces en el mismo toque
 
@@ -90,7 +90,7 @@ public class CameraController : MonoBehaviour
             tiempoTactilVioleta += Time.deltaTime;
             if (tiempoTactilVioleta >= tiempoLongPressVioleta && !yaProcesoLongPressVioleta)
             {
-                // Se han alcanzado 1 segundo: procesar el long press
+                // Se han el tiempo para procesar el long press
                 fueClickLargoPorVioleta = true;
                 yaProcesoLongPressVioleta = true;
                 ClickIzquierdo(); // Llamar directamente aquí cuando se alcanza el tiempo
@@ -319,6 +319,7 @@ public class CameraController : MonoBehaviour
 
         if (!volverAPosicionOriginal)
         {
+            Board.Instance?.LimpiarResaltadoVioleta();
             volverAPosicionOriginal = true;
             moverCamara = false;
             bloqueado = false;

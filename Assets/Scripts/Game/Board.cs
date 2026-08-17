@@ -396,9 +396,25 @@ public class Board : MonoBehaviour
         }
     }
 
+    // Limpia el resaltado violeta para no dejar casillas enemigas marcadas al salir del modo de visión del tablero.
+    public void LimpiarResaltadoVioleta()
+    {
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < columns; col++)
+            {
+                Cell casilla = cells[row, col];
+                if (casilla != null && casilla.GetColor() == Color.violet)
+                    casilla.ResetColor();
+            }
+        }
+    }
+
     // Resalta en violeta todas las casillas ocupadas por cartas del jugador rival.
     public void ResaltarCasillasVioleta()
     {
+        LimpiarResaltadoVioleta();
+
         for (int row = 0; row < rows; row++)
         {
             for (int col = 0; col < columns; col++)
