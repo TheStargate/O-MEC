@@ -267,18 +267,18 @@ public class UIManager : MonoBehaviour
         {
             sb.AppendLine("<b>[ MODIFICADORES ]</b>");
             if (aturdido) sb.AppendLine("😵 Aturdido hasta el próximo turno");
-            if (carta.invulnerableHastaProximoTurno) sb.AppendLine("🛡 Invulnerable hasta el próximo turno");
-            if (carta.inmuneHechizosIndefinido)      sb.AppendLine("✨ Inmunidad a hechizos indefinida");
-            if (carta.multDanyoIndefinido != 1)      sb.AppendLine($"⚔ Multiplicador de daño indefinido: x{carta.multDanyoIndefinido}");
-            if (carta.bonusDanyoProximoAtaque != 0)  sb.AppendLine($"⚔ Bonus del próximo ataque: +{carta.bonusDanyoProximoAtaque}");
-            if (carta.multDanyoProximoAtaque != 1)   sb.AppendLine($"⚔ Multiplicador del próximo ataque: x{carta.multDanyoProximoAtaque}");
-            if (carta.areaProximoAtaque)             sb.AppendLine("💥 Próximo ataque en área");
-            if (carta.espiaActivoProximoAtaque)      sb.AppendLine("🕵 Bonus de triple de daño al castillo");
-            if (carta.bonusDanyoTrampa != 0)         sb.AppendLine($"💣 Bonus de daño: +{carta.bonusDanyoTrampa}");
-            if (carta.multDanyoTrampa != 1)          sb.AppendLine($"💣 Multiplicador de daño: x{carta.multDanyoTrampa}");
-            if (carta.trampaAplicaAturdimiento)      sb.AppendLine("😵 Aplica Aturdimiento");
-            if (carta.trampaAplicaRalentizacion)     sb.AppendLine("🐢 Aplica Ralentización");
-            if (carta.trampaAplicaFuego > 0)         sb.AppendLine($"🔥 Aplica Fuego ({carta.trampaAplicaFuego} daño por turno)");
+            if (carta.invulnerableHastaProximoTurno) sb.AppendLine("🛡️ Invulnerable hasta el próximo turno");
+            if (carta.inmuneHechizosIndefinido) sb.AppendLine("✨ Inmunidad a hechizos indefinida");
+            if (carta.multDanyoIndefinido != 1) sb.AppendLine($"⚔️ Multiplicador de daño indefinido: x{carta.multDanyoIndefinido}");
+            if (carta.bonusDanyoProximoAtaque != 0) sb.AppendLine($"⚔️ Bonus del próximo ataque: +{carta.bonusDanyoProximoAtaque}");
+            if (carta.multDanyoProximoAtaque != 1) sb.AppendLine($"⚔️ Multiplicador del próximo ataque: x{carta.multDanyoProximoAtaque}");
+            if (carta.areaProximoAtaque) sb.AppendLine("💥 Próximo ataque en área");
+            if (carta.espiaActivoProximoAtaque) sb.AppendLine("🕵 Bonus de triple de daño al castillo");
+            if (carta.bonusDanyoTrampa != 0) sb.AppendLine($"💣 Bonus de daño: +{carta.bonusDanyoTrampa}");
+            if (carta.multDanyoTrampa != 1) sb.AppendLine($"💣 Multiplicador de daño: x{carta.multDanyoTrampa}");
+            if (carta.trampaAplicaAturdimiento) sb.AppendLine("😵 Aplica Aturdimiento");
+            if (carta.trampaAplicaRalentizacion) sb.AppendLine("🐢 Aplica Ralentización");
+            if (carta.trampaAplicaFuego > 0) sb.AppendLine($"🔥 Aplica Fuego ({carta.trampaAplicaFuego} daño por turno)");
             sb.AppendLine();
         }
 

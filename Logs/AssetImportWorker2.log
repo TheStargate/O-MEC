@@ -1,0 +1,373 @@
+Using pre-set license
+Built from '6000.1/staging' branch; Version is '6000.1.10f1 (3c681a6c22ff) revision 3958810'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) 64bit Core' Language: 'es' Physical Memory: 16233 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1, IsPro: 1
+Date: 2026-08-16T21:46:45Z
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\6000.1.10f1\Editor\Unity.exe
+-adb2
+-batchMode
+-noUpm
+-name
+AssetImportWorker2
+-projectPath
+C:/Users/JaumeJH/O_MEC
+-logFile
+Logs/AssetImportWorker2.log
+-srvPort
+56401
+-job-worker-count
+5
+-background-job-worker-count
+8
+-gc-helper-count
+1
+-name
+AssetImport
+Successfully changed project path to: C:/Users/JaumeJH/O_MEC
+C:/Users/JaumeJH/O_MEC
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gfx=262144"
+Player connection [46948]  Target information:
+
+Player connection [46948]  * "[IP] 26.199.87.91 [Port] 0 [Flags] 2 [Guid] 3550237985 [EditorId] 3550237985 [Version] 1048832 [Id] WindowsEditor(7,Zephyrus-JH) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [46948]  * "[IP] 192.168.131.1 [Port] 0 [Flags] 2 [Guid] 3550237985 [EditorId] 3550237985 [Version] 1048832 [Id] WindowsEditor(7,Zephyrus-JH) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [46948]  * "[IP] 192.168.47.1 [Port] 0 [Flags] 2 [Guid] 3550237985 [EditorId] 3550237985 [Version] 1048832 [Id] WindowsEditor(7,Zephyrus-JH) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [46948]  * "[IP] 192.168.18.7 [Port] 0 [Flags] 2 [Guid] 3550237985 [EditorId] 3550237985 [Version] 1048832 [Id] WindowsEditor(7,Zephyrus-JH) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [46948] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [46948] Host joined alternative multi-casting on [225.0.0.222:34997]...
+JobSystem: Creating JobQueue using job-worker-count value 5
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Refreshing native plugins compatible for Editor in 13.38 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.1.10f1 (3c681a6c22ff)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.1.10f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path C:/Users/JaumeJH/O_MEC/Assets
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+Direct3D:
+    Version:         Direct3D 12 [level 12.1]
+    Renderer:        NVIDIA GeForce RTX 2070 (ID=0x1f50)
+    Vendor:          NVIDIA
+    VRAM:            8006 MB
+    App VRAM Budget: 7238 MB
+    Driver:          32.0.15.9621
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.1.10f1/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.1.10f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.1.10f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56292
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.1.10f1/Editor/Data/PlaybackEngines/WebGLSupport/UnityEditor.WebGL.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.1.10f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.1.10f1/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Registered in 0.005671 seconds.
+- Loaded All Assemblies, in  0.837 seconds
+Native extension for Android target not found
+Android Extension - Scanning For ADB Devices 446 ms
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.005 seconds
+Domain Reload Profiling: 1835ms
+	BeginReloadAssembly (383ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (1ms)
+	RebuildCommonClasses (79ms)
+	RebuildNativeTypeToScriptingClass (19ms)
+	initialDomainReloadingComplete (90ms)
+	LoadAllAssembliesAndSetupDomain (258ms)
+		LoadAssemblies (375ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (252ms)
+			TypeCache.Refresh (250ms)
+				TypeCache.ScanAssembly (233ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (1006ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (948ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (620ms)
+			SetLoadedEditorAssemblies (5ms)
+			BeforeProcessingInitializeOnLoad (82ms)
+			ProcessInitializeOnLoadAttributes (153ms)
+			ProcessInitializeOnLoadMethodAttributes (88ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+========================================================================
+Worker process is ready to serve import requests
+Import Worker Mode flag is 0x00
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  1.197 seconds
+Refreshing native plugins compatible for Editor in 1.94 ms, found 3 plugins.
+Native extension for Android target not found
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.299 seconds
+Domain Reload Profiling: 2485ms
+	BeginReloadAssembly (330ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (31ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (45ms)
+	RebuildCommonClasses (48ms)
+	RebuildNativeTypeToScriptingClass (20ms)
+	initialDomainReloadingComplete (62ms)
+	LoadAllAssembliesAndSetupDomain (726ms)
+		LoadAssemblies (520ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (340ms)
+			TypeCache.Refresh (258ms)
+				TypeCache.ScanAssembly (237ms)
+			BuildScriptInfoCaches (61ms)
+			ResolveRequiredComponents (16ms)
+	FinalizeReload (1300ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (958ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (13ms)
+			SetLoadedEditorAssemblies (5ms)
+			BeforeProcessingInitializeOnLoad (176ms)
+			ProcessInitializeOnLoadAttributes (651ms)
+			ProcessInitializeOnLoadMethodAttributes (99ms)
+			AfterProcessingInitializeOnLoad (13ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (45ms)
+Launched and connected shader compiler UnityShaderCompiler.exe after 0.04 seconds
+Refreshing native plugins compatible for Editor in 2.21 ms, found 3 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 220 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 6024 unused Assets / (5.1 MB). Loaded Objects now: 6748.
+Memory consumption went from 167.8 MB to 162.7 MB.
+Total: 20.481300 ms (FindLiveObjects: 0.962400 ms CreateObjectMapping: 2.097700 ms MarkObjects: 10.974100 ms  DeleteObjects: 6.443500 ms)
+
+========================================================================
+Received Import Request.
+  Time since last request: 136713.463664 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Border/panel-border-015.png
+  artifactKey: Guid(be65fbd5df4a66344b593f70e358005f) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Border/panel-border-015.png using Guid(be65fbd5df4a66344b593f70e358005f) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '08512581161ae5638a932754a8ad1b61') in 0.1296727 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000050 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Border/panel-border-027.png
+  artifactKey: Guid(fed183a866aa7c04ba10bc8cc24a15d0) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Border/panel-border-027.png using Guid(fed183a866aa7c04ba10bc8cc24a15d0) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'e8dc22a5994b13f93adaadf4378c48d1') in 0.0251284 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000037 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Border/panel-border-014.png
+  artifactKey: Guid(82731487c9ddbdb40b41340f5eb64d9a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Border/panel-border-014.png using Guid(82731487c9ddbdb40b41340f5eb64d9a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '382f909cce4131047ec930cac0ac1f35') in 0.0260822 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 36.652660 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent border
+  artifactKey: Guid(424db8701ce6c014fb1c049542eb2008) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent border using Guid(424db8701ce6c014fb1c049542eb2008) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '1f90554d0365d40044d6dcbaa59a50c2') in 0.0006572 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.806958 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center
+  artifactKey: Guid(c689aa3453e660f42a7dc235a5ed5f80) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center using Guid(c689aa3453e660f42a7dc235a5ed5f80) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'a80c01873507095be365035ce316ba0c') in 0.0006679 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
+
+========================================================================
+Received Import Request.
+  Time since last request: 33.296458 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-000.png
+  artifactKey: Guid(07dffaf153b057c449b6528167ab407c) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-000.png using Guid(07dffaf153b057c449b6528167ab407c) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'f75015424f0cd770d02e2ad21c62d1cf') in 0.0289772 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000019 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-017.png
+  artifactKey: Guid(d0e7617678e77d44da95ca8ad0475a44) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-017.png using Guid(d0e7617678e77d44da95ca8ad0475a44) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '3f980cafc9224e70093b6965755a36e3') in 0.0278049 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000026 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-021.png
+  artifactKey: Guid(6218abd5fa4ad854cbd3300b6b1190af) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-021.png using Guid(6218abd5fa4ad854cbd3300b6b1190af) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'c83c60a5a607a12fe31b3e77ab23e847') in 0.0221045 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000029 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-026.png
+  artifactKey: Guid(9da64c2e2954cc2469947d6a4005b822) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-026.png using Guid(9da64c2e2954cc2469947d6a4005b822) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '6ea1da09997b08700b35eba40049e852') in 0.0241878 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000016 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-013.png
+  artifactKey: Guid(726226d3d37a66a4a92c01e53d4f4ed3) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-013.png using Guid(726226d3d37a66a4a92c01e53d4f4ed3) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '07f18ec0ed9dba008229aa49163fc7ee') in 0.0282966 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000033 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-031.png
+  artifactKey: Guid(517ffcfafc941494387fcbb1372ed78f) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-031.png using Guid(517ffcfafc941494387fcbb1372ed78f) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '7f27316a4d8b36887c2f3371edb903eb') in 0.0305232 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000165 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-019.png
+  artifactKey: Guid(8c2bc5a46b910dc40bea55d644028004) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-019.png using Guid(8c2bc5a46b910dc40bea55d644028004) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '3fe6d6036b92cd7c459fdff1991f51d9') in 0.0241286 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000023 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-014.png
+  artifactKey: Guid(6bada69b3239b5f4c9c69a6522d30be3) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-014.png using Guid(6bada69b3239b5f4c9c69a6522d30be3) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '83d71be901cd2706885a37379a8d004b') in 0.0210192 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000021 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-002.png
+  artifactKey: Guid(2bcc0c2a1cd9edb48b7397a7610b56e1) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-002.png using Guid(2bcc0c2a1cd9edb48b7397a7610b56e1) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '07c6c44e13461f4b5ffc26256bc6cccb') in 0.0266845 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000057 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-015.png
+  artifactKey: Guid(81dcf066380ff4f4dac570847bff6467) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-015.png using Guid(81dcf066380ff4f4dac570847bff6467) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'eec6886009c3ade77887ab5bbb389ad4') in 0.0256766 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000017 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-007.png
+  artifactKey: Guid(fdf9ad64380eb704297440b8c5132227) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-007.png using Guid(fdf9ad64380eb704297440b8c5132227) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '36d7126442b10d6b0fcc0a9cbd93167d') in 0.0221859 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000022 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-005.png
+  artifactKey: Guid(be876acabb0e5444e938d6528017b2d7) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-005.png using Guid(be876acabb0e5444e938d6528017b2d7) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '1426cb850fe5ad8417b337034a48a721') in 0.0219928 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000044 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-006.png
+  artifactKey: Guid(8be6d28fcffe159448f040416804836a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-006.png using Guid(8be6d28fcffe159448f040416804836a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '2df49909a672f3820608c0b3fc4329c5') in 0.0235697 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000034 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-028.png
+  artifactKey: Guid(82370c7a7e4882347a2744ab8555a367) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-028.png using Guid(82370c7a7e4882347a2744ab8555a367) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'c23be94f2dfc3cef2a9144522e137db8') in 0.0127201 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000021 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-018.png
+  artifactKey: Guid(750d231efb7402b4087d4da952393b0a) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-018.png using Guid(750d231efb7402b4087d4da952393b0a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: '7c78c607fbc9e646a21406d8dfa44e0c') in 0.0211586 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+========================================================================
+Received Import Request.
+  Time since last request: 0.000038 seconds.
+  path: Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-009.png
+  artifactKey: Guid(e93d4a5b164b8444eaa9060b85c6a2d7) Importer(815301076,1909f56bfc062723c751e8b465ee728b)
+Start importing Assets/Resources/Fantasy UI Borders/PNG/Default/Transparent center/panel-transparent-center-009.png using Guid(e93d4a5b164b8444eaa9060b85c6a2d7) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'e015b6fa7b8d3809979a845437dbeaf9') in 0.0194032 seconds
+Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 2
+
+Editor requested this worker to shutdown with reason: Scaling down because of idle timeout
+AssetImportWorker is now disconnected from the server
+Process exiting
+Exiting without the bug reporter. Application will terminate with return code 0

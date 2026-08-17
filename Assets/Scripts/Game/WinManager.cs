@@ -13,6 +13,7 @@ public class WinManager : MonoBehaviour
 
     public TextMeshProUGUI textoGanador; // Texto que indica qué jugador ha ganado
     [SerializeField] private Image fondoGanador; // Fondo del texto del ganador
+    [SerializeField] private ParticleSystem particulasVictoria; // Efecto visual al anunciar el ganador
     public bool partidaTerminada = false; // Para evitar que el método se llame dos veces
     public bool perdedorEsP1 = false;
 
@@ -66,6 +67,9 @@ public class WinManager : MonoBehaviour
         // Resaltar en violeta las casillas ocupadas por el bando perdedor
         if (Board.Instance != null)
             Board.Instance.ResaltarCasillasVioleta();
+
+        if (particulasVictoria != null)
+            particulasVictoria.Play();
 
         Debug.Log($"[WinManager] Fin de partida. {ganador}");
     }
