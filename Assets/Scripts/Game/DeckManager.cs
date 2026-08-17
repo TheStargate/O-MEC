@@ -89,7 +89,7 @@ public class DeckManager : MonoBehaviour
                 ataque = 5,
                 velocidad = 6,
                 alcance = 1,
-                costeHabilidad = 3
+                costeHabilidad = 2
             },
             new MonsterCardData
             {
@@ -113,7 +113,7 @@ public class DeckManager : MonoBehaviour
                 ataque = 4,
                 velocidad = 6,
                 alcance = 4,
-                costeHabilidad = 6
+                costeHabilidad = 4
             },
             new MonsterCardData
             {
@@ -125,7 +125,7 @@ public class DeckManager : MonoBehaviour
                 ataque = 5,
                 velocidad = 3,
                 alcance = 3,
-                costeHabilidad = 7
+                costeHabilidad = 4
             },
             new MonsterCardData
             {
@@ -153,27 +153,15 @@ public class DeckManager : MonoBehaviour
             },
             new MonsterCardData
             {
-                nombre = "Tanque",
-                tipo = CardType.Monstruo,
-                costoEnergia = 5,
-                vida = 15,
-                vidaMaxima = 15,
-                ataque = 6,
-                velocidad = 2,
-                alcance = 3,
-                costeHabilidad = 8
-            },
-            new MonsterCardData
-            {
                 nombre = "Bebé dragón",
                 tipo = CardType.Monstruo,
-                costoEnergia = 6,
+                costoEnergia = 5,
                 vida = 4,
                 vidaMaxima = 4,
                 ataque = 6,
                 velocidad = 3,
                 alcance = 3,
-                costeHabilidad = 3
+                costeHabilidad = 1
             },
             new MonsterCardData
             {
@@ -185,19 +173,55 @@ public class DeckManager : MonoBehaviour
                 ataque = 6,
                 velocidad = 5,
                 alcance = 5,
-                costeHabilidad = 3
+                costeHabilidad = 2
             },
             new MonsterCardData
             {
                 nombre = "Cura protector",
                 tipo = CardType.Monstruo,
                 costoEnergia = 6,
-                vida = 6,
-                vidaMaxima = 6,
+                vida = 9,
+                vidaMaxima = 9,
                 ataque = 7,
                 velocidad = 3,
-                alcance = 3,
+                alcance = 4,
                 costeHabilidad = 4
+            },
+            new MonsterCardData
+            {
+                nombre = "Esqueleto gigante",
+                tipo = CardType.Monstruo,
+                costoEnergia = 6,
+                vida = 14,
+                vidaMaxima = 14,
+                ataque = 4,
+                velocidad = 2,
+                alcance = 1,
+                costeHabilidad = 5
+            },
+            new MonsterCardData
+            {
+                nombre = "Guerrero acorazado",
+                tipo = CardType.Monstruo,
+                costoEnergia = 6,
+                vida = 18,
+                vidaMaxima = 18,
+                ataque = 4,
+                velocidad = 1,
+                alcance = 1,
+                costeHabilidad = 2
+            },
+            new MonsterCardData
+            {
+                nombre = "Tanque",
+                tipo = CardType.Monstruo,
+                costoEnergia = 7,
+                vida = 15,
+                vidaMaxima = 15,
+                ataque = 6,
+                velocidad = 2,
+                alcance = 3,
+                costeHabilidad = 3
             },
             new MonsterCardData
             {
@@ -213,6 +237,18 @@ public class DeckManager : MonoBehaviour
             },
             new MonsterCardData
             {
+                nombre = "Mago",
+                tipo = CardType.Monstruo,
+                costoEnergia = 7,
+                vida = 5,
+                vidaMaxima = 5,
+                ataque = 5,
+                velocidad = 4,
+                alcance = 4,
+                costeHabilidad = 6
+            },
+            new MonsterCardData
+            {
                 nombre = "Dragón de fuego",
                 tipo = CardType.Monstruo,
                 costoEnergia = 8,
@@ -221,7 +257,7 @@ public class DeckManager : MonoBehaviour
                 ataque = 10,
                 velocidad = 4,
                 alcance = 5,
-                costeHabilidad = 5
+                costeHabilidad = 3
             },
             new MonsterCardData
             {
@@ -249,51 +285,15 @@ public class DeckManager : MonoBehaviour
             },
             new MonsterCardData
             {
-                nombre = "Esqueleto gigante",
-                tipo = CardType.Monstruo,
-                costoEnergia = 9,
-                vida = 14,
-                vidaMaxima = 14,
-                ataque = 4,
-                velocidad = 2,
-                alcance = 1,
-                costeHabilidad = 6
-            },
-            new MonsterCardData
-            {
-                nombre = "Mago",
-                tipo = CardType.Monstruo,
-                costoEnergia = 9,
-                vida = 5,
-                vidaMaxima = 5,
-                ataque = 5,
-                velocidad = 4,
-                alcance = 4,
-                costeHabilidad = 7
-            },
-            new MonsterCardData
-            {
-                nombre = "Guerrero acorazado",
-                tipo = CardType.Monstruo,
-                costoEnergia = 10,
-                vida = 16,
-                vidaMaxima = 16,
-                ataque = 3,
-                velocidad = 1,
-                alcance = 1,
-                costeHabilidad = 4
-            },
-            new MonsterCardData
-            {
                 nombre = "Guerrero oscuro",
                 tipo = CardType.Monstruo,
-                costoEnergia = 11,
+                costoEnergia = 7,
                 vida = 10,
                 vidaMaxima = 10,
-                ataque = 5,
+                ataque = 10,
                 velocidad = 3,
                 alcance = 1,
-                costeHabilidad = 6
+                costeHabilidad = 1
             },
             new StructureCardData
             {
@@ -315,18 +315,18 @@ public class DeckManager : MonoBehaviour
                 vidaMaxima = 20,
                 ataque = 2,
                 alcance = 3,
-                costeHabilidad = 3
+                costeHabilidad = 2
             },
             new StructureCardData
             {
                 nombre = "Castillo falso",
                 tipo = CardType.Estructura,
-                costoEnergia = 2,
+                costoEnergia = 3,
                 vida = 30,
                 vidaMaxima = 30,
                 ataque = 0,
                 alcance = 0,
-                costeHabilidad = 5
+                costeHabilidad = 3
             },
             new StructureCardData
             {
@@ -381,7 +381,7 @@ public class DeckManager : MonoBehaviour
                 vidaMaxima = 25,
                 ataque = 7,
                 alcance = 3,
-                costeHabilidad = 4
+                costeHabilidad = 3
             },
             new StructureCardData
             {
@@ -392,15 +392,15 @@ public class DeckManager : MonoBehaviour
                 vidaMaxima = 50,
                 ataque = 2,
                 alcance = 5,
-                costeHabilidad = 7
+                costeHabilidad = 4
             },
             new StructureCardData
             {
                 nombre = "Torre infernal",
                 tipo = CardType.Estructura,
-                costoEnergia = 10,
-                vida = 15,
-                vidaMaxima = 15,
+                costoEnergia = 8,
+                vida = 20,
+                vidaMaxima = 20,
                 ataque = 1,
                 alcance = 3,
                 costeHabilidad = 6
@@ -421,16 +421,16 @@ public class DeckManager : MonoBehaviour
             },
             new SpellCardData
             {
-                nombre = "Muerte instantánea",
+                nombre = "Flecha ardiente",
                 tipo = CardType.Hechizo,
-                costoEnergia = 7,
+                costoEnergia = 6,
                 requiereMonstruo = true
             },
             new SpellCardData
             {
-                nombre = "Flecha ardiente",
+                nombre = "Muerte instantánea",
                 tipo = CardType.Hechizo,
-                costoEnergia = 6,
+                costoEnergia = 7,
                 requiereMonstruo = true
             },
             new SpellCardData
@@ -743,8 +743,8 @@ public class DeckManager : MonoBehaviour
         deckP1.Enqueue(deckList[13]);
         deckP1.Enqueue(deckList[14]);
         deckP1.Enqueue(deckList[15]);
+        deckP1.Enqueue(deckList[15]);
         deckP1.Enqueue(deckList[16]);
-        deckP1.Enqueue(deckList[17]);
         deckP1.Enqueue(deckList[17]);
         deckP1.Enqueue(deckList[18]);
         deckP1.Enqueue(deckList[19]);

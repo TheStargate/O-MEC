@@ -181,7 +181,7 @@ public class UIManager : MonoBehaviour
         {
             if (data.tipo == CardType.Energia)
                 DeckManager.Instance.descartarEnergia();
-            else if(data.tipo != CardType.MonstruoLeg)
+            else if (data.tipo != CardType.MonstruoLeg)
                 DeckManager.Instance.descartar(data, TurnManager.turnoP1);
         }
 
@@ -217,7 +217,8 @@ public class UIManager : MonoBehaviour
         if (data is MonsterCardData mData)
         {
             int ataqueTotal = PassiveAbility.CalcularDanyoAtacante(carta, null);
-            
+            int ataqueBase = mData.ataque;
+
             // Obtener la velocidad original de la carta si DeckManager existe
             int velocidadOriginal = mData.velocidad;
             if (DeckManager.Instance != null)
@@ -229,15 +230,17 @@ public class UIManager : MonoBehaviour
             bool velocidadModificada = mData.velocidad != velocidadOriginal;
 
             sb.AppendLine($"Vida: {mData.vida} / {mData.vidaMaxima}");
-            sb.AppendLine($"Ataque: {ataqueTotal}" + (ataqueTotal != mData.ataque ? " (modificado)" : ""));
+            sb.AppendLine($"Ataque: {ataqueTotal}" + (ataqueTotal != ataqueBase ? " (modificado)" : ""));
             sb.AppendLine($"Velocidad: {mData.velocidad}" + (velocidadModificada ? " (modificado)" : ""));
             sb.AppendLine($"Alcance: {mData.alcance}");
         }
         else if (data is StructureCardData sData)
         {
             int ataqueTotal = PassiveAbility.CalcularDanyoAtacante(carta, null);
+            int ataqueBase = sData.ataque;
+
             sb.AppendLine($"Vida: {sData.vida} / {sData.vidaMaxima}");
-            sb.AppendLine($"Ataque: {ataqueTotal}" + (ataqueTotal != sData.ataque ? " (modificado)" : ""));
+            sb.AppendLine($"Ataque: {ataqueTotal}" + (ataqueTotal != ataqueBase ? " (modificado)" : ""));
             sb.AppendLine($"Alcance: {sData.alcance}");
         }
         else if (data is TrapCardData tData)
@@ -248,10 +251,28 @@ public class UIManager : MonoBehaviour
         sb.AppendLine();
 
         // MODIFICADORES ACTIVOS
-        bool aturdido = co != null && (co.ultimoMovimiento >= TurnManager.numTurno + 2 || co.ultimoAtaque >= TurnManager.numTurno + 2);
+        bool aturdido = co != null && co.aturdido > 0;
+        bool protegidoPorTorre = PassiveAbility.EsInvulnerablePorTorreProtectora(carta);
+        bool inmunePorReyCura = PassiveAbility.EsInmuneHechizo(carta);
+        bool tripleDanyoPorReyCura = PassiveAbility.EsTripleDanyoPorReyCura(carta);
+        int bonusPasiva = carta.pasiva != null ? carta.pasiva.ModificarDanyoAtacante(null) : 0;
+        int bonusEdificio = 0;
+        if (carta.clickableObject != null && carta.casilla != null)
+        {
+            if (carta.cardData is MonsterCardData)
+                bonusEdificio = PassiveAbility.BonusDanyoMonstruos(carta.clickableObject.propietarioP1);
+            else if (carta.cardData is StructureCardData)
+                bonusEdificio = PassiveAbility.BonusDanyoEstructuras(carta.clickableObject.propietarioP1);
+        }
+
         bool hayModificadores = aturdido ||
                                 carta.invulnerableHastaProximoTurno ||
                                 carta.inmuneHechizosIndefinido ||
+                                protegidoPorTorre ||
+                                inmunePorReyCura ||
+                                tripleDanyoPorReyCura ||
+                                bonusPasiva > 0 ||
+                                bonusEdificio > 0 ||
                                 carta.bonusDanyoProximoAtaque != 0 ||
                                 carta.multDanyoProximoAtaque != 1 ||
                                 carta.areaProximoAtaque ||
@@ -266,9 +287,18 @@ public class UIManager : MonoBehaviour
         if (hayModificadores)
         {
             sb.AppendLine("<b>[ MODIFICADORES ]</b>");
-            if (aturdido) sb.AppendLine("😵 Aturdido hasta el próximo turno");
+            if (aturdido)
+            {
+                string turnosTexto = co.aturdido == 1 ? "turno rest." : "turnos rest.";
+                sb.AppendLine($"😵 Aturdido ({co.aturdido} {turnosTexto})");
+            }
             if (carta.invulnerableHastaProximoTurno) sb.AppendLine("🛡️ Invulnerable hasta el próximo turno");
             if (carta.inmuneHechizosIndefinido) sb.AppendLine("✨ Inmunidad a hechizos indefinida");
+            if (protegidoPorTorre) sb.AppendLine("🛡️ Invulnerable por Torre protectora");
+            if (inmunePorReyCura) sb.AppendLine("✨ Inmunidad a hechizos por Rey cura");
+            if (tripleDanyoPorReyCura) sb.AppendLine("⚔️ Daño x3 por Rey cura");
+            if (bonusPasiva > 0) sb.AppendLine($"⚔️ Bonus de habilidad pasiva: +{bonusPasiva}");
+            if (bonusEdificio > 0) sb.AppendLine($"⚔️ Bonus de edificio: +{bonusEdificio}");
             if (carta.multDanyoIndefinido != 1) sb.AppendLine($"⚔️ Multiplicador de daño indefinido: x{carta.multDanyoIndefinido}");
             if (carta.bonusDanyoProximoAtaque != 0) sb.AppendLine($"⚔️ Bonus del próximo ataque: +{carta.bonusDanyoProximoAtaque}");
             if (carta.multDanyoProximoAtaque != 1) sb.AppendLine($"⚔️ Multiplicador del próximo ataque: x{carta.multDanyoProximoAtaque}");

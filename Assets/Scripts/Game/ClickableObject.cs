@@ -8,6 +8,7 @@ public class ClickableObject : MonoBehaviour
     public int ultimoAtaque = 0; // Turno en el que la carta realizó el último ataque
     public int ultimoMovimiento = 0; // Turno en el que la carta realizó el último movimiento
     public int turnoColocado = 0; // Turno en el que la carta fue colocada en el tablero
+    public int aturdido = 0; // Turnos restantes aturdido
     public bool habilidadUsada = false; // Si la habilidad activa de la carta ya ha sido usada
     public bool usado; // Si el objeto ya ha sido usado, no se resalta ni permite atacar o moverse
     public Renderer renderizador; // Para controlar la textura y resaltado del objeto
@@ -38,7 +39,7 @@ public class ClickableObject : MonoBehaviour
             else
                 renderizador.material.color = Color.lightPink;
         }
-        else if (usado)
+        else if (usado || aturdido > 0)
         {
             // Aunque esté "usada", puede seguir sin estar gris si su habilidad activa sigue disponible
             Card carta = GetComponent<Card>();
@@ -46,7 +47,8 @@ public class ClickableObject : MonoBehaviour
                                       carta.activa != null &&
                                       !habilidadUsada &&
                                       turnoColocado < TurnManager.numTurno && // No puede actuar el turno en que fue colocada
-                                      carta.cardData.costeHabilidad <= TurnManager.energiaDisponible;
+                                      carta.cardData.costeHabilidad <= TurnManager.energiaDisponible &&
+                                      aturdido <= 0; // Si está aturdida la carta al inicio del turno se mantiene en gris
             renderizador.material.color = puedeUsarHabilidad ? Color.white : Color.gray;
         }
         else
@@ -61,6 +63,28 @@ public class ClickableObject : MonoBehaviour
             usado = true;
             actualizarResaltado();
         }
+    }
+
+    // Comprueba si la carta todavía tiene acciones disponibles (atacar o moverse)
+    public bool TieneAccionesDisponibles()
+    {
+        if (usado || aturdido > 0)
+            return false;
+
+        Card carta = GetComponent<Card>();
+        if (carta == null || carta.cardData == null)
+            return false;
+
+        bool puedeAtacar = false;
+        bool puedeMover = false;
+
+        if (carta.cardData is DamageableCardData dData && ultimoAtaque < TurnManager.numTurno && dData.ataque > 0)
+            puedeAtacar = true;
+
+        if (carta.cardData is MonsterCardData mData && ultimoMovimiento < TurnManager.numTurno && mData.velocidad > 0)
+            puedeMover = true;
+
+        return puedeAtacar || puedeMover;
     }
 }
 

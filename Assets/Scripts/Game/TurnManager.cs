@@ -14,6 +14,17 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI textoTurnoUI; // Texto que muestra el turno actual
     public static TextMeshProUGUI textoTurno; // Texto accesible estáticamente para actualizar el turno
 
+    void Awake()
+    {
+        turnoP1 = true;
+        robadoDisponible = false;
+        numTurno = 1;
+        energiaDisponible = 0;
+        bonusHerreriaActiva = 0;
+        clickables = null;
+        textoTurno = null;
+    }
+
     void Start()
     {
         textoTurno = textoTurnoUI;
@@ -116,6 +127,14 @@ public class TurnManager : MonoBehaviour
                         // Actualiza efectos por turno activos
                         carta.UpdateEfectos();
                         if (carta == null) continue; // La carta ha muerto, pasamos a la siguiente
+
+                        // Decrementar aturdimiento si el objeto está aturdido
+                        if (clickable.aturdido > 0)
+                            clickable.aturdido--;
+
+                        // Si sigue aturdido, mantener la carta como usada (gris y no interactuable) al inicio del turno
+                        if (clickable.aturdido > 0)
+                            clickable.usado = true;
 
                         // Dispara la habilidad pasiva de inicio de turno
                         carta.pasiva?.OnTurnoInicio();

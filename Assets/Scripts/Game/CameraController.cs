@@ -63,7 +63,7 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float limiteMaxZ = 70f; // Desplazamiento Z máximo en la visión de tablero
 
     private float tiempoTactilVioleta = 0f; // Tiempo que lleva pulsado el toque en modo violeta
-    private const float tiempoLongPressVioleta = 0.5f; // Tiempo necesario para long press en modo violeta
+    private const float tiempoLongPressViolet = 0.5f; // Tiempo necesario para long press en modo violeta
     private bool fueClickLargoPorVioleta = false; // Indica si el último click fue un long press en violeta
     private bool yaProcesoLongPressVioleta = false; // Para evitar procesar el long press múltiples veces en el mismo toque
 
@@ -88,7 +88,7 @@ public class CameraController : MonoBehaviour
         if (modoVioleta && touchActivo)
         {
             tiempoTactilVioleta += Time.deltaTime;
-            if (tiempoTactilVioleta >= tiempoLongPressVioleta && !yaProcesoLongPressVioleta)
+            if (tiempoTactilVioleta >= tiempoLongPressViolet && !yaProcesoLongPressVioleta)
             {
                 // Se han el tiempo para procesar el long press
                 fueClickLargoPorVioleta = true;
@@ -220,6 +220,13 @@ public class CameraController : MonoBehaviour
 
         if (!moverCamara && objetivoActual == hit.transform && esTipoCarta && carta != null)
         {
+            // Las trampas enemigas colocadas en el tablero no deben poder abrirse en el visor central ni mostrar su información.
+            if (carta.cardData != null && carta.cardData.tipo == CardType.Trampa &&
+                carta.clickableObject != null && carta.clickableObject.propietarioP1 != TurnManager.turnoP1)
+            {
+                return;
+            }
+
             bool visorActivo = false;
             if (UIManager.visorCentral != null)
             {

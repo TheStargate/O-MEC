@@ -185,22 +185,27 @@ public class Board : MonoBehaviour
                 danyoTrampa += trampa.bonusDanyoTrampa;
                 danyoTrampa *= trampa.multDanyoTrampa;
 
-                if (mCardData != null)
-                    carta.UpdateVida(mCardData.vida - danyoTrampa);
-
-                // Efectos de habilidades activas de trampas
-                if (trampa.trampaAplicaAturdimiento)
-                { // Aturde la carta (no podrá moverse ni atacar durante 1 turno)
-                    carta.clickableObject.ultimoMovimiento = TurnManager.numTurno + 2;
-                    carta.clickableObject.ultimoAtaque = TurnManager.numTurno + 2;
-                }
-                if (trampa.trampaAplicaRalentizacion && mCardData != null)
-                { // Ralentiza la carta (su velocidad se reduce 1 punto permanentemente)
-                    carta.UpdateVelocidad(mCardData.velocidad - 1);
-                }
-                if (trampa.trampaAplicaFuego > 0 && mCardData != null)
-                { // Aplica fuego a la carta (1 punto de daño durante 3 turnos)
-                    mCardData.efectosDanyo.Add(new DanyoEfecto("Quemadura", trampa.trampaAplicaFuego, 3));
+                // Aplicar daño respetando invulnerabilidad y reducción por pasivas
+                PassiveAbility.AplicarDanyoCarta(carta, danyoTrampa);
+                
+                // Si la carta sobrevive, aplicar efectos secundarios de la trampa
+                if (carta.cardData is DamageableCardData dData && dData.vida > 0)
+                {
+                    // Efectos secundarios de habilidades de trampas
+                    if (trampa.trampaAplicaAturdimiento)
+                    { // Aturde la carta (no podrá moverse ni atacar durante 1 turno)
+                        carta.clickableObject.ultimoMovimiento = TurnManager.numTurno + 2;
+                        carta.clickableObject.ultimoAtaque = TurnManager.numTurno + 2;
+                        carta.clickableObject.aturdido += 2;
+                    }
+                    if (trampa.trampaAplicaRalentizacion && mCardData != null)
+                    { // Ralentiza la carta (su velocidad se reduce 1 punto permanentemente)
+                        carta.UpdateVelocidad(mCardData.velocidad - 1);
+                    }
+                    if (trampa.trampaAplicaFuego > 0 && mCardData != null)
+                    { // Aplica fuego a la carta (1 punto de daño durante 3 turnos)
+                        mCardData.efectosDanyo.Add(new DanyoEfecto("Quemadura", trampa.trampaAplicaFuego, 3));
+                    }
                 }
 
                 casillaSeleccionada.LiberarCasilla(false);
@@ -213,6 +218,7 @@ public class Board : MonoBehaviour
             int ultimoMovimientoOriginal = carta.clickableObject.ultimoMovimiento;
             int ultimoAtaqueOriginal = carta.clickableObject.ultimoAtaque;
             bool habilidadUsadaOriginal = carta.clickableObject.habilidadUsada;
+            int aturdidoOriginal = carta.clickableObject.aturdido;
             if (casillaSeleccionada.OcuparCasilla(carta))
             {
                 casillaOriginal.LiberarCasilla(true);
@@ -223,11 +229,18 @@ public class Board : MonoBehaviour
                     carta.clickableObject.ultimoMovimiento = ultimoMovimientoOriginal;
                     carta.clickableObject.ultimoAtaque = ultimoAtaqueOriginal;
                     carta.clickableObject.habilidadUsada = habilidadUsadaOriginal;
-                    carta.clickableObject.usado = false;
+                    carta.clickableObject.aturdido = aturdidoOriginal;
+                    carta.clickableObject.usado = (aturdidoOriginal > 0);
                     carta.clickableObject.actualizarResaltado();
                 }
                 if (mCardData != null && mCardData.vida <= 0) // Comprueba si ha muerto por trampa
+                {
                     casillaSeleccionada.LiberarCasilla(false);
+                    // Si la carta murió por trampa, devolver la cámara a la posición original
+                    if (CameraController.Instance != null)
+                        CameraController.Instance.VolverAPosicionOriginal();
+                    return;
+                }
             }
         }
         else
@@ -259,22 +272,10 @@ public class Board : MonoBehaviour
             else
             {
                 // Atacar: se calcula el daño base y todos los modificadores ofensivos (bonus pasivos, herreria, rey cura...)
-                DamageableCardData cardData = objetivo.cardData as DamageableCardData;
                 int danyo = PassiveAbility.CalcularDanyoAtacante(carta, objetivo);
-                // Reducción de daño del defensor
-                danyo = objetivo.pasiva?.OnRecibirDanyo(danyo) ?? danyo;
-                // Invulnerabilidad absoluta (daño 0)
-                if (PassiveAbility.EsInvulnerableATodo(objetivo)) danyo = 0;
-
-                // Aplica el daño a la carta seleccionada
-                if (cardData != null)
-                {
-                    int nuevaVida = cardData.vida - danyo;
-                    if (nuevaVida <= 0)
-                        casillaSeleccionada.LiberarCasilla(false); // Destruye la carta si se queda sin vida
-                    else
-                        objetivo.UpdateVida(nuevaVida);
-                }
+                
+                // Aplicar daño respetando invulnerabilidad y defensas pasivas
+                PassiveAbility.AplicarDanyoCarta(objetivo, danyo);
 
                 // Efectos secundarios de la habilidad pasiva del atacante (Mago en área, Arquero largo, Ninja 2 ataques...)
                 carta.pasiva?.OnDespuesDeAtacar(objetivo);
@@ -297,8 +298,14 @@ public class Board : MonoBehaviour
         if (carta.clickableObject != null && carta.clickableObject.ultimoMovimiento == TurnManager.numTurno && carta.clickableObject.ultimoAtaque == TurnManager.numTurno)
             carta.clickableObject.usar(); // Marca la carta como usada si no quedan acciones disponibles
 
+        // Si la carta no tiene más acciones disponibles, vuelve a la visión por defecto del tablero
         if (CameraController.Instance != null)
-            CameraController.Instance.VolverACarta(carta);
+        {
+            if (carta.clickableObject != null && !carta.clickableObject.TieneAccionesDisponibles())
+                CameraController.Instance.VolverAPosicionOriginal();
+            else
+                CameraController.Instance.VolverACarta(carta);
+        }
     }
 
     // Obtiene la carta seleccionada desde la UI y permite aplicar su habilidad activa
@@ -707,4 +714,5 @@ public class Board : MonoBehaviour
         else
             DeckManager.Instance.handPanelP2?.GetComponent<CardSorter>()?.Resaltar();
     }
+
 }

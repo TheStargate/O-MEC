@@ -68,6 +68,9 @@ public class Cell : MonoBehaviour
         // Inicializar la habilidad activa de la carta
         cartaActual.activa = ActiveAbility.Crear(cartaActual.cardData.nombre, cartaActual);
 
+        // Conserva los estados temporales del Card original (efectos por turno, bonus, invulnerabilidad, fuego, etc.)
+        cartaActual.CopiarEstadoTemporalDesde(cartaPrefab);
+
         // Guardar el turno en el que se colocó la carta
         if (cartaActual.clickableObject != null)
             cartaActual.clickableObject.turnoColocado = TurnManager.numTurno;
@@ -78,6 +81,12 @@ public class Cell : MonoBehaviour
 
         ocupada = true;
         cartaActual.RefrescarAtaqueUI();
+
+        // Restaurar los backgrounds de vida y velocidad tras Setup() que los desactiva
+        if (cartaActual.cardData is DamageableCardData dData)
+            cartaActual.UpdateVida(dData.vida);
+        if (cartaActual.cardData is MonsterCardData mData)
+            cartaActual.UpdateVelocidad(mData.velocidad);
 
         return true;
     }
@@ -100,6 +109,7 @@ public class Cell : MonoBehaviour
             Destroy(cartaActual.gameObject);
         }
 
+        cartaActual.RefrescarAtaqueUI();
         ocupada = false;
         cartaActual = null;
     }

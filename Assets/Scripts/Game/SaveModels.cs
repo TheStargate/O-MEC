@@ -76,6 +76,7 @@ public class SaveData_Card
     public bool usado;
     public bool habilidadUsada;
     public int turnoColocado;
+    public int aturdido;
 
     // Estadísticas Actuales (si aplican)
     public int vidaActual;

@@ -107,9 +107,14 @@ public abstract class PassiveAbility
     /// aliados adyacentes (3x si está cerca de uno, 1x si no).</summary>
     public static int MultiplicadorDanyoReyCura(Card atacante)
     {
-        if (atacante.casilla == null) return 1;
+        if (atacante == null || atacante.casilla == null || atacante.clickableObject == null) return 1;
         return HayPasivaAdyacente<PassiveReyCura>(
             atacante.casilla.row, atacante.casilla.col, atacante.clickableObject.propietarioP1) ? 3 : 1;
+    }
+
+    public static bool EsTripleDanyoPorReyCura(Card carta)
+    {
+        return carta != null && MultiplicadorDanyoReyCura(carta) == 3;
     }
 
     /// <summary>Devuelve cuántos puntos de bonus de daño tienen las estructuras aliadas
@@ -222,6 +227,28 @@ public abstract class PassiveAbility
         }
     }
 
+    // Aplica daño a una carta directamente, respetando sus habilidades defensivas (invulnerabilidad, reducción de daño por pasivas).
+    // Se usa tanto en ataques como en efectos (trampas, daño por turnos, etc.)
+    public static void AplicarDanyoCarta(Card carta, int danyo)
+    {
+        if (carta == null) return;
+        // Invulnerabilidad absoluta: Torre protectora o Castillo falso
+        if (EsInvulnerableATodo(carta)) return;
+        if (carta.cardData is DamageableCardData dData)
+        {
+            // Reducción de daño del defensor por habilidades pasivas
+            int danyoFinal = carta.pasiva?.OnRecibirDanyo(danyo) ?? danyo;
+            int nuevaVida = dData.vida - danyoFinal;
+            if (nuevaVida <= 0)
+            {
+                if (carta.casilla != null)
+                    carta.casilla.LiberarCasilla(false);
+            }
+            else
+                carta.UpdateVida(nuevaVida);
+        }
+    }
+
     // Aplica daño en área a partir de una casilla central, con opciones para filtrar por monstruos o aliados
     public static void AplicarDanyoAreaGeneral(Card atacante, Cell centro, int danyo, int radio, bool soloMonstruos = false, bool afectarAliados = false)
     {
@@ -269,6 +296,71 @@ public abstract class PassiveAbility
                 
                 int danyoFinal = CalcularDanyoAtacante(atacante, cell.cartaActual);
                 AplicarDanyo(cell, danyoFinal);
+            }
+        }
+    }
+
+    /// <summary>Busca monstruos enemigos en línea recta desde el atacante hacia el objetivo principal.
+    /// Solo se activa si el objetivo principal es un monstruo. Si se sale del tablero, se detiene.
+    /// El daño se aplica a los enemigos encontrados en la misma línea y termina al alcanzar maxObjetivosExtra.
+    /// La lógica original de la pasiva de Arquero largo se conserva aquí para reutilizarla con el Rey arquero.</summary>
+    public static void AplicarDanyoEnLinea(Card atacante, Card objetivo, int maxObjetivosExtra)
+    {
+        if (atacante == null || atacante.casilla == null || objetivo == null || objetivo.casilla == null)
+            return;
+
+        // Solo se activa si se ataca a un monstruo, si es a una estructura no hace nada
+        if (!(objetivo.cardData is MonsterCardData))
+            return;
+
+        int dr = objetivo.casilla.row - atacante.casilla.row;
+        int dc = objetivo.casilla.col - atacante.casilla.col;
+
+        // Solo líneas rectas: horizontal, vertical o diagonal
+        if (dr != 0 && dc != 0 && Mathf.Abs(dr) != Mathf.Abs(dc))
+            return;
+
+        int normR = dr == 0 ? 0 : (dr > 0 ? 1 : -1);
+        int normC = dc == 0 ? 0 : (dc > 0 ? 1 : -1);
+        int alcance = (atacante.cardData as DamageableCardData)?.alcance ?? 0;
+        bool esP1 = atacante.clickableObject?.propietarioP1 ?? false;
+        bool esDiagonal = normR != 0 && normC != 0;
+
+        // El daño en línea solo puede afectar a objetivos que estén en la misma línea
+        // y a una distancia menor o igual al alcance del atacante.
+        // En diagonal cada paso cuenta como 2 de distancia, no como 1.
+        int objetivosAplicados = 0;
+        for (int dist = 1; ; dist++)
+        {
+            int distanciaReal = esDiagonal ? dist * 2 : dist;
+            if (distanciaReal > alcance)
+                break;
+
+            int tr = atacante.casilla.row + normR * dist;
+            int tc = atacante.casilla.col + normC * dist;
+
+            // Si se sale del tablero, la línea termina
+            if (tr < 0 || tr >= Board.Instance.rows || tc < 0 || tc >= Board.Instance.columns)
+                break;
+
+            Cell cell = Board.Instance.cells[tr, tc];
+
+            // El objetivo principal ya ha recibido el daño normal del ataque, se salta
+            if (tr == objetivo.casilla.row && tc == objetivo.casilla.col)
+                continue;
+
+            // Si hay un enemigo MONSTRUO en la trayectoria, recibe el daño pasivo y la línea se detiene si llega al máximo
+            if (cell.ocupada && cell.cartaActual != null &&
+                cell.cartaActual.clickableObject != null &&
+                cell.cartaActual.clickableObject.propietarioP1 != esP1 &&
+                cell.cartaActual.cardData is MonsterCardData)
+            {
+                int danyoFinal = CalcularDanyoAtacante(atacante, cell.cartaActual);
+                AplicarDanyo(cell, danyoFinal);
+                objetivosAplicados++;
+
+                if (objetivosAplicados >= maxObjetivosExtra)
+                    break;
             }
         }
     }
@@ -409,72 +501,12 @@ public class PassiveCuraProtector : PassiveAbility
 }
 
 /// <summary>Arquero largo: tras atacar a un objetivo, puede dañar a un segundo monstruo
-/// enemigo que esté en línea recta (horizontal, vertical o diagonal) con el primero
-/// y dentro del alcance del arquero. Pueden existir huecos entre los dos.</summary>
+/// enemigo en línea recta.</summary>
 public class PassiveArqueroLargo : PassiveAbility
 {
     public override void OnDespuesDeAtacar(Card objetivo)
     {
-        if (portador == null || portador.casilla == null || objetivo == null || objetivo.casilla == null) return;
-        
-        // Solo se activa si se ataca a un monstruo, si es a una estructura no hace nada
-        if (!(objetivo.cardData is MonsterCardData)) return;
-
-        int dr = objetivo.casilla.row - portador.casilla.row;
-        int dc = objetivo.casilla.col - portador.casilla.col;
-
-        Debug.Log($"[ArqueroLargo] Atacando a {objetivo.name}. dr={dr}, dc={dc}");
-
-        // Solo líneas rectas: horizontal, vertical o diagonal (|dr|==|dc|)
-        if (dr != 0 && dc != 0 && Mathf.Abs(dr) != Mathf.Abs(dc)) 
-        {
-            Debug.Log($"[ArqueroLargo] Ataque no lineal. Se cancela pasiva.");
-            return;
-        }
-
-        int normR = dr == 0 ? 0 : (dr > 0 ? 1 : -1);
-        int normC = dc == 0 ? 0 : (dc > 0 ? 1 : -1);
-        int alcance = (portador.cardData as DamageableCardData)?.alcance ?? 0;
-        int ataqueBase = (portador.cardData as DamageableCardData)?.ataque ?? 0;
-        bool esP1   = portador.clickableObject.propietarioP1;
-
-        Debug.Log($"[ArqueroLargo] Pasiva activada. normR={normR}, normC={normC}, alcance={alcance}, ataqueBase={ataqueBase}");
-
-        for (int dist = 1; dist <= alcance; dist++)
-        {
-            int tr = portador.casilla.row + normR * dist;
-            int tc = portador.casilla.col + normC * dist;
-            
-            if (tr < 0 || tr >= Board.Instance.rows || tc < 0 || tc >= Board.Instance.columns) 
-            {
-                Debug.Log($"[ArqueroLargo] Fin de la linea (fuera del tablero) en dist={dist}");
-                break;
-            }
-
-            Cell cell = Board.Instance.cells[tr, tc];
-
-            // El objetivo principal ya recibió el daño normal del ataque, lo saltamos
-            if (tr == objetivo.casilla.row && tc == objetivo.casilla.col)
-            {
-                Debug.Log($"[ArqueroLargo] dist={dist} ({tr},{tc}) es el objetivo principal. Ignorando.");
-                continue;
-            }
-
-            // Si hay un enemigo MONSTRUO en la trayectoria, recibe el daño pasivo y la flecha se detiene
-            if (cell.ocupada && cell.cartaActual != null)
-            {
-                if (cell.cartaActual.clickableObject.propietarioP1 != esP1 &&
-                    cell.cartaActual.cardData is MonsterCardData)
-                {
-                    // Calculamos el daño total con los bonus actuales (Herrería, Rey Cura...)
-                    int danyoFinal = CalcularDanyoAtacante(portador, cell.cartaActual);
-
-                    Debug.Log($"[ArqueroLargo] ¡Es monstruo enemigo! Aplicando {danyoFinal} de daño.");
-                    AplicarDanyo(cell, danyoFinal);
-                    break; // Solo un objetivo extra por ataque
-                }
-            }
-        }
+        AplicarDanyoEnLinea(portador, objetivo, 1);
     }
 }
 
@@ -751,10 +783,16 @@ public class PassiveReyDragon : PassiveAbility
         => (atacante.cardData as DamageableCardData)?.alcance >= 4;
 }
 
-/// <summary>Rey arquero: el daño recibido se reduce en 3.</summary>
+/// <summary>Rey arquero: el daño recibido se reduce en 4.
+/// Además, tras atacar a un objetivo, puede dañar hasta 3 monstruos adicionales en línea recta.</summary>
 public class PassiveReyArquero : PassiveAbility
 {
-    public override int OnRecibirDanyo(int danyo) => Mathf.Max(0, danyo - 3);
+    public override int OnRecibirDanyo(int danyo) => Mathf.Max(0, danyo - 4);
+
+    public override void OnDespuesDeAtacar(Card objetivo)
+    {
+        AplicarDanyoEnLinea(portador, objetivo, 3);
+    }
 }
 
 /// <summary>Rey esqueleto: al inicio de cada turno recupera toda su vida.

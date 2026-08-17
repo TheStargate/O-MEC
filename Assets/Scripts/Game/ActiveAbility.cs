@@ -93,12 +93,12 @@ public abstract class ActiveAbility
 // HABILIDADES ACTIVAS DE MONSTRUOS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// <summary>Guerrero oscuro: inflige 5 puntos de daño a todos los monstruos enemigos en un área de 3x3 a su alrededor.</summary>
+/// <summary>Guerrero oscuro: inflige 10 puntos de daño a todos los monstruos enemigos en un área de 3x3 a su alrededor.</summary>
 public class ActiveGuerreroOscuro : ActiveAbility
 {
     public override void Ejecutar(List<Card> objetivos = null)
     {
-        PassiveAbility.AplicarDanyoAreaGeneral(portador, portador.casilla, 5, 1, soloMonstruos: true, afectarAliados: true);
+        PassiveAbility.AplicarDanyoAreaGeneral(portador, portador.casilla, 10, 1, soloMonstruos: true, afectarAliados: true);
     }
 }
 

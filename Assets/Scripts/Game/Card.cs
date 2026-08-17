@@ -126,7 +126,8 @@ public class MonsterCardData : DamageableCardData
             ataque = this.ataque,
             alcance = this.alcance,
             velocidad = this.velocidad,
-            costeHabilidad = this.costeHabilidad
+            costeHabilidad = this.costeHabilidad,
+            efectosDanyo = this.efectosDanyo.ConvertAll(e => e.Clone())
         };
     }
 }
@@ -147,7 +148,8 @@ public class StructureCardData : DamageableCardData
             vidaMaxima = this.vidaMaxima,
             ataque = this.ataque,
             alcance = this.alcance,
-            costeHabilidad = this.costeHabilidad
+            costeHabilidad = this.costeHabilidad,
+            efectosDanyo = this.efectosDanyo.ConvertAll(e => e.Clone())
         };
     }
 }
@@ -190,11 +192,9 @@ public class Card : MonoBehaviour
     public GameObject backgroundAtaqueMonstruo; // Fondo para que se vea bien textoAtaqueMonstruo
     public GameObject backgroundAtaqueEstructura; // Fondo para que se vea bien textoAtaqueEstructura
     public GameObject indicadorHabilidadUsada; // Indica visualmente que la habilidad activa ya se ha usado
-    [SerializeField] private TextMeshPro TextoDanyo; // Texto flotante para daño / curación
     [SerializeField] private Vector3 offsetTextoDanyo = new Vector3(0f, 1.5f, 0.2f);
     [SerializeField] private float tiempoTextoDanyo = 5f;
     [SerializeField] private float escalaTextoDanyo = 1.25f;
-    private Coroutine corutinaTextoDanyo;
     public PassiveAbility pasiva; // Habilidad pasiva de la carta (null si no tiene)
     public ActiveAbility activa; // Habilidad activa de la carta (null si no tiene)
     
@@ -275,35 +275,15 @@ public class Card : MonoBehaviour
         }
     }
 
-    // Crea y reutiliza un TextMeshPro hijo de la carta para mostrar el texto flotante de daño/curación.
-    private TextMeshPro ObtenerTextoDanyo()
-    {
-        if (TextoDanyo != null)
-            return TextoDanyo;
-
-        GameObject go = new GameObject("TextoDanyo", typeof(TextMeshPro));
-        go.transform.SetParent(transform, false);
-        go.transform.localPosition = offsetTextoDanyo;
-
-        TextoDanyo = go.GetComponent<TextMeshPro>();
-        TextoDanyo.alignment = TextAlignmentOptions.Center;
-        TextoDanyo.fontSize = 32;
-        TextoDanyo.raycastTarget = false;
-        TextoDanyo.alpha = 1f;
-        TextoDanyo.transform.localScale = Vector3.one * escalaTextoDanyo;
-        TextoDanyo.transform.localRotation = Quaternion.Euler(0f, clickableObject != null && clickableObject.propietarioP1 == TurnManager.turnoP1 ? 180f : 0f, 0f);
-        TextoDanyo.gameObject.SetActive(false);
-        return TextoDanyo;
-    }
-
     // Muestra un número flotante sobre la carta: -2 si recibe daño, +5 si se cura.
+    // Cada popup es un GameObject independiente para evitar conflictos con múltiples eventos simultáneos.
     public void MostrarTextoCambioVida(int cantidad)
     {
         if (cantidad == 0 || cardData is not DamageableCardData)
             return;
 
-        TextMeshPro tmp = ObtenerTextoDanyo();
-        if (tmp == null)
+        Transform parent = casilla != null ? casilla.transform : transform.parent;
+        if (parent == null)
             return;
 
         bool esCuracion = cantidad > 0;
@@ -312,18 +292,25 @@ public class Card : MonoBehaviour
         float alturaExtra = Mathf.Clamp(magnitud * 0.2f, 0f, 2.2f);
         float alturaInicial = Mathf.Clamp(offsetTextoDanyo.y + alturaExtra * 0.8f, 1.2f, 5f);
 
+        // Crear un nuevo GameObject independiente para cada popup de daño
+        GameObject popup = new GameObject("PopupDanyo", typeof(TextMeshPro));
+        popup.transform.SetParent(parent, false);
+        popup.transform.position = transform.position + new Vector3(offsetTextoDanyo.x, alturaInicial, offsetTextoDanyo.z);
+        popup.transform.localScale = Vector3.one * escalaBase;
+        // Rotar según el turno
+        popup.transform.localRotation = Quaternion.Euler(0f, !TurnManager.turnoP1 ? 180f : 0f, 0f);
+
+        TextMeshPro tmp = popup.GetComponent<TextMeshPro>();
         tmp.text = (esCuracion ? "+" : "-") + magnitud.ToString();
-        tmp.transform.localScale = Vector3.one * escalaBase;
-        tmp.transform.localPosition = new Vector3(offsetTextoDanyo.x, alturaInicial, offsetTextoDanyo.z);
-        bool rotar180 = clickableObject != null && clickableObject.propietarioP1 == TurnManager.turnoP1;
-        tmp.transform.localRotation = Quaternion.Euler(0f, rotar180 ? 180f : 0f, 0f);
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.fontSize = 32;
+        tmp.raycastTarget = false;
         tmp.color = esCuracion ? UnityEngine.Color.green : UnityEngine.Color.red;
-        tmp.gameObject.SetActive(true);
+        tmp.enableAutoSizing = false;
 
-        if (corutinaTextoDanyo != null)
-            StopCoroutine(corutinaTextoDanyo);
-
-        corutinaTextoDanyo = StartCoroutine(CorutinaTextoCambioVida(tmp, escalaBase, alturaExtra));
+        // Añadir componente para animar el popup de forma independiente
+        popup.AddComponent<PopupDanyoAnim>();
+        popup.GetComponent<PopupDanyoAnim>().Inicializar(escalaBase, alturaExtra, tiempoTextoDanyo);
     }
 
     // Muestra un símbolo de calavera para indicar que se ha eliminado la carta
@@ -354,39 +341,7 @@ public class Card : MonoBehaviour
         popup.AddComponent<PopupMuerteAnim>();
     }
 
-    // Animación del texto flotante: pequeño pop, luego sube y se desvanece antes de desaparecer.
-    private IEnumerator CorutinaTextoCambioVida(TextMeshPro texto, float escalaInicial, float alturaExtra)
-    {
-        if (texto == null)
-            yield break;
 
-        float tiempo = 0f;
-        Vector3 posicionInicial = texto.transform.localPosition;
-        UnityEngine.Color colorInicial = texto.color;
-
-        while (tiempo < tiempoTextoDanyo)
-        {
-            tiempo += Time.deltaTime;
-            float progreso = Mathf.Clamp01(tiempo / tiempoTextoDanyo);
-
-            // Pop más agresivo cuando el valor es grande; además sube más alto.
-            float escalaActual = Mathf.Lerp(escalaInicial * 1.35f, escalaInicial, Mathf.Clamp01(progreso * 2.5f));
-            texto.transform.localScale = Vector3.one * escalaActual;
-
-            float alturaMovimiento = (0.9f + alturaExtra) * progreso;
-            texto.transform.localPosition = posicionInicial + Vector3.up * alturaMovimiento;
-
-            UnityEngine.Color color = texto.color;
-            color.a = 1f - progreso;
-            texto.color = color;
-            yield return null;
-        }
-
-        texto.gameObject.SetActive(false);
-        texto.color = colorInicial;
-        texto.transform.localPosition = posicionInicial;
-        texto.transform.localScale = Vector3.one * escalaInicial;
-    }
 
     // Actualiza y muestra la nueva vida de la carta.
     public void UpdateVida(int nuevaVida)
@@ -424,6 +379,26 @@ public class Card : MonoBehaviour
         areaProximoAtaque = false;
         espiaActivoProximoAtaque = false;
         RefrescarAtaqueUI();
+    }
+
+    // Copia los estados temporales de una carta a otra durante un movimiento o re-instanciación.
+    public void CopiarEstadoTemporalDesde(Card origen)
+    {
+        if (origen == null)
+            return;
+
+        invulnerableHastaProximoTurno = origen.invulnerableHastaProximoTurno;
+        inmuneHechizosIndefinido = origen.inmuneHechizosIndefinido;
+        bonusDanyoProximoAtaque = origen.bonusDanyoProximoAtaque;
+        multDanyoProximoAtaque = origen.multDanyoProximoAtaque;
+        areaProximoAtaque = origen.areaProximoAtaque;
+        espiaActivoProximoAtaque = origen.espiaActivoProximoAtaque;
+        multDanyoIndefinido = origen.multDanyoIndefinido;
+        bonusDanyoTrampa = origen.bonusDanyoTrampa;
+        multDanyoTrampa = origen.multDanyoTrampa;
+        trampaAplicaAturdimiento = origen.trampaAplicaAturdimiento;
+        trampaAplicaRalentizacion = origen.trampaAplicaRalentizacion;
+        trampaAplicaFuego = origen.trampaAplicaFuego;
     }
 
     // Actualiza y muestra la nueva velocidad de la carta (para monstruos)
@@ -472,7 +447,6 @@ public class Card : MonoBehaviour
     private static void RefrescarAtaqueUIParaCarta(Card carta)
     {
         if (carta == null) return;
-
         if (carta.textoAtaqueMonstruo != null) carta.textoAtaqueMonstruo.gameObject.SetActive(false);
         if (carta.textoAtaqueEstructura != null) carta.textoAtaqueEstructura.gameObject.SetActive(false);
         if (carta.backgroundAtaqueMonstruo != null) carta.backgroundAtaqueMonstruo.SetActive(false);
@@ -606,6 +580,64 @@ public class PopupMuerteAnim : MonoBehaviour
 
             transform.localPosition = Vector3.Lerp(posicionInicio, posicionFinal, progreso);
             transform.localScale = Vector3.one * Mathf.Lerp(1.8f, 3.4f, progreso);
+
+            UnityEngine.Color color = texto.color;
+            color.a = 1f - progreso;
+            texto.color = color;
+            yield return null;
+        }
+
+        Destroy(gameObject);
+    }
+}
+
+/// <summary>Componente que gestiona la animación independiente de un popup de daño.
+/// Cada instancia anima su propio GameObject de forma aislada, permitiendo múltiples popups simultáneos.</summary>
+public class PopupDanyoAnim : MonoBehaviour
+{
+    private TextMeshPro texto;
+    private float escalaInicial;
+    private float alturaExtra;
+    private float duracion;
+
+    /// <summary>Inicializa los parámetros de animación del popup.</summary>
+    public void Inicializar(float escalaBase, float alturaExtra, float tiempoAnimacion)
+    {
+        this.escalaInicial = escalaBase;
+        this.alturaExtra = alturaExtra;
+        this.duracion = tiempoAnimacion;
+    }
+
+    private void Start()
+    {
+        texto = GetComponent<TextMeshPro>();
+        if (texto == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        StartCoroutine(CorutinaDanyo());
+    }
+
+    /// <summary>Animación del texto flotante: pequeño pop, luego sube y se desvanece antes de desaparecer.</summary>
+    private IEnumerator CorutinaDanyo()
+    {
+        Vector3 posicionInicial = transform.localPosition;
+        UnityEngine.Color colorInicial = texto.color;
+        float tiempo = 0f;
+
+        while (tiempo < duracion)
+        {
+            tiempo += Time.deltaTime;
+            float progreso = Mathf.Clamp01(tiempo / duracion);
+
+            // Pop más agresivo cuando el valor es grande; además sube más alto.
+            float escalaActual = Mathf.Lerp(escalaInicial * 1.35f, escalaInicial, Mathf.Clamp01(progreso * 2.5f));
+            transform.localScale = Vector3.one * escalaActual;
+
+            float alturaMovimiento = (0.9f + alturaExtra) * progreso;
+            transform.localPosition = posicionInicial + Vector3.up * alturaMovimiento;
 
             UnityEngine.Color color = texto.color;
             color.a = 1f - progreso;

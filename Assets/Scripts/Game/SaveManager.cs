@@ -115,6 +115,7 @@ public class SaveManager : MonoBehaviour
                     usado = carta.clickableObject.usado,
                     habilidadUsada = carta.clickableObject.habilidadUsada,
                     turnoColocado = carta.clickableObject.turnoColocado,
+                    aturdido = carta.clickableObject.aturdido,
                     
                     invulnerableHastaProximoTurno = carta.invulnerableHastaProximoTurno,
                     inmuneHechizosIndefinido = carta.inmuneHechizosIndefinido,
@@ -303,6 +304,7 @@ public class SaveManager : MonoBehaviour
                 carta.clickableObject.usado = saveCard.usado;
                 carta.clickableObject.habilidadUsada = saveCard.habilidadUsada;
                 carta.clickableObject.turnoColocado = saveCard.turnoColocado;
+                carta.clickableObject.aturdido = saveCard.aturdido;
                 carta.RefrescarIndicadorHabilidadUsada();
 
                 carta.invulnerableHastaProximoTurno = saveCard.invulnerableHastaProximoTurno;
