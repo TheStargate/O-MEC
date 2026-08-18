@@ -194,7 +194,6 @@ public class Card : MonoBehaviour
     public GameObject indicadorHabilidadUsada; // Indica visualmente que la habilidad activa ya se ha usado
     [SerializeField] private Vector3 offsetTextoDanyo = new Vector3(0f, 1.5f, 0.2f);
     [SerializeField] private float tiempoTextoDanyo = 5f;
-    [SerializeField] private float escalaTextoDanyo = 1.25f;
     public PassiveAbility pasiva; // Habilidad pasiva de la carta (null si no tiene)
     public ActiveAbility activa; // Habilidad activa de la carta (null si no tiene)
     
@@ -531,10 +530,19 @@ public class Card : MonoBehaviour
     // Actualiza los turnos restantes de las cartas de tipo Trampa
     public void UpdateTurnos()
     {
-        TrapCardData data = cardData as TrapCardData;
+        if (cardData is not TrapCardData data || data == null)
+            return;
+
+        if (casilla == null)
+        {
+            Debug.LogWarning($"[Card] Se intentó actualizar turnos de trampa sin casilla: {name}");
+            return;
+        }
+
         data.turnos--;
         RefrescarDurabilidadTrampa();
-        if (data.turnos == 0) // Si turnos llega a 0, se desturye la trampa
+
+        if (data.turnos <= 0) // Si turnos llega a 0, se destruye la trampa
             casilla.LiberarCasilla(false);
     }
 

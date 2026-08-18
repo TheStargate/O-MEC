@@ -213,13 +213,15 @@ public abstract class PassiveAbility
     // Aplica daño a una carta respetando sus habilidades, y la destruye si llega a 0
     public static void AplicarDanyo(Cell cell, int danyo)
     {
-        if (!cell.ocupada || cell.cartaActual == null) return;
+        if (cell == null || !cell.ocupada || cell.cartaActual == null) return;
+        if (cell.cartaActual.clickableObject == null) return;
+
         // Invulnerabilidad absoluta: Torre protectora o Castillo falso
         if (EsInvulnerableATodo(cell.cartaActual)) return;
         if (cell.cartaActual.cardData is DamageableCardData dData)
         {
             int danyoFinal = cell.cartaActual.pasiva?.OnRecibirDanyo(danyo) ?? danyo;
-            int nuevaVida  = dData.vida - danyoFinal;
+            int nuevaVida = dData.vida - danyoFinal;
             if (nuevaVida <= 0)
                 cell.LiberarCasilla(false);
             else
@@ -253,7 +255,10 @@ public abstract class PassiveAbility
     public static void AplicarDanyoAreaGeneral(Card atacante, Cell centro, int danyo, int radio, bool soloMonstruos = false, bool afectarAliados = false)
     {
         if (atacante == null || centro == null) return;
+        if (atacante.clickableObject == null) return;
+
         bool esP1 = atacante.clickableObject.propietarioP1;
+        List<Cell> celdasAfectadas = new List<Cell>();
 
         for (int dr = -radio; dr <= radio; dr++)
         {
@@ -263,17 +268,20 @@ public abstract class PassiveAbility
                 int r = centro.row + dr, c = centro.col + dc;
                 if (r < 0 || r >= Board.Instance.rows || c < 0 || c >= Board.Instance.columns) continue;
                 Cell cell = Board.Instance.cells[r, c];
-                if (!cell.ocupada || cell.cartaActual == null) continue;
-                
-                // Si no se permite afectar aliados y la carta es del mismo propietario, ignorarla
-                if (!afectarAliados && cell.cartaActual.clickableObject.propietarioP1 == esP1) continue;
-                
+                if (cell == null || !cell.ocupada || cell.cartaActual == null) continue;
+                if (!afectarAliados && cell.cartaActual.clickableObject != null && cell.cartaActual.clickableObject.propietarioP1 == esP1) continue;
                 if (soloMonstruos && !(cell.cartaActual.cardData is MonsterCardData)) continue;
                 if (!soloMonstruos && !(cell.cartaActual.cardData is MonsterCardData) &&
                     !(cell.cartaActual.cardData is StructureCardData)) continue;
-                    
-                AplicarDanyo(cell, danyo);
+
+                celdasAfectadas.Add(cell);
             }
+        }
+
+        foreach (Cell cell in celdasAfectadas)
+        {
+            if (cell == null || !cell.ocupada || cell.cartaActual == null) continue;
+            AplicarDanyo(cell, danyo);
         }
     }
 

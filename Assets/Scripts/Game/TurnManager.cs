@@ -110,7 +110,7 @@ public class TurnManager : MonoBehaviour
             DeckManager.Instance.SpawnCard();
 
             // Resetear objetos clickables del jugador actual
-            clickables = FindObjectsByType<ClickableObject>(FindObjectsSortMode.None);
+            clickables = FindObjectsByType<ClickableObject>(FindObjectsInactive.Include);
             foreach (ClickableObject clickable in clickables)
             {
                 clickable.usado = false; // Permite que los objetos se puedan usar en el nuevo turno
@@ -146,7 +146,8 @@ public class TurnManager : MonoBehaviour
                         else if (carta.cardData is TrapCardData)
                         { // Si es una trampa ya colocada, no se puede usar y se actualizan sus turnos restantes
                             clickable.usado = true;
-                            carta.UpdateTurnos();
+                            if (carta.casilla != null)
+                                carta.UpdateTurnos();
                         }
                     }
                 }

@@ -94,23 +94,29 @@ public class Cell : MonoBehaviour
     // Elimina la carta de la casilla (si hay alguna)
     public void LiberarCasilla(bool movimiento)
     {
-        if (cartaActual != null)
+        if (cartaActual == null)
         {
-            // Disparar la habilidad pasiva de muerte antes de destruir (solo si no se está moviendo la carta)
-            if (!movimiento)
-                cartaActual.pasiva?.OnMorir();
-
-            if (!movimiento)
-                cartaActual.MostrarTextoMuerte();
-
-            // Si la carta se ha movido a otra casilla o es un Monstruo Legendario, no se pone en la pila de descartes
-            if (cartaActual.cardData != null && cartaActual.cardData.tipo != CardType.MonstruoLeg && !movimiento && cartaActual.clickableObject != null)
-                DeckManager.Instance.descartar(cartaActual.cardData, cartaActual.clickableObject.propietarioP1);
-            Destroy(cartaActual.gameObject);
+            ocupada = false;
+            cartaActual = null;
+            return;
         }
 
-        cartaActual.RefrescarAtaqueUI();
+        // Quitar la carta del tablero primero para evitar reentrada cuando una pasiva de muerte
+        // daña a otra carta adyacente y esa otra carta intenta destruir a la primera en la misma cascada.
+        Card cartaADestruir = cartaActual;
         ocupada = false;
         cartaActual = null;
+
+        if (!movimiento)
+        {
+            cartaADestruir.pasiva?.OnMorir();
+            cartaADestruir.MostrarTextoMuerte();
+        }
+
+        // Si la carta se ha movido a otra casilla o es un Monstruo Legendario, no se pone en la pila de descartes
+        if (cartaADestruir.cardData != null && cartaADestruir.cardData.tipo != CardType.MonstruoLeg && !movimiento && cartaADestruir.clickableObject != null)
+            DeckManager.Instance.descartar(cartaADestruir.cardData, cartaADestruir.clickableObject.propietarioP1);
+
+        Destroy(cartaADestruir.gameObject);
     }
 }

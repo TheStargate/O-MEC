@@ -705,7 +705,7 @@ public class Board : MonoBehaviour
     // Debe llamarse cada vez que cambie la energía disponible.
     public static void RefrescarResaltados()
     {
-        foreach (ClickableObject co in FindObjectsByType<ClickableObject>(FindObjectsSortMode.None))
+        foreach (ClickableObject co in FindObjectsByType<ClickableObject>(FindObjectsInactive.Include))
             co.actualizarResaltado();
 
         if (DeckManager.Instance == null) return;
