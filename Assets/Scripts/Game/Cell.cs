@@ -110,7 +110,11 @@ public class Cell : MonoBehaviour
         if (!movimiento)
         {
             cartaADestruir.pasiva?.OnMorir();
-            cartaADestruir.MostrarTextoMuerte();
+
+            // Las trampas no muestran el popup de calavera al destruirse, porque su destrucción
+            // es parte del efecto de activación y no representa la muerte de una carta del tablero.
+            if (cartaADestruir.cardData != null && cartaADestruir.cardData.tipo != CardType.Trampa)
+                cartaADestruir.MostrarTextoMuerte();
         }
 
         // Si la carta se ha movido a otra casilla o es un Monstruo Legendario, no se pone en la pila de descartes

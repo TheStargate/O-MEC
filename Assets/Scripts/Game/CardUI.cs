@@ -145,9 +145,9 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
                     cell.Resaltar(Color.lightBlue);
             }
         }
-        else if (cartaPrefab.cardData.tipo == CardType.Estructura || cartaPrefab.cardData.tipo == CardType.Trampa)
+        else if (cartaPrefab.cardData.tipo == CardType.Estructura)
         {
-            // Si es una estructura o trampa, se resaltan solo las casillas de la mitad del tablero del jugador
+            // Las estructuras solo pueden colocarse en la mitad del tablero del propietario.
             foreach (var cell in Board.Instance.cells)
             {
                 // El castillo solo se puede colocar en la segunda fila y no en los bordes del tablero ni dónde haya casillas ocupadas alrededor
@@ -208,7 +208,35 @@ public class CardUI : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, ID
 
             if (castilloEncontrado)
             {
-                // Si se quiere colocar una estructura o trampa, NO resaltar las tres casillas detrás del castillo
+                // Si se quiere colocar una estructura, NO resaltar las tres casillas detrás del castillo
+                foreach (var cell in casillasCastillo)
+                {
+                    cell.Bloquear();
+                }
+            }
+        }
+        else if (cartaPrefab.cardData.tipo == CardType.Trampa)
+        {
+            // Las trampas pueden colocarse en la mitad del propietario y en una fila extra cercana al centro.
+            int filaExtra = Board.Instance.rows / 2;
+            foreach (var cell in Board.Instance.cells)
+            {
+                bool filaPermitida = TurnManager.turnoP1
+                    ? cell.row <= filaExtra
+                    : cell.row >= filaExtra - 1;
+
+                if (filaPermitida)
+                {
+                    if (cell.ocupada)
+                        cell.SetColor(Color.red);
+                    else
+                        cell.Resaltar(Color.lightBlue);
+                }
+            }
+
+            if (castilloEncontrado)
+            {
+                // Las trampas tampoco pueden colocarse justo detrás del castillo enemigo
                 foreach (var cell in casillasCastillo)
                 {
                     cell.Bloquear();

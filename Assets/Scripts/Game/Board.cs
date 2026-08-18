@@ -162,63 +162,35 @@ public class Board : MonoBehaviour
 
         if (!seleccionandoAtaque)
         { // Mover
-          // Actualizar turno del último movimiento
+            // Actualizar turno del último movimiento
             carta.clickableObject.ultimoMovimiento = TurnManager.numTurno;
             MonsterCardData mCardData = carta.cardData as MonsterCardData;
 
+            Card trampa = null;
+            TrapCardData trapCardData = null;
+
             if (casillaSeleccionada.cartaActual != null && casillaSeleccionada.cartaActual.cardData != null &&
                 casillaSeleccionada.cartaActual.cardData.tipo == CardType.Trampa)
-            { // Si se mueve la carta a una trampa, se activa y produce daño
-                Card trampa = casillaSeleccionada.cartaActual;
-                TrapCardData trapCardData = trampa.cardData as TrapCardData;
-                UIManager.visorCentral.sprite = trapCardData.imagenCarta;
-                UIManager.visorCentral.gameObject.SetActive(true);
-
-                if (UIManager.textoInfoCarta != null)
-                {
-                    string info = UIManager.GenerarInfoCarta(trampa);
-                    UIManager.textoInfoCarta.text = info;
-                    UIManager.textoInfoCarta.transform.parent.parent.parent.gameObject.SetActive(!string.IsNullOrEmpty(info));
-                }
-
-                int danyoTrampa = trapCardData.ataque;
-                danyoTrampa += trampa.bonusDanyoTrampa;
-                danyoTrampa *= trampa.multDanyoTrampa;
-
-                // Aplicar daño respetando invulnerabilidad y reducción por pasivas
-                PassiveAbility.AplicarDanyoCarta(carta, danyoTrampa);
-                
-                // Si la carta sobrevive, aplicar efectos secundarios de la trampa
-                if (carta.cardData is DamageableCardData dData && dData.vida > 0)
-                {
-                    // Efectos secundarios de habilidades de trampas
-                    if (trampa.trampaAplicaAturdimiento)
-                    { // Aturde la carta (no podrá moverse ni atacar durante 1 turno)
-                        carta.clickableObject.ultimoMovimiento = TurnManager.numTurno + 2;
-                        carta.clickableObject.ultimoAtaque = TurnManager.numTurno + 2;
-                        carta.clickableObject.aturdido += 2;
-                    }
-                    if (trampa.trampaAplicaRalentizacion && mCardData != null)
-                    { // Ralentiza la carta (su velocidad se reduce 1 punto permanentemente)
-                        carta.UpdateVelocidad(mCardData.velocidad - 1);
-                    }
-                    if (trampa.trampaAplicaFuego > 0 && mCardData != null)
-                    { // Aplica fuego a la carta (1 punto de daño durante 3 turnos)
-                        mCardData.efectosDanyo.Add(new DanyoEfecto("Quemadura", trampa.trampaAplicaFuego, 3));
-                    }
-                }
-
-                casillaSeleccionada.LiberarCasilla(false);
-                CameraController.Instance.MantenerVisor(); // Mantenemos el visor para mostrar la trampa activada
+            {
+                trampa = casillaSeleccionada.cartaActual;
+                trapCardData = trampa.cardData as TrapCardData;
             }
 
-            // La carta se mueve (se ocupa la nueva casilla y se libera la anterior)
-            // Preservar el estado del ClickableObject que se resetearía con el nuevo Instantiate
+            // Primero se mueve la carta a la casilla destino, liberando la trampa antes del desplazamiento.
+            // Así, el daño de la trampa se aplica ya con la carta en su posición final y no se puede
+            // "revivir" ni seguir moviendo una carta que ya murió al pisar la trampa.
             int turnoColocadoOriginal = carta.clickableObject.turnoColocado;
             int ultimoMovimientoOriginal = carta.clickableObject.ultimoMovimiento;
             int ultimoAtaqueOriginal = carta.clickableObject.ultimoAtaque;
             bool habilidadUsadaOriginal = carta.clickableObject.habilidadUsada;
             int aturdidoOriginal = carta.clickableObject.aturdido;
+
+            if (trampa != null)
+            {
+                // La trampa se destruye al activarse y la carta ocupa la casilla libre.
+                casillaSeleccionada.LiberarCasilla(false);
+            }
+
             if (casillaSeleccionada.OcuparCasilla(carta))
             {
                 casillaOriginal.LiberarCasilla(true);
@@ -233,13 +205,53 @@ public class Board : MonoBehaviour
                     carta.clickableObject.usado = (aturdidoOriginal > 0);
                     carta.clickableObject.actualizarResaltado();
                 }
-                if (mCardData != null && mCardData.vida <= 0) // Comprueba si ha muerto por trampa
+
+                if (trampa != null && trapCardData != null)
                 {
-                    casillaSeleccionada.LiberarCasilla(false);
-                    // Si la carta murió por trampa, devolver la cámara a la posición original
-                    if (CameraController.Instance != null)
-                        CameraController.Instance.VolverAPosicionOriginal();
-                    return;
+                    UIManager.visorCentral.sprite = trapCardData.imagenCarta;
+                    UIManager.visorCentral.gameObject.SetActive(true);
+
+                    if (UIManager.textoInfoCarta != null)
+                    {
+                        string info = UIManager.GenerarInfoCarta(trampa);
+                        UIManager.textoInfoCarta.text = info;
+                        UIManager.textoInfoCarta.transform.parent.parent.parent.gameObject.SetActive(!string.IsNullOrEmpty(info));
+                    }
+
+                    int danyoTrampa = trapCardData.ataque;
+                    danyoTrampa += trampa.bonusDanyoTrampa;
+                    danyoTrampa *= trampa.multDanyoTrampa;
+
+                    // Daño aplicado después del movimiento, ya sobre la carta en la casilla final.
+                    PassiveAbility.AplicarDanyoCarta(carta, danyoTrampa);
+
+                    if (carta.cardData is DamageableCardData dData && dData.vida > 0)
+                    {
+                        if (trampa.trampaAplicaAturdimiento)
+                        {
+                            carta.clickableObject.ultimoMovimiento = TurnManager.numTurno + 2;
+                            carta.clickableObject.ultimoAtaque = TurnManager.numTurno + 2;
+                            carta.clickableObject.aturdido += 2;
+                        }
+                        if (trampa.trampaAplicaRalentizacion && mCardData != null)
+                        {
+                            carta.UpdateVelocidad(mCardData.velocidad - 1);
+                        }
+                        if (trampa.trampaAplicaFuego > 0 && mCardData != null)
+                        {
+                            mCardData.efectosDanyo.Add(new DanyoEfecto("Quemadura", trampa.trampaAplicaFuego, 3));
+                        }
+                    }
+
+                    // Si la trampa mató la carta, la cámara debe volver a la posición original y no re-enfocar la carta muerta.
+                    if (casillaSeleccionada.cartaActual == null)
+                    {
+                        if (CameraController.Instance != null)
+                            CameraController.Instance.VolverAPosicionOriginal();
+                        return;
+                    }
+
+                    CameraController.Instance.MantenerVisor();
                 }
             }
         }

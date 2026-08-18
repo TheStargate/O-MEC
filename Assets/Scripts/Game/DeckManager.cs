@@ -385,17 +385,6 @@ public class DeckManager : MonoBehaviour
             },
             new StructureCardData
             {
-                nombre = "Torre protectora",
-                tipo = CardType.Estructura,
-                costoEnergia = 8,
-                vida = 50,
-                vidaMaxima = 50,
-                ataque = 2,
-                alcance = 5,
-                costeHabilidad = 4
-            },
-            new StructureCardData
-            {
                 nombre = "Torre infernal",
                 tipo = CardType.Estructura,
                 costoEnergia = 8,
@@ -404,6 +393,17 @@ public class DeckManager : MonoBehaviour
                 ataque = 1,
                 alcance = 3,
                 costeHabilidad = 6
+            },
+            new StructureCardData
+            {
+                nombre = "Torre protectora",
+                tipo = CardType.Estructura,
+                costoEnergia = 16,
+                vida = 50,
+                vidaMaxima = 50,
+                ataque = 2,
+                alcance = 5,
+                costeHabilidad = 4
             },
             new SpellCardData
             {

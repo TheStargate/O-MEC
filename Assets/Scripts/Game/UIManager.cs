@@ -255,6 +255,13 @@ public class UIManager : MonoBehaviour
         bool protegidoPorTorre = PassiveAbility.EsInvulnerablePorTorreProtectora(carta);
         bool inmunePorReyCura = PassiveAbility.EsInmuneHechizo(carta);
         bool tripleDanyoPorReyCura = PassiveAbility.EsTripleDanyoPorReyCura(carta);
+        bool reduccionDaño = carta.pasiva is PassiveGuerreroOscuro ||
+                             carta.pasiva is PassiveArqueroReforzado ||
+                             carta.pasiva is PassiveMuro ||
+                             carta.pasiva is PassiveMuroReforzado ||
+                             carta.pasiva is PassiveReyArquero;
+        bool reduccionDañoTurno = carta.pasiva is PassiveMuro ||
+                                  carta.pasiva is PassiveMuroReforzado;
         int bonusPasiva = carta.pasiva != null ? carta.pasiva.ModificarDanyoAtacante(null) : 0;
         int bonusEdificio = 0;
         if (carta.clickableObject != null && carta.casilla != null)
@@ -271,6 +278,8 @@ public class UIManager : MonoBehaviour
                                 protegidoPorTorre ||
                                 inmunePorReyCura ||
                                 tripleDanyoPorReyCura ||
+                                reduccionDaño ||
+                                reduccionDañoTurno ||
                                 bonusPasiva > 0 ||
                                 bonusEdificio > 0 ||
                                 carta.bonusDanyoProximoAtaque != 0 ||
@@ -297,6 +306,11 @@ public class UIManager : MonoBehaviour
             if (protegidoPorTorre) sb.AppendLine("🛡️ Invulnerable por Torre protectora");
             if (inmunePorReyCura) sb.AppendLine("✨ Inmunidad a hechizos por Rey cura");
             if (tripleDanyoPorReyCura) sb.AppendLine("⚔️ Daño x3 por Rey cura");
+            if (carta.pasiva is PassiveGuerreroOscuro) sb.AppendLine("🛡️ Reduce el daño recibido en 1");
+            if (carta.pasiva is PassiveArqueroReforzado) sb.AppendLine("🛡️ Reduce el daño recibido en 1");
+            if (carta.pasiva is PassiveMuro) sb.AppendLine("🛡️ Reduce el daño recibido en 1 por turno");
+            if (carta.pasiva is PassiveMuroReforzado) sb.AppendLine("🛡️ Reduce el daño recibido en 3 por turno");
+            if (carta.pasiva is PassiveReyArquero) sb.AppendLine("🛡️ Reduce el daño recibido en 4");
             if (bonusPasiva > 0) sb.AppendLine($"⚔️ Bonus de habilidad pasiva: +{bonusPasiva}");
             if (bonusEdificio > 0) sb.AppendLine($"⚔️ Bonus de edificio: +{bonusEdificio}");
             if (carta.multDanyoIndefinido != 1) sb.AppendLine($"⚔️ Multiplicador de daño indefinido: x{carta.multDanyoIndefinido}");
