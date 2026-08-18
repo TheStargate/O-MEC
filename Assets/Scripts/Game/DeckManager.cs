@@ -468,8 +468,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 2,
                 costeHabilidad = 2,
                 ataque = 5,
-                turnos = 6,
-                turnosMaximos = 6
+                turnos = 18,
+                turnosMaximos = 18
             },
             new TrapCardData
             {
@@ -478,8 +478,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 2,
                 costeHabilidad = 2,
                 ataque = 3,
-                turnos = 9,
-                turnosMaximos = 9
+                turnos = 24,
+                turnosMaximos = 24
             },
             new TrapCardData
             {
@@ -488,8 +488,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 2,
                 costeHabilidad = 2,
                 ataque = 12,
-                turnos = 2,
-                turnosMaximos = 2
+                turnos = 12,
+                turnosMaximos = 12
             },
             new TrapCardData
             {
@@ -498,8 +498,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 3,
                 costeHabilidad = 1,
                 ataque = 7,
-                turnos = 3,
-                turnosMaximos = 3
+                turnos = 24,
+                turnosMaximos = 24
             },
             new TrapCardData
             {
@@ -508,8 +508,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 3,
                 costeHabilidad = 2,
                 ataque = 10,
-                turnos = 5,
-                turnosMaximos = 5
+                turnos = 18,
+                turnosMaximos = 18
             },
             new TrapCardData
             {
@@ -518,8 +518,8 @@ public class DeckManager : MonoBehaviour
                 costoEnergia = 3,
                 costeHabilidad = 2,
                 ataque = 6,
-                turnos = 8,
-                turnosMaximos = 8
+                turnos = 24,
+                turnosMaximos = 24
             },
             new MonsterCardData
             {
